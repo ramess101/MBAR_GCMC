@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-GCMC histogram reweighting
+MBAR GCMC
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
+from pymbar import MBAR
+import sys
+import pdb
 
+# Physical constants
+N_A = 6.02214086e23 #[/mol]
+nm3_to_ml = 10**21
+bar_nm3_to_kJ_per_mole = 0.0602214086
 Ang3tom3 = 10**-30
 gmtokg = 1e-3
 kb = 1.3806485e-23 #[J/K]
 Jm3tobar = 1e-5
 Rg = 8.314472 #[J/mol/K]
-N_A = Rg/kb #[1/mol]
 
 Mw_hexane  = 12.0109*6.+1.0079*(2.*6.+2.) #[gm/mol]
 
@@ -22,19 +28,29 @@ rhov_Potoff = np.array([112.352,90.541,72.249,58.283,47.563,39.028,32.053,26.27,
 Psat_Potoff = np.array([27.697,23.906,20.521,17.529,14.889,12.563,10.522,8.738,7.19,5.857,4.717,3.753,2.946,2.279,1.734,1.296,0.949,0.68,0.476])
 Zsat_Potoff = Psat_Potoff / rhov_Potoff / Tsat_Potoff * Mw_hexane / Rg * gmtokg / Jm3tobar
 
-#plt.plot(Tsat_Potoff,Zsat_Potoff,'b-',label='Potoff et al.')
-#plt.plot(Tsat_Potoff,np.ones(len(Tsat_Potoff)),'k--',label='Ideal Gas')
-#plt.xlabel('Temperature [K]')
-#plt.ylabel(r'$Z_v^{sat}$')
-#plt.legend()
-#plt.show()
+def U_to_u(Uint,Temp,mu,Nmol):
+    '''
+    Converts internal energy, temperature, chemical potential, and number of molecules into reduced potential energy 
+    
+    inputs:
+        Uint: internal energy (K)
+        Temp: Temperature (K)
+        mu: Chemical potential (K)
+        Nmol: number of molecules
+    outputs:
+        Ureduced: reduced potential energy
+    '''
+    beta = 1./Temp #[1/K]
+    Ureduced = beta*(Uint) - beta*mu*Nmol  #[dimensionless]
+    return Ureduced
 
-class histogram_reweighting():
+class MBAR_GCMC():
     def __init__(self,filepaths,use_stored_C=False):
         self.filepaths = filepaths
         self.extract_all_data()
         self.min_max_all_data()
-        self.calc_fi_NU()
+#        self.calc_fi_NU()
+        self.build_MBAR_matrices()
         if use_stored_C:
             self.C_all = C_stored
         else:    
@@ -249,55 +265,55 @@ class histogram_reweighting():
 #        print(P_NU_muT.shape)
         return P_NU_muT, N_muT
         
-    def calc_fi_NU(self):
-        N_min, N_max, U_min, U_max = self.N_min, self.N_max, self.U_min, self.U_max
-        N_data_all, U_data_all, K_all = self.N_data_all, self.U_data_all, self.K_all
-        
-        N_range = np.linspace(N_min,N_max,N_max-N_min+1)
-        U_range = np.linspace(U_min,U_max,200)
-        
-        NU_range = np.array([N_range,U_range])
-        
-        fi_NU = np.zeros([len(N_range)-1,len(U_range)-1,len(K_all)])
-        N_flat = np.zeros((len(N_range)-1)*(len(U_range)-1))
-        U_flat = N_flat.copy()
-        #print(len(N_range))
-        #print(len(U_range))
-        #print(len(K_all))
-        #print(fi_NU.shape)
-        for i_R, K_i in enumerate(K_all):
-            N_data_i = N_data_all[i_R]
-            U_data_i = U_data_all[i_R]
-            #print(N_data_i.shape)
-            #print(U_data_i.shape)
-            #print(NU_range.shape)
-            hist_NU = np.histogram2d(N_data_i,U_data_i,NU_range)
-            #print(hist_NU[0].shape)
-            #print(hist_NU[1].shape)
-            #print(hist_NU[2].shape)
-            fi_NU[:,:,i_R] = hist_NU[0]
-            self.K_all[i_R] = np.sum(hist_NU[0])
-        i_NU = 0    
-            
-        for i_N, N_i in enumerate(hist_NU[1][:-1]):
-            for i_U, U_i in enumerate(hist_NU[2][:-1]):
-                N_flat[i_NU] = N_i
-                U_flat[i_NU] = U_i
-                i_NU += 1
-        #print(N_flat.shape)
-        #print(U_flat.shape)
-        #print(fi_NU[:,:,0].shape)
-        
-#        plt.scatter(N_flat,U_flat,c=fi_NU[:,:,0].reshape(len(N_flat)))
-#        plt.xlabel('Number of Molecules')
-#        plt.ylabel('Energy (K)')
-#        plt.show()
-        
-        N_unique = np.unique(N_flat)
-
-        self.C_all = np.zeros(len(K_all))
-        self.N_range = N_range
-        self.fi_NU, self.N_flat, self.U_flat, self.N_unique = fi_NU, N_flat, U_flat, N_unique
+#    def calc_fi_NU(self):
+#        N_min, N_max, U_min, U_max = self.N_min, self.N_max, self.U_min, self.U_max
+#        N_data_all, U_data_all, K_all = self.N_data_all, self.U_data_all, self.K_all
+#        
+#        N_range = np.linspace(N_min,N_max,N_max-N_min+1)
+#        U_range = np.linspace(U_min,U_max,200)
+#        
+#        NU_range = np.array([N_range,U_range])
+#        
+#        fi_NU = np.zeros([len(N_range)-1,len(U_range)-1,len(K_all)])
+#        N_flat = np.zeros((len(N_range)-1)*(len(U_range)-1))
+#        U_flat = N_flat.copy()
+#        #print(len(N_range))
+#        #print(len(U_range))
+#        #print(len(K_all))
+#        #print(fi_NU.shape)
+#        for i_R, K_i in enumerate(K_all):
+#            N_data_i = N_data_all[i_R]
+#            U_data_i = U_data_all[i_R]
+#            #print(N_data_i.shape)
+#            #print(U_data_i.shape)
+#            #print(NU_range.shape)
+#            hist_NU = np.histogram2d(N_data_i,U_data_i,NU_range)
+#            #print(hist_NU[0].shape)
+#            #print(hist_NU[1].shape)
+#            #print(hist_NU[2].shape)
+#            fi_NU[:,:,i_R] = hist_NU[0]
+#            self.K_all[i_R] = np.sum(hist_NU[0])
+#        i_NU = 0    
+#            
+#        for i_N, N_i in enumerate(hist_NU[1][:-1]):
+#            for i_U, U_i in enumerate(hist_NU[2][:-1]):
+#                N_flat[i_NU] = N_i
+#                U_flat[i_NU] = U_i
+#                i_NU += 1
+#        #print(N_flat.shape)
+#        #print(U_flat.shape)
+#        #print(fi_NU[:,:,0].shape)
+#        
+##        plt.scatter(N_flat,U_flat,c=fi_NU[:,:,0].reshape(len(N_flat)))
+##        plt.xlabel('Number of Molecules')
+##        plt.ylabel('Energy (K)')
+##        plt.show()
+#        
+#        N_unique = np.unique(N_flat)
+#
+#        self.C_all = np.zeros(len(K_all))
+#        self.N_range = N_range
+#        self.fi_NU, self.N_flat, self.U_flat, self.N_unique = fi_NU, N_flat, U_flat, N_unique
         
     def min_max_all_data(self):
         
@@ -391,8 +407,7 @@ class histogram_reweighting():
     def plot_VLE(self,Temp_VLE_all):
         
         rhov, rhol = self.calc_rho(Temp_VLE_all)
-#        Psat = self.calc_Psat(Temp_VLE_all)
-        
+
         plt.plot(rhov,Temp_VLE_all,'bo',mfc='None',markersize=8)
         plt.plot(rhol,Temp_VLE_all,'bo',mfc='None',markersize=8,label='This Work')
         plt.plot(rhol_Potoff,Tsat_Potoff,'ks',mfc='None',markersize=8)
@@ -402,69 +417,45 @@ class histogram_reweighting():
         plt.legend()
         plt.show()
         
-#        plt.plot(1000./Temp_VLE_all,np.log10(Psat),'bo',mfc='None',markersize=8,label='This Work')
-#        plt.plot(1000./Tsat_Potoff,np.log10(Psat_Potoff),'ks',mfc='None',markersize=8,label='Potoff et al.')
-#        plt.xlabel('1000/T (K)')
-#        plt.ylabel(r'$\log_{10}(P_v^{sat}/bar)$')
-#        plt.legend()
-#        plt.show()
-#        
-    def calc_Psat(self,Temp_VLE_all):
+    def build_MBAR_matrices(self):
         
-        N_unique, N_cut = self.N_unique, self.N_cut
+        # N_k contains the number of snapshots from each state point, including the unsampled points
+        N_k = np.array(self.K_all.append(0))
+        # N_kn contains all of the Number of molecules in 1-d array
+        Nmol_kn = np.array(self.N_data_all)
+        Nmol_kn = Nmol_kn.reshape([Nmol_kn.size])
         
-        Psat = np.zeros(len(Temp_VLE_all))
+        # u_kn contains all the reduced potential energies in 1-d array, including the unsampled points
+        u_kn = np.zeros(len(self.Temp_all)+1,self.K_all.sum())
         
-#        C_ideal = self.C_all[-1]
-#        
-#        N_data_ideal = self.N_data_all[-1]
-#        Temp_ideal = self.Temp_all[-1]       
-#        N_ideal = np.mean(N_data_ideal)
-        Vbox = self.Vbox_all[0]
-                
-        Temp_ideal = 1000.
-        beta_ideal = 1./Temp_ideal
-#        mu_ideal = self.solve_mu(Temp_ideal,refined=True)
-        mu_ideal = -20000.
-        P_NU_muT, N_muT = self.calc_P_NU_muT(mu_ideal,Temp_ideal)
-        C_ideal = np.log(np.sum(P_NU_muT))
-        N_ideal = np.sum(N_muT[N_unique<=N_cut]*N_unique[N_unique<=N_cut])/np.sum(N_muT[N_unique<=N_cut])
-        print(N_muT[:10])
-        plt.plot(N_unique,N_muT)
-        plt.plot([N_ideal,N_ideal],[0,np.max(N_muT)])
-        plt.xlim([0,10])
-        plt.xlabel('Number of Molecules')
-        plt.ylabel('PDF')
-        plt.show()
-     
-        rho_ideal = N_ideal / Vbox * self.Mw / N_A * gmtokg / Ang3tom3 #[kg/m3]
-        print(C_ideal,N_ideal,rho_ideal)
-        print(self.C_all)
-        P_ideal = N_ideal / beta_ideal / Vbox * kb / Ang3tom3 * Jm3tobar
-        print('Ideal gas pressure at reference is '+str(P_ideal)+' bar')
+        ### Build u_kn
         
-        for iT, Temp_VLE in enumerate(Temp_VLE_all):
-            
-            beta_VLE = 1./Temp_VLE
-            
-            mu_VLE = self.solve_mu(Temp_VLE,refined=True)
-            
-            P_NU_muT, N_muT = self.calc_P_NU_muT(mu_VLE,Temp_VLE)
-            
-            C_VLE = np.log(np.sum(P_NU_muT))
-            
-            print(C_VLE)
-            
-            deltaC = C_VLE - C_ideal
-            
-            print(deltaC)
-            
-            Psat[iT] = (deltaC + N_ideal) / beta_VLE / Vbox
-                
-        Psat *= kb / Ang3tom3 * Jm3tobar
+#u00=U_to_u(U0,T0,mu0,N0)
+#u01=U_to_u(U1,T0,mu0,N1)
+#u10=U_to_u(U0,T1,mu1,N0)
+#u11=U_to_u(U1,T1,mu1,N1)
+#
+#T2 = 480. #[K]
+#mu2 = -4023 #[K]
+#
+#u20 = U_to_u(U0,T2,mu2,N0)
+#u21 = U_to_u(U1,T2,mu2,N1)
+#      
+#N_k = np.array([len(u00),len(u11),0]) # The number of samples from each state
+#N_K = np.sum(N_k)
+#              
+#u_kn = np.zeros([3,len(u00)+len(u11)])
+#u_kn[0,:len(u00)] = u00
+#u_kn[0,len(u00):] = u01     
+#u_kn[1,:len(u00)] = u10
+#u_kn[1,len(u00):] = u11    
+#u_kn[2,:len(u00)] = u20
+#u_kn[2,len(u00):] = u21   
+#     
+#N_kn = np.zeros(len(u00)+len(u11))
+#N_kn[:len(u00)] = N0
+#N_kn[len(u00):] = N1 
         
-        return Psat
-
 filepaths = []
         
 #root_path = 'H:/GOMC_practice/GCMC/hexane_replicates/'
@@ -481,36 +472,151 @@ for iT, Temp in enumerate(Temp_range):
     
     filepaths.append(root_path+Temp+hist_name)
 
-hist_trial = histogram_reweighting(filepaths,use_stored_C=True)
-print(hist_trial.K_all)
-#print(hist_trial.N_min)
-#print(hist_trial.fi_NU)
-hist_trial.plot_histograms()
-C_stored = hist_trial.C_all
+MBAR_GCMC_trial = MBAR_GCMC(filepaths,use_stored_C=False)
+#print(MBAR_GCMC_trial.K_all)
+#print(MBAR_GCMC_trial.N_min)
+#print(MBAR_GCMC_trial.fi_NU)
+MBAR_GCMC_trial.plot_histograms()
+C_stored = MBAR_GCMC_trial.C_all
 #Temp_VLE_all = np.array([420,390,360])
 #Temp_VLE_all = np.array([460,410])
 Temp_VLE_all = np.array([480,450,420,390,360,330])
 #Temp_VLE_all = np.array([480.,330.])
 #Temp_VLE_all = Tsat_Potoff
-#hist_trial.calc_rho(Temp_VLE_all)
-#hist_trial.diff_area_peaks(-4023.,480.,plot=True)
-hist_trial.plot_VLE(Temp_VLE_all)
-#Temp_VLE_all = np.array([320])
-#for Temp_VLE in Temp_VLE_all:
-#    
-#    mu_VLE = hist_trial.solve_mu(Temp_VLE,refined=True)
-#    print(mu_VLE)
-#    hist_trial.diff_area_peaks(mu_VLE,Temp_VLE,plot=True)
-#mu_range = np.linspace(-4100,-3900,200)
-#diff_range = np.zeros(len(mu_range))
-#
-#for i_mu, mu_i in enumerate(mu_range):
-#    
-#    diff_range[i_mu] = hist_trial.diff_area_peaks(mu_i,Temp_VLE)
-#    
-#plt.plot(mu_range,diff_range)
-#plt.xlabel('mu (K)')
-#plt.ylabel('Difference areas')
-#plt.title('Temperature = '+str(Temp_VLE)+' K')
-#plt.ylim([diff_range.min(),-diff_range.min()])
-#plt.show()
+#MBAR_GCMC_trial.calc_rho(Temp_VLE_all)
+#MBAR_GCMC_trial.diff_area_peaks(-4023.,480.,plot=True)
+MBAR_GCMC_trial.plot_VLE(Temp_VLE_all)
+
+assert 1 == 0
+
+#### Working for two states
+T0 = 510. #[K]
+mu0 = -4127. #[K]
+Lbox = 35. #[Angstrom]
+Vbox = Lbox**3 #[Angstrom^3]
+
+T1 = 480. #[K]
+mu1 = -3980 #[K]
+
+NU0 = np.loadtxt('H:/MBAR_GCMC/hexane_Potoff/510/his1a.dat',skiprows=1)
+NU1 = np.loadtxt('H:/MBAR_GCMC/hexane_Potoff/480/his4a.dat',skiprows=1)
+
+U0 = NU0[:,1]
+N0 = NU0[:,0]
+
+U1 = NU1[:,1]
+N1 = NU1[:,0]
+
+u00=U_to_u(U0,T0,mu0,N0)
+u01=U_to_u(U1,T0,mu0,N1)
+u10=U_to_u(U0,T1,mu1,N0)
+u11=U_to_u(U1,T1,mu1,N1)
+
+T2 = 480. #[K]
+mu2 = -4023 #[K]
+
+u20 = U_to_u(U0,T2,mu2,N0)
+u21 = U_to_u(U1,T2,mu2,N1)
+      
+N_k = np.array([len(u00),len(u11),0]) # The number of samples from each state
+N_K = np.sum(N_k)
+              
+u_kn = np.zeros([3,len(u00)+len(u11)])
+u_kn[0,:len(u00)] = u00
+u_kn[0,len(u00):] = u01     
+u_kn[1,:len(u00)] = u10
+u_kn[1,len(u00):] = u11    
+u_kn[2,:len(u00)] = u20
+u_kn[2,len(u00):] = u21   
+     
+N_kn = np.zeros(len(u00)+len(u11))
+N_kn[:len(u00)] = N0
+N_kn[len(u00):] = N1     
+              
+mbar = MBAR(u_kn,N_k)
+
+Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)
+print "effective sample numbers"
+print (mbar.computeEffectiveSampleNumber())
+print('\nWhich is approximately '+str(mbar.computeEffectiveSampleNumber()/N_K*100.)+'%')
+
+NAk, dNAk = mbar.computeExpectations(N_kn) # Average number of molecules
+NAk_alt = np.zeros(len(N_k))
+for i in range(len(N_k)):
+    NAk_alt[i] = np.sum(mbar.W_nk[:,i]*N_kn)
+    
+print(NAk)
+
+Nscan = np.arange(60,100)
+
+sqdeltaW0 = np.zeros(len(Nscan))
+
+for iN, Ni in enumerate(Nscan):
+
+    sumWliq = np.sum(mbar.W_nk[:,0][N_kn>Ni])
+    sumWvap = np.sum(mbar.W_nk[:,0][N_kn<=Ni])
+    sqdeltaW0[iN] = (sumWliq - sumWvap)**2
+
+plt.plot(Nscan,sqdeltaW0,'ko')
+plt.xlabel(r'$N_{\rm cut}$')
+plt.ylabel(r'$(\Delta W_0^{\rm sat})^2$')
+plt.show()
+                        
+Ncut = Nscan[np.argmin(sqdeltaW0)]
+
+mu_scan = np.linspace(-4150,-3950,200)
+sqdeltaWi = np.zeros(len(mu_scan))
+Nliq = np.zeros(len(mu_scan))
+Nvap = np.zeros(len(mu_scan))
+
+Ti = 500 #[K]
+nStates = len(N_k)
+                                     
+for imu, mui in enumerate(mu_scan):
+  
+    ui0 = U_to_u(U0,Ti,mui,N0) #Keeping epsilon and sigma constant for now
+    ui1 = U_to_u(U1,Ti,mui,N1) #Keeping epsilon and sigma constant for now
+                
+    u_kn[nStates,:len(u00)] = ui0
+    u_kn[nStates,len(u00):] = ui1
+    
+    mbar = MBAR(u_kn,N_k)
+    
+    (Deltaf_ij, dDeltaf_ij, Theta_ij) = mbar.getFreeEnergyDifferences(return_theta=True)
+    
+    sumWliq = np.sum(mbar.W_nk[:,nStates][N_kn>Ncut])
+    sumWvap = np.sum(mbar.W_nk[:,nStates][N_kn<=Ncut])
+    sqdeltaWi[imu] = (sumWliq - sumWvap)**2
+
+#    Nliq[imu], dNliq = mbar.computeExpectations(N0[N0>Ncut])
+#    Nvap[imu], dNvap = mbar.computeExpectations(N0[N0<Ncut])
+    
+    Nliq[imu] = np.sum(mbar.W_nk[:,nStates][N_kn>Ncut]*N_kn[N_kn>Ncut])/sumWliq #Must renormalize by the liquid or vapor phase
+    Nvap[imu] = np.sum(mbar.W_nk[:,nStates][N_kn<=Ncut]*N_kn[N_kn<=Ncut])/sumWvap
+          
+plt.plot(mu_scan,sqdeltaWi,'k-')
+plt.xlabel(r'$\mu$ (K)')
+plt.ylabel(r'$(\Delta W_1^{\rm sat})^2$')
+plt.show()
+
+plt.plot(mu_scan,Nliq,'r-',label='Liquid')
+plt.plot(mu_scan,Nvap,'b--',label='Vapor')
+plt.plot([mu_scan[np.argmin(sqdeltaWi)],mu_scan[np.argmin(sqdeltaWi)]],[0,np.max(Nliq)],'k--',label='Equilibrium')
+plt.xlabel(r'$\mu$ (K)')
+plt.ylabel(r'$N$')
+plt.legend()
+plt.show()
+
+rholiq = Nliq[np.argmin(sqdeltaWi)]/Vbox * Mw_hexane / N_A * gmtokg / Ang3tom3 #[kg/m3]
+rhovap = Nvap[np.argmin(sqdeltaWi)]/Vbox * Mw_hexane / N_A * gmtokg / Ang3tom3 #[kg/m3]
+           
+plt.plot(rhovap,Ti,'bo')
+plt.plot(rholiq,Ti,'ro')
+plt.plot(rhov_Potoff,Tsat_Potoff,'ks',mfc='None')
+plt.plot(rhol_Potoff,Tsat_Potoff,'ks',mfc='None')
+plt.xlabel(r'$\rho$ (kg/m$^3$)')
+plt.ylabel(r'$T$ (K)')
+plt.xlim([0,650])
+plt.ylim([320,520])
+plt.show()
+###

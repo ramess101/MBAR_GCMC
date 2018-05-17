@@ -49,60 +49,55 @@ mu0 = -4127. #[K]
 Lbox = 35. #[Angstrom]
 Vbox = Lbox**3 #[Angstrom^3]
 
+T1 = 480. #[K]
+mu1 = -3980 #[K]
+
 NU0 = np.loadtxt('H:/MBAR_GCMC/hexane_Potoff/510/his1a.dat',skiprows=1)
+NU1 = np.loadtxt('H:/MBAR_GCMC/hexane_Potoff/480/his4a.dat',skiprows=1)
 
 U0 = NU0[:,1]
 N0 = NU0[:,0]
 
-u0=U_to_u(U0,T0,mu0,N0)
+U1 = NU1[:,1]
+N1 = NU1[:,0]
 
-T1 = 500 #[K]
-mu1 = -4080 #[K]
+u00=U_to_u(U0,T0,mu0,N0)
+u01=U_to_u(U1,T0,mu0,N1)
+u10=U_to_u(U0,T1,mu1,N0)
+u11=U_to_u(U1,T1,mu1,N1)
 
-u1 = U_to_u(U0,T1,mu1,N0) #Keeping epsilon and sigma constant for now
+T2 = 480. #[K]
+mu2 = -4023 #[K]
 
-T2 = 500 #[K]
-mu2 = -4000 #[K]
-
-u2 = U_to_u(U0,T2,mu2,N0) #Keeping epsilon and sigma constant for now   
-
-T3 = 500 #[K]
-mu3 = -4127 #[K]
-
-u3 = U_to_u(U0,T3,mu3,N0) #Keeping epsilon and sigma constant for now    
-
-T4 = 300 #[K]
-mu4 = -3650 #[K]
-
-u4 = U_to_u(U0,T4,mu4,N0) #Keeping epsilon and sigma constant for now  
-                    
-plt.hist(N0,bins=np.arange(np.min(N0),np.max(N0)))
-plt.xlabel(r'$N$')
-plt.ylabel('Count')
-plt.show()           
-           
-plt.plot(N0,U0,'ko',markersize=0.05,alpha=0.5)
-plt.xlabel(r'$N$')
-plt.ylabel(r'$U$')           
-plt.show()
+u20 = U_to_u(U0,T2,mu2,N0)
+u21 = U_to_u(U1,T2,mu2,N1)
       
-# Using just the Model 0 mdrun samples
-N_k = np.array([len(u0),0,0,0,0]) # The number of samples from the different states
-
-u_kn = np.array([u0,u1,u2,u3,u4])
-Nmol_kn = N0
-
+N_k = np.array([len(u00),len(u11),0]) # The number of samples from each state
+N_K = np.sum(N_k)
+              
+u_kn = np.zeros([3,len(u00)+len(u11)])
+u_kn[0,:len(u00)] = u00
+u_kn[0,len(u00):] = u01     
+u_kn[1,:len(u00)] = u10
+u_kn[1,len(u00):] = u11    
+u_kn[2,:len(u00)] = u20
+u_kn[2,len(u00):] = u21   
+     
+N_kn = np.zeros(len(u00)+len(u11))
+N_kn[:len(u00)] = N0
+N_kn[len(u00):] = N1     
+              
 mbar = MBAR(u_kn,N_k)
 
-(Deltaf_ij, dDeltaf_ij, Theta_ij) = mbar.getFreeEnergyDifferences(return_theta=True)
+Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)
 print "effective sample numbers"
-print (mbar.computeEffectiveSampleNumber()/N_k[0]*100.)
-print('\nWhich is approximately '+str(mbar.computeEffectiveSampleNumber()/N_k[0]*100.)+'%')
+print (mbar.computeEffectiveSampleNumber())
+print('\nWhich is approximately '+str(mbar.computeEffectiveSampleNumber()/N_K*100.)+'%')
 
-NAk, dNAk = mbar.computeExpectations(N0) # Average number of molecules
+NAk, dNAk = mbar.computeExpectations(N_kn) # Average number of molecules
 NAk_alt = np.zeros(len(N_k))
 for i in range(len(N_k)):
-    NAk_alt[i] = np.sum(mbar.W_nk[:,i]*N0)
+    NAk_alt[i] = np.sum(mbar.W_nk[:,i]*N_kn)
     
 print(NAk)
 
@@ -112,8 +107,8 @@ sqdeltaW0 = np.zeros(len(Nscan))
 
 for iN, Ni in enumerate(Nscan):
 
-    sumWliq = np.sum(mbar.W_nk[:,0][N0>Ni])
-    sumWvap = np.sum(mbar.W_nk[:,0][N0<=Ni])
+    sumWliq = np.sum(mbar.W_nk[:,0][N_kn>Ni])
+    sumWvap = np.sum(mbar.W_nk[:,0][N_kn<=Ni])
     sqdeltaW0[iN] = (sumWliq - sumWvap)**2
 
 plt.plot(Nscan,sqdeltaW0,'ko')
@@ -129,29 +124,29 @@ Nliq = np.zeros(len(mu_scan))
 Nvap = np.zeros(len(mu_scan))
 
 Ti = 500 #[K]
-
+nStates = len(N_k)
+                                     
 for imu, mui in enumerate(mu_scan):
   
-    ui = U_to_u(U0,Ti,mui,N0) #Keeping epsilon and sigma constant for now
+    ui0 = U_to_u(U0,Ti,mui,N0) #Keeping epsilon and sigma constant for now
+    ui1 = U_to_u(U1,Ti,mui,N1) #Keeping epsilon and sigma constant for now
                 
-    N_k = np.array([len(u0),0]) # The number of samples from the two states           
-               
-    u_kn = np.array([u0,ui])
-    Nmol_kn = N0
+    u_kn[nStates,:len(u00)] = ui0
+    u_kn[nStates,len(u00):] = ui1
     
     mbar = MBAR(u_kn,N_k)
     
     (Deltaf_ij, dDeltaf_ij, Theta_ij) = mbar.getFreeEnergyDifferences(return_theta=True)
     
-    sumWliq = np.sum(mbar.W_nk[:,1][N0>Ncut])
-    sumWvap = np.sum(mbar.W_nk[:,1][N0<=Ncut])
+    sumWliq = np.sum(mbar.W_nk[:,nStates][N_kn>Ncut])
+    sumWvap = np.sum(mbar.W_nk[:,nStates][N_kn<=Ncut])
     sqdeltaWi[imu] = (sumWliq - sumWvap)**2
 
 #    Nliq[imu], dNliq = mbar.computeExpectations(N0[N0>Ncut])
 #    Nvap[imu], dNvap = mbar.computeExpectations(N0[N0<Ncut])
     
-    Nliq[imu] = np.sum(mbar.W_nk[:,1][N0>Ncut]*N0[N0>Ncut])/sumWliq #Must renormalize by the liquid or vapor phase
-    Nvap[imu] = np.sum(mbar.W_nk[:,1][N0<=Ncut]*N0[N0<=Ncut])/sumWvap
+    Nliq[imu] = np.sum(mbar.W_nk[:,nStates][N_kn>Ncut]*N_kn[N_kn>Ncut])/sumWliq #Must renormalize by the liquid or vapor phase
+    Nvap[imu] = np.sum(mbar.W_nk[:,nStates][N_kn<=Ncut]*N_kn[N_kn<=Ncut])/sumWvap
           
 plt.plot(mu_scan,sqdeltaWi,'k-')
 plt.xlabel(r'$\mu$ (K)')
