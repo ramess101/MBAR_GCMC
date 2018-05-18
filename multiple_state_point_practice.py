@@ -45,7 +45,7 @@ def U_to_u(Uint,Temp,mu,Nmol):
     Ureduced = beta*(Uint) - beta*mu*Nmol  #[dimensionless]
     return Ureduced
 
-root_path = 'H:/MBAR_GCMC/hexane_Potoff/'
+root_path = 'hexane_Potoff/'
 Temp_range = ['510','470','430','480','450','420','390','360','330']
 hist_num=['1','2','3','4','5','6','7','8','9']
 
@@ -55,7 +55,7 @@ hist_num=['1','2','3','4','5','6','7','8','9']
 nSnapshots=90000
 
 U_all = np.zeros([len(Temp_range),nSnapshots])
-N_all = np.zeros([len(Temp_range),nSnapshots])
+Nmol_all = np.zeros([len(Temp_range),nSnapshots])
 
 for iT, Temp in enumerate(Temp_range):
     
@@ -67,7 +67,7 @@ for iT, Temp in enumerate(Temp_range):
     N = NU[:,0]
     
     U_all[iT] = U
-    N_all[iT] = N
+    Nmol_all[iT] = N
          
 Temp_sim = np.array([510,470,430,480,450,420,390,360,330])  
 mu_sim = np.array([-4127., -4127., -4127., -3980., -3880., -3800., -3725., -3675.,-3625.])  
@@ -78,18 +78,13 @@ mu_sim = np.array([-4127., -4127., -4127., -3980., -3880., -3800., -3725., -3675
 Lbox = 35. #[Angstrom]
 Vbox = Lbox**3 #[Angstrom^3]
 
-#        # N_k contains the number of snapshots from each state point, including the unsampled points
-#        N_k = np.array(self.K_all.append(0))
-#        # N_kn contains all of the Number of molecules in 1-d array
-#        Nmol_kn = np.array(self.N_data_all)
-#        Nmol_kn = Nmol_kn.reshape([Nmol_kn.size])
-#        
-#        # u_kn contains all the reduced potential energies in 1-d array, including the unsampled points
-#        u_kn = np.zeros(len(self.Temp_all)+1,self.K_all.sum())
+## N_k contains the number of snapshots from each state point simulated
+## Nmol_kn contains all of the Number of molecules in 1-d array
+## u_kn_sim contains all the reduced potential energies just for the simulated points
 
 N_k = [nSnapshots]*len(Temp_sim)
 sumN_k = nSnapshots*len(Temp_sim)
-Nmol_kn = N_all.reshape([N_all.size])
+Nmol_kn = Nmol_all.reshape([Nmol_all.size])
 u_kn_sim = np.zeros([len(Temp_sim),nSnapshots*len(Temp_sim)])
 
 for iT, (Temp, mu) in enumerate(zip(Temp_sim, mu_sim)):
@@ -99,32 +94,14 @@ for iT, (Temp, mu) in enumerate(zip(Temp_sim, mu_sim)):
         jstart = nSnapshots*jT
         jend = jstart+nSnapshots
         
-        u_kn_sim[iT,jstart:jend] = U_to_u(U_all[jT],Temp,mu,N_all[jT])
+        u_kn_sim[iT,jstart:jend] = U_to_u(U_all[jT],Temp,mu,Nmol_all[jT])
         
 mbar = MBAR(u_kn_sim,N_k)
 
 Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)[0]
-#print "effective sample numbers"
-#print (mbar.computeEffectiveSampleNumber())
-#print('\nWhich is approximately '+str(mbar.computeEffectiveSampleNumber()/sumN_k*100.)+'%')
 
 f_k_sim = Deltaf_ij[0,:]
-
-#mbar2 = MBAR(u_kn_sim,N_k,initial_f_k=f_k_sim)
-#
-#Deltaf_ij2 = mbar2.getFreeEnergyDifferences(return_theta=False)[0]
-#print "effective sample numbers"
-#print (mbar2.computeEffectiveSampleNumber())
-#print('\nWhich is approximately '+str(mbar2.computeEffectiveSampleNumber()/sumN_k*100.)+'%')
-
-#Nmolk, dNmolk = mbar.computeExpectations(Nmol_kn) # Average number of molecules
-#Nmolk_alt = np.zeros(len(N_k))
-#for i in range(len(N_k)):
-#    Nmolk_alt[i] = np.sum(mbar.W_nk[:,i]*Nmol_kn)
-
-#print(Nmolk)
-#print(Nmolk_alt)
-
+print(f_k_sim)
 ### This was how I want to implement it, but I am not sure how to make 
 Temp_VLE = np.array([500,490,480,470,460,450,440,430,420,410,400,390,380,370,360,350,340,330,320])
 #Temp_VLE = np.array([450,400,370,320])
@@ -137,57 +114,8 @@ u_kn = np.concatenate((u_kn_sim,u_kn_VLE))
 
 f_k_guess = np.concatenate((f_k_sim,np.zeros(len(Temp_VLE))))
 
-#np.array([-3900.]*len(Temp_VLE))
-
-#for iT in range(len(Temp_sim)):
-#    
-#    istart = nSnapshots*iT
-#    iend = istart+nSnapshots
-#    
-#    for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_VLE)):
-#        
-#        u_kn[len(Temp_sim)+jT,istart:iend] = U_to_u(U_all[iT],Temp,mu,N_all[iT])
-#
-#mbar = MBAR(u_kn,N_k)
-#Ncut = 81
-#sqdeltaWi = np.zeros(len(Temp_VLE))
-#
-#for jT in range(len(Temp_VLE)):
-#    sumWliq = np.sum(mbar.W_nk[:,jT][Nmol_kn>Ncut])
-#    sumWvap = np.sum(mbar.W_nk[:,jT][Nmol_kn<=Ncut])
-#    sqdeltaWi[jT] = (sumWliq - sumWvap)**2
-#             
-#print(sqdeltaWi)
-
-#def sqdeltaW(mu_VLE):
-#
-#    for iT in range(len(Temp_sim)):
-#        
-#        istart = nSnapshots*iT
-#        iend = istart+nSnapshots
-#        
-#        for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_VLE)):
-#            
-#            u_kn[len(Temp_sim)+jT,istart:iend] = U_to_u(U_all[iT],Temp,mu,N_all[iT])
-#    
-#    mbar = MBAR(u_kn,N_k,initial_f_k=f_k_guess)
-#    Ncut = 81
-#    sqdeltaW = np.zeros(len(Temp_VLE))
-#    
-#    for jT in range(len(Temp_VLE)):
-#        sumWliq = np.sum(mbar.W_nk[:,jT][Nmol_kn>Ncut])
-#        sumWvap = np.sum(mbar.W_nk[:,jT][Nmol_kn<=Ncut])
-#        sqdeltaW[jT] = (sumWliq - sumWvap)**2
-#       
-#### Could be advantageous to store this. But needs to be outside the function. Either as a global variable or within the optimizer    
-#### I guess within the class I can store this as self.f_k_guess and update it each time the function is called     
-##    Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)[0]
-##    f_k_guess = Deltaf_ij[0,:]
-#                 
-#    return sqdeltaW
-
-U_all_flat = U_all.flatten()
-N_all_flat = N_all.flatten()
+U_flat = U_all.flatten()
+Nmol_flat = Nmol_all.flatten()
 
 jT0 = len(Temp_sim)
 Ncut = 81
@@ -196,23 +124,45 @@ def sqdeltaW(mu_VLE):
     
     for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_VLE)):
         
-        u_kn[jT0+jT,:] = U_to_u(U_all_flat,Temp,mu,N_all_flat)
-    
+        u_kn[jT0+jT,:] = U_to_u(U_flat,Temp,mu,Nmol_flat)
+#    print(u_kn.shape,np.array(N_k).shape,f_k_guess.shape)
     mbar = MBAR(u_kn,N_k,initial_f_k=f_k_guess)
 
-    sqdeltaW_VLE = np.zeros(len(Temp_VLE))
-    
-    for jT in range(len(Temp_VLE)):
-        sumWliq = np.sum(mbar.W_nk[:,jT0+jT][Nmol_kn>Ncut])
-        sumWvap = np.sum(mbar.W_nk[:,jT0+jT][Nmol_kn<=Ncut])
-        sqdeltaW_VLE[jT] = (sumWliq - sumWvap)**2
-       
+    sumWliq = np.sum(mbar.W_nk[:,jT0:][Nmol_flat>Ncut],axis=0)
+    sumWvap = np.sum(mbar.W_nk[:,jT0:][Nmol_flat<=Ncut],axis=0)
+    sqdeltaW_VLE = (sumWliq-sumWvap)**2
+
 ### Could be advantageous to store this. But needs to be outside the function. Either as a global variable or within the optimizer    
 ### I guess within the class I can store this as self.f_k_guess and update it each time the function is called     
 #    Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)[0]
 #    f_k_guess = Deltaf_ij[0,:]
                  
     return sqdeltaW_VLE
+
+### This approach is much slower, i.e. performing the MBAR analysis for each temperature individually
+#N_k = [nSnapshots]*len(Temp_sim)
+#N_k.extend([0])
+#
+#u_kn_VLE = np.zeros([1,nSnapshots*len(Temp_sim)])
+#u_kn = np.concatenate((u_kn_sim,u_kn_VLE))
+#
+#f_k_guess = np.concatenate((f_k_sim,np.zeros(1)))
+#                    
+#def sqdeltaW(mu_VLE):
+#    
+#    sqdeltaW_VLE = np.zeros(len(Temp_VLE))
+#    
+#    for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_VLE)):
+#        
+#        u_kn[-1,:] = U_to_u(U_all_flat,Temp,mu,N_all_flat)
+#    
+#        mbar = MBAR(u_kn,N_k,initial_f_k=f_k_guess)
+#
+#        sumWliq = np.sum(mbar.W_nk[:,-1][Nmol_kn>Ncut])
+#        sumWvap = np.sum(mbar.W_nk[:,-1][Nmol_kn<=Ncut])
+#        sqdeltaW_VLE[jT] = (sumWliq - sumWvap)**2
+#                    
+#    return sqdeltaW_VLE
 
 ### Optimization of mu
 ### Bounds for mu
@@ -226,25 +176,38 @@ Temp_sim_mu_high = Temp_sim[np.argmax(mu_sim)]
 mu_guess = lambda Temp: mu_sim_high + (mu_sim_low - mu_sim_high)/(Temp_sim_mu_low-Temp_sim_mu_high) * (Temp-Temp_sim_mu_high)
 
 mu_VLE_guess = mu_guess(Temp_VLE)
+mu_VLE_guess[mu_VLE_guess<mu_sim.min()] = mu_sim.min()
+mu_VLE_guess[mu_VLE_guess>mu_sim.max()] = mu_sim.max()
+print(mu_VLE_guess)
+mu_lower_bound = mu_sim_low*1.005
+mu_upper_bound = mu_sim_high*0.995
 
 print(r'$(\Delta W)^2$ for $\mu_{\rm guess}$ =')
 print(sqdeltaW(mu_VLE_guess))
 
-mu_opt = GOLDEN_multi(sqdeltaW,mu_VLE_guess,mu_sim_low,mu_sim_high,TOL=0.001,maxit=30)
+### Optimize mu
+
+mu_opt = GOLDEN_multi(sqdeltaW,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.0001,maxit=30)
 sqdeltaW_opt = sqdeltaW(mu_opt)
 
-plt.plot(Temp_VLE,mu_opt,'k-')
-plt.plot(Temp_sim,mu_sim,'ro',mfc='None')
+plt.plot(Temp_VLE,mu_opt,'k-',label=r'$\mu_{\rm opt}$')
+plt.plot(Temp_sim,mu_sim,'ro',mfc='None',label='Simulation')
+plt.plot(Temp_VLE,mu_VLE_guess,'b--',label=r'$\mu_{\rm guess}$')
 plt.xlabel(r'$T$ (K)')
 plt.ylabel(r'$\mu_{\rm opt}$ (K)')
 plt.xlim([300,550])
 plt.ylim([-4200,-3600])
+plt.legend()
 plt.show()
 
 plt.plot(Temp_VLE,sqdeltaW_opt,'ko')
 plt.xlabel(r'$T$ (K)')
 plt.ylabel(r'$(\Delta W^{\rm sat})^2$')
 plt.show()
+
+print("Effective sample numbers")
+print (mbar.computeEffectiveSampleNumber())
+print('\nWhich is approximately '+str(mbar.computeEffectiveSampleNumber()/sumN_k*100.)+'% of the total snapshots')
 
 ###Scan of mu
 #mu_scan = np.linspace(-4120,-4000,20)
@@ -259,21 +222,18 @@ plt.show()
 #    
 #plt.plot(mu_scan,sqdeltaW_all.T)
 #plt.show()
-
-Nliq = np.zeros(len(Temp_VLE))
-Nvap = np.zeros(len(Temp_VLE))
     
 for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_opt)):
     
-    u_kn[jT0+jT,:] = U_to_u(U_all_flat,Temp,mu,N_all_flat)
+    u_kn[jT0+jT,:] = U_to_u(U_flat,Temp,mu,Nmol_flat)
     
-    mbar = MBAR(u_kn,N_k,initial_f_k=f_k_guess)
+mbar = MBAR(u_kn,N_k,initial_f_k=f_k_guess)
     
-    sumWliq = np.sum(mbar.W_nk[:,jT0+jT][Nmol_kn>Ncut])
-    sumWvap = np.sum(mbar.W_nk[:,jT0+jT][Nmol_kn<=Ncut])
+sumWliq = np.sum(mbar.W_nk[:,jT0:][Nmol_kn>Ncut],axis=0)
+sumWvap = np.sum(mbar.W_nk[:,jT0:][Nmol_kn<=Ncut],axis=0)
 
-    Nliq[jT] = np.sum(mbar.W_nk[:,jT0+jT][Nmol_kn>Ncut]*Nmol_kn[Nmol_kn>Ncut])/sumWliq #Must renormalize by the liquid or vapor phase
-    Nvap[jT] = np.sum(mbar.W_nk[:,jT0+jT][Nmol_kn<=Ncut]*Nmol_kn[Nmol_kn<=Ncut])/sumWvap
+Nliq = np.sum(mbar.W_nk[:,jT0:][Nmol_kn>Ncut].T*Nmol_kn[Nmol_kn>Ncut],axis=1)/sumWliq #Must renormalize by the liquid or vapor phase
+Nvap = np.sum(mbar.W_nk[:,jT0:][Nmol_kn<=Ncut].T*Nmol_kn[Nmol_kn<=Ncut],axis=1)/sumWvap
 
 rholiq = Nliq/Vbox * Mw_hexane / N_A * gmtokg / Ang3tom3 #[kg/m3]
 rhovap = Nvap/Vbox * Mw_hexane / N_A * gmtokg / Ang3tom3 #[kg/m3]
@@ -289,148 +249,3 @@ plt.ylim([320,520])
 plt.legend()
 plt.show()
  
-    
-#for imu, mui in enumerate(mu_scan):
-#  
-#    ui0 = U_to_u(U0,Ti,mui,N0) #Keeping epsilon and sigma constant for now
-#    ui1 = U_to_u(U1,Ti,mui,N1) #Keeping epsilon and sigma constant for now
-#                
-#    u_kn[nStates,:len(u00)] = ui0
-#    u_kn[nStates,len(u00):] = ui1
-#    
-#    mbar = MBAR(u_kn,N_k)
-#    
-#    (Deltaf_ij, dDeltaf_ij, Theta_ij) = mbar.getFreeEnergyDifferences(return_theta=True)
-#    
-#    sumWliq = np.sum(mbar.W_nk[:,nStates][N_kn>Ncut])
-#    sumWvap = np.sum(mbar.W_nk[:,nStates][N_kn<=Ncut])
-#    sqdeltaWi[imu] = (sumWliq - sumWvap)**2
-#
-##    Nliq[imu], dNliq = mbar.computeExpectations(N0[N0>Ncut])
-##    Nvap[imu], dNvap = mbar.computeExpectations(N0[N0<Ncut])
-#    
-#    Nliq[imu] = np.sum(mbar.W_nk[:,nStates][N_kn>Ncut]*N_kn[N_kn>Ncut])/sumWliq #Must renormalize by the liquid or vapor phase
-#    Nvap[imu] = np.sum(mbar.W_nk[:,nStates][N_kn<=Ncut]*N_kn[N_kn<=Ncut])/sumWvap
-
-
-
-#        
-#
-#T0 = 510. #[K]
-#mu0 = -4127. #[K]
-#
-#T1 = 480. #[K]
-#mu1 = -3980 #[K]
-#
-#u00=U_to_u(U0,T0,mu0,N0)
-#u01=U_to_u(U1,T0,mu0,N1)
-#u10=U_to_u(U0,T1,mu1,N0)
-#u11=U_to_u(U1,T1,mu1,N1)
-#
-#T2 = 480. #[K]
-#mu2 = -4023 #[K]
-#
-#u20 = U_to_u(U0,T2,mu2,N0)
-#u21 = U_to_u(U1,T2,mu2,N1)
-#      
-#N_k = np.array([len(u00),len(u11),0]) # The number of samples from each state
-#N_K = np.sum(N_k)
-#              
-#u_kn = np.zeros([3,len(u00)+len(u11)])
-#u_kn[0,:len(u00)] = u00
-#u_kn[0,len(u00):] = u01     
-#u_kn[1,:len(u00)] = u10
-#u_kn[1,len(u00):] = u11    
-#u_kn[2,:len(u00)] = u20
-#u_kn[2,len(u00):] = u21   
-#     
-#N_kn = np.zeros(len(u00)+len(u11))
-#N_kn[:len(u00)] = N0
-#N_kn[len(u00):] = N1     
-#              
-#mbar = MBAR(u_kn,N_k)
-#
-#Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)
-#print "effective sample numbers"
-#print (mbar.computeEffectiveSampleNumber())
-#print('\nWhich is approximately '+str(mbar.computeEffectiveSampleNumber()/N_K*100.)+'%')
-#
-#NAk, dNAk = mbar.computeExpectations(N_kn) # Average number of molecules
-#NAk_alt = np.zeros(len(N_k))
-#for i in range(len(N_k)):
-#    NAk_alt[i] = np.sum(mbar.W_nk[:,i]*N_kn)
-#    
-#print(NAk)
-#
-#Nscan = np.arange(60,100)
-#
-#sqdeltaW0 = np.zeros(len(Nscan))
-#
-#for iN, Ni in enumerate(Nscan):
-#
-#    sumWliq = np.sum(mbar.W_nk[:,0][N_kn>Ni])
-#    sumWvap = np.sum(mbar.W_nk[:,0][N_kn<=Ni])
-#    sqdeltaW0[iN] = (sumWliq - sumWvap)**2
-#
-#plt.plot(Nscan,sqdeltaW0,'ko')
-#plt.xlabel(r'$N_{\rm cut}$')
-#plt.ylabel(r'$(\Delta W_0^{\rm sat})^2$')
-#plt.show()
-#                        
-#Ncut = Nscan[np.argmin(sqdeltaW0)]
-#
-#mu_scan = np.linspace(-4150,-3950,200)
-#sqdeltaWi = np.zeros(len(mu_scan))
-#Nliq = np.zeros(len(mu_scan))
-#Nvap = np.zeros(len(mu_scan))
-#
-#Ti = 460 #[K]
-#nStates = len(N_k)-1
-#                                     
-#for imu, mui in enumerate(mu_scan):
-#  
-#    ui0 = U_to_u(U0,Ti,mui,N0) #Keeping epsilon and sigma constant for now
-#    ui1 = U_to_u(U1,Ti,mui,N1) #Keeping epsilon and sigma constant for now
-#                
-#    u_kn[nStates,:len(u00)] = ui0
-#    u_kn[nStates,len(u00):] = ui1
-#    
-#    mbar = MBAR(u_kn,N_k)
-#    
-#    (Deltaf_ij, dDeltaf_ij, Theta_ij) = mbar.getFreeEnergyDifferences(return_theta=True)
-#    
-#    sumWliq = np.sum(mbar.W_nk[:,nStates][N_kn>Ncut])
-#    sumWvap = np.sum(mbar.W_nk[:,nStates][N_kn<=Ncut])
-#    sqdeltaWi[imu] = (sumWliq - sumWvap)**2
-#
-##    Nliq[imu], dNliq = mbar.computeExpectations(N0[N0>Ncut])
-##    Nvap[imu], dNvap = mbar.computeExpectations(N0[N0<Ncut])
-#    
-#    Nliq[imu] = np.sum(mbar.W_nk[:,nStates][N_kn>Ncut]*N_kn[N_kn>Ncut])/sumWliq #Must renormalize by the liquid or vapor phase
-#    Nvap[imu] = np.sum(mbar.W_nk[:,nStates][N_kn<=Ncut]*N_kn[N_kn<=Ncut])/sumWvap
-#          
-#plt.plot(mu_scan,sqdeltaWi,'k-')
-#plt.xlabel(r'$\mu$ (K)')
-#plt.ylabel(r'$(\Delta W_1^{\rm sat})^2$')
-#plt.show()
-#
-#plt.plot(mu_scan,Nliq,'r-',label='Liquid')
-#plt.plot(mu_scan,Nvap,'b--',label='Vapor')
-#plt.plot([mu_scan[np.argmin(sqdeltaWi)],mu_scan[np.argmin(sqdeltaWi)]],[0,np.max(Nliq)],'k--',label='Equilibrium')
-#plt.xlabel(r'$\mu$ (K)')
-#plt.ylabel(r'$N$')
-#plt.legend()
-#plt.show()
-#
-#rholiq = Nliq[np.argmin(sqdeltaWi)]/Vbox * Mw_hexane / N_A * gmtokg / Ang3tom3 #[kg/m3]
-#rhovap = Nvap[np.argmin(sqdeltaWi)]/Vbox * Mw_hexane / N_A * gmtokg / Ang3tom3 #[kg/m3]
-#           
-#plt.plot(rhovap,Ti,'bo')
-#plt.plot(rholiq,Ti,'ro')
-#plt.plot(rhov_Potoff,Tsat_Potoff,'ks',mfc='None')
-#plt.plot(rhol_Potoff,Tsat_Potoff,'ks',mfc='None')
-#plt.xlabel(r'$\rho$ (kg/m$^3$)')
-#plt.ylabel(r'$T$ (K)')
-#plt.xlim([0,650])
-#plt.ylim([320,520])
-#plt.show()

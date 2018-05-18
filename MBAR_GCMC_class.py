@@ -9,6 +9,7 @@ from scipy.optimize import minimize
 from pymbar import MBAR
 import sys
 import pdb
+from Golden_search_multi import GOLDEN_multi
 
 # Physical constants
 N_A = 6.02214086e23 #[/mol]
@@ -50,13 +51,13 @@ class MBAR_GCMC():
         self.extract_all_data()
         self.min_max_all_data()
 #        self.calc_fi_NU()
-        self.build_MBAR_matrices()
-        if use_stored_C:
-            self.C_all = C_stored
-        else:    
-            self.solve_C()
-        self.N_cut = 70
-        self.Mw = Mw_hexane 
+        self.build_MBAR_sim()
+#        if use_stored_C:
+#            self.C_all = C_stored
+#        else:    
+#            self.solve_C()
+        self.Ncut = 81
+#        self.Mw = Mw_hexane 
 #        
         #self.solve_mu(480)
         #self.calc_P_NU_muT(-4127,500)
@@ -417,44 +418,128 @@ class MBAR_GCMC():
         plt.legend()
         plt.show()
         
-    def build_MBAR_matrices(self):
+    def build_MBAR_sim(self):
+        ####From multiple_state_point_practice       
+        ## N_k contains the number of snapshots from each state point simulated
+        ## Nmol_kn contains all of the Number of molecules in 1-d array
+        ## u_kn_sim contains all the reduced potential energies just for the simulated points
         
-        # N_k contains the number of snapshots from each state point, including the unsampled points
-        N_k = np.array(self.K_all.append(0))
-        # N_kn contains all of the Number of molecules in 1-d array
-        Nmol_kn = np.array(self.N_data_all)
-        Nmol_kn = Nmol_kn.reshape([Nmol_kn.size])
+        Temp_sim, mu_sim, nSnapshots, U_data_all, N_data_all = self.Temp_all, self.mu_all, self.K_all, self.U_data_all, self.N_data_all
         
-        # u_kn contains all the reduced potential energies in 1-d array, including the unsampled points
-        u_kn = np.zeros(len(self.Temp_all)+1,self.K_all.sum())
+        N_k = np.array(nSnapshots)
+        sumN_k = np.sum(N_k)
+        Nmol_flat = np.array(N_data_all).flatten()
+        U_flat = np.array(U_data_all).flatten()
+#        Nmol_kn = Nmol_kn.reshape([Nmol_kn.size])
+        u_kn_sim = np.zeros([len(Temp_sim),sumN_k])
         
-        ### Build u_kn
+        for iT, (Temp, mu) in enumerate(zip(Temp_sim, mu_sim)):
+    
+            u_kn_sim[iT] = U_to_u(U_flat,Temp,mu,Nmol_flat)
+#            
+#            jstart = 0
+#            
+#            for jT in range(len(Temp_sim)):
+#                
+#                jend = jstart+N_k[jT]
+#                u_kn_sim[iT,jstart:jend] = U_to_u(U_data_all[jT],Temp,mu,N_data_all[jT])                
+#                jstart = jend
+
+        mbar = MBAR(u_kn_sim,N_k)
         
-#u00=U_to_u(U0,T0,mu0,N0)
-#u01=U_to_u(U1,T0,mu0,N1)
-#u10=U_to_u(U0,T1,mu1,N0)
-#u11=U_to_u(U1,T1,mu1,N1)
-#
-#T2 = 480. #[K]
-#mu2 = -4023 #[K]
-#
-#u20 = U_to_u(U0,T2,mu2,N0)
-#u21 = U_to_u(U1,T2,mu2,N1)
-#      
-#N_k = np.array([len(u00),len(u11),0]) # The number of samples from each state
-#N_K = np.sum(N_k)
-#              
-#u_kn = np.zeros([3,len(u00)+len(u11)])
-#u_kn[0,:len(u00)] = u00
-#u_kn[0,len(u00):] = u01     
-#u_kn[1,:len(u00)] = u10
-#u_kn[1,len(u00):] = u11    
-#u_kn[2,:len(u00)] = u20
-#u_kn[2,len(u00):] = u21   
-#     
-#N_kn = np.zeros(len(u00)+len(u11))
-#N_kn[:len(u00)] = N0
-#N_kn[len(u00):] = N1 
+        Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)[0]
+        f_k_sim = Deltaf_ij[0,:]        
+        print(f_k_sim)
+        
+        self.u_kn_sim, self.f_k_sim, self.Nmol_flat, self.U_flat, self.sumN_k, self.N_k = u_kn_sim, f_k_sim, Nmol_flat, U_flat, sumN_k, N_k
+        
+    def build_MBAR_VLE_matrices(self,Temp_VLE):
+        Temp_sim, U_flat, Nmol_flat,u_kn_sim,f_k_sim,N_k,sumN_k = self.Temp_all, self.U_flat,self.Nmol_flat,self.u_kn_sim,self.f_k_sim,self.N_k,self.sumN_k
+        
+        jT0 = len(Temp_sim)
+        
+        ### From multiple_state_point_practice        
+        Temp_VLE_all = np.concatenate((Temp_sim,Temp_VLE))
+        N_k_VLE = np.append(N_k,np.zeros(len(Temp_VLE)))
+        
+        u_kn_VLE = np.zeros([len(Temp_VLE),sumN_k])
+        u_kn = np.concatenate((u_kn_sim,u_kn_VLE))
+        
+        f_k_guess = np.concatenate((f_k_sim,np.zeros(len(Temp_VLE))))
+        
+        self.u_kn, self.f_k_guess, self.N_k_VLE, self.jT0 = u_kn, f_k_guess, N_k_VLE,jT0
+        
+    def solve_VLE(self,Temp_VLE):
+        
+        mu_sim, Temp_sim = self.mu_all, self.Temp_all
+        self.Temp_VLE = Temp_VLE
+        
+        self.build_MBAR_VLE_matrices(Temp_VLE)
+        
+        ### Optimization of mu
+        ### Bounds for mu
+        mu_sim_low = np.ones(len(Temp_VLE))*mu_sim.min()
+        mu_sim_high = np.ones(len(Temp_VLE))*mu_sim.max()
+        
+        Temp_sim_mu_low = Temp_sim[np.argmin(mu_sim)]
+        Temp_sim_mu_high = Temp_sim[np.argmax(mu_sim)]
+        print(mu_sim,Temp_sim)
+        ### Guess for mu
+        mu_guess = lambda Temp: mu_sim_high + (mu_sim_low - mu_sim_high)/(Temp_sim_mu_low-Temp_sim_mu_high) * (Temp-Temp_sim_mu_high)
+        
+        mu_VLE_guess = mu_guess(Temp_VLE)
+        mu_VLE_guess[mu_VLE_guess<mu_sim.min()] = mu_sim.min()
+        mu_VLE_guess[mu_VLE_guess>mu_sim.max()] = mu_sim.max()
+        
+        mu_lower_bound = mu_sim_low*1.005
+        mu_upper_bound = mu_sim_high*0.995
+        
+        print(r'$(\Delta W)^2$ for $\mu_{\rm guess}$ =')
+        print(self.sqdeltaW(mu_VLE_guess))
+        
+        ### Optimize mu
+        
+        mu_opt = GOLDEN_multi(self.sqdeltaW,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.0001,maxit=30)
+        sqdeltaW_opt = self.sqdeltaW(mu_opt)
+        
+        plt.plot(Temp_VLE,mu_opt,'k-',label=r'$\mu_{\rm opt}$')
+        plt.plot(Temp_sim,mu_sim,'ro',mfc='None',label='Simulation')
+        plt.plot(Temp_VLE,mu_VLE_guess,'b--',label=r'$\mu_{\rm guess}$')
+        plt.xlabel(r'$T$ (K)')
+        plt.ylabel(r'$\mu_{\rm opt}$ (K)')
+        plt.xlim([300,550])
+        plt.ylim([-4200,-3600])
+        plt.legend()
+        plt.show()
+        
+        plt.plot(Temp_VLE,sqdeltaW_opt,'ko')
+        plt.xlabel(r'$T$ (K)')
+        plt.ylabel(r'$(\Delta W^{\rm sat})^2$')
+        plt.show()
+        
+        print("Effective sample numbers")
+        print (mbar.computeEffectiveSampleNumber())
+        print('\nWhich is approximately '+str(mbar.computeEffectiveSampleNumber()/self.sumN_k*100.)+'% of the total snapshots')
+        
+    def sqdeltaW(self,mu_VLE):
+        
+        jT0, U_flat, Nmol_flat,Ncut, f_k_guess, Temp_VLE, u_kn, N_k_VLE = self.jT0, self.U_flat, self.Nmol_flat, self.Ncut,self.f_k_guess, self.Temp_VLE, self.u_kn, self.N_k_VLE
+        
+        for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_VLE)):
+            
+            u_kn[jT0+jT,:] = U_to_u(U_flat,Temp,mu,Nmol_flat)
+        print(u_kn.shape,N_k_VLE.shape,f_k_guess.shape)
+        mbar = MBAR(u_kn,N_k_VLE,initial_f_k=f_k_guess)
+    
+        sumWliq = np.sum(mbar.W_nk[:,jT0:][Nmol_flat>Ncut],axis=0)
+        sumWvap = np.sum(mbar.W_nk[:,jT0:][Nmol_flat<=Ncut],axis=0)
+        sqdeltaW_VLE = (sumWliq-sumWvap)**2
+
+        ### Store previous solutions to speed-up future convergence
+        Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)[0]
+        self.f_k_guess = Deltaf_ij[0,:]
+                     
+        return sqdeltaW_VLE
         
 filepaths = []
         
@@ -462,7 +547,7 @@ filepaths = []
 #Temp_range = ['510','480','450','420','390','360','330','460','410']
 #hist_num=['2']*len(Temp_range)
 
-root_path = 'H:/MBAR_GCMC/hexane_Potoff/'
+root_path = 'hexane_Potoff/'
 Temp_range = ['510','470','430','480','450','420','390','360','330']
 hist_num=['1','2','3','4','5','6','7','8','9']
 
@@ -473,14 +558,16 @@ for iT, Temp in enumerate(Temp_range):
     filepaths.append(root_path+Temp+hist_name)
 
 MBAR_GCMC_trial = MBAR_GCMC(filepaths,use_stored_C=False)
+#MBAR_GCMC_trial.solve_VLE(Temp_VLE_all)
 #print(MBAR_GCMC_trial.K_all)
 #print(MBAR_GCMC_trial.N_min)
 #print(MBAR_GCMC_trial.fi_NU)
-MBAR_GCMC_trial.plot_histograms()
-C_stored = MBAR_GCMC_trial.C_all
+#MBAR_GCMC_trial.plot_histograms()
+#C_stored = MBAR_GCMC_trial.C_all
 #Temp_VLE_all = np.array([420,390,360])
 #Temp_VLE_all = np.array([460,410])
-Temp_VLE_all = np.array([480,450,420,390,360,330])
+Temp_VLE_all = np.array([500,490,480,470,460,450,440,430,420,410,400,390,380,370,360,350,340,330,320])
+MBAR_GCMC_trial.solve_VLE(Temp_VLE_all)
 #Temp_VLE_all = np.array([480.,330.])
 #Temp_VLE_all = Tsat_Potoff
 #MBAR_GCMC_trial.calc_rho(Temp_VLE_all)
@@ -536,7 +623,7 @@ N_kn[len(u00):] = N1
 mbar = MBAR(u_kn,N_k)
 
 Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)
-print "effective sample numbers"
+print("effective sample numbers")
 print (mbar.computeEffectiveSampleNumber())
 print('\nWhich is approximately '+str(mbar.computeEffectiveSampleNumber()/N_K*100.)+'%')
 
