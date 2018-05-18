@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 MBAR GCMC
+This code was supposed to scale epsilon, but I just realized that for hexane
+the total energy also depends on intramolecular contributions, such that I 
+cannot simply scale the energy.
 """
 
 import numpy as np
@@ -192,11 +195,13 @@ N_all_flat = N_all.flatten()
 jT0 = len(Temp_sim)
 Ncut = 81
 
+eps_ratio = 1.05
+
 def sqdeltaW(mu_VLE):
     
     for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_VLE)):
         
-        u_kn[jT0+jT,:] = U_to_u(U_all_flat,Temp,mu,N_all_flat)
+        u_kn[jT0+jT,:] = U_to_u(eps_ratio*U_all_flat,Temp,mu,N_all_flat)
     
     mbar = MBAR(u_kn,N_k,initial_f_k=f_k_guess)
 
@@ -278,12 +283,13 @@ for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_opt)):
 rholiq = Nliq/Vbox * Mw_hexane / N_A * gmtokg / Ang3tom3 #[kg/m3]
 rhovap = Nvap/Vbox * Mw_hexane / N_A * gmtokg / Ang3tom3 #[kg/m3]
    
-plt.plot(rhovap,Temp_VLE,'ro',label='MBAR-GCMC')
-plt.plot(rholiq,Temp_VLE,'ro')
+plt.plot(rhovap[Temp_VLE<425],Temp_VLE[Temp_VLE<425],'ro',label='MBAR-GCMC')
+plt.plot(rholiq[Temp_VLE<425],Temp_VLE[Temp_VLE<425],'ro')
 plt.plot(rhov_Potoff,Tsat_Potoff,'ks',mfc='None',label='Potoff')
 plt.plot(rhol_Potoff,Tsat_Potoff,'ks',mfc='None')
 plt.xlabel(r'$\rho$ (kg/m$^3$)')
 plt.ylabel(r'$T$ (K)')
+plt.title(r'$\epsilon = $'+str(eps_ratio)+r' $\epsilon_{\rm ref}$')
 plt.xlim([0,650])
 plt.ylim([320,520])
 plt.legend()
