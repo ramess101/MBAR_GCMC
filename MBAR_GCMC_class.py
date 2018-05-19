@@ -57,7 +57,7 @@ class MBAR_GCMC():
 #        else:    
 #            self.solve_C()
         self.Ncut = 81
-#        self.Mw = Mw_hexane 
+        self.Mw = Mw_hexane 
 #        
         #self.solve_mu(480)
         #self.calc_P_NU_muT(-4127,500)
@@ -265,57 +265,7 @@ class MBAR_GCMC():
         
 #        print(P_NU_muT.shape)
         return P_NU_muT, N_muT
-        
-#    def calc_fi_NU(self):
-#        N_min, N_max, U_min, U_max = self.N_min, self.N_max, self.U_min, self.U_max
-#        N_data_all, U_data_all, K_all = self.N_data_all, self.U_data_all, self.K_all
-#        
-#        N_range = np.linspace(N_min,N_max,N_max-N_min+1)
-#        U_range = np.linspace(U_min,U_max,200)
-#        
-#        NU_range = np.array([N_range,U_range])
-#        
-#        fi_NU = np.zeros([len(N_range)-1,len(U_range)-1,len(K_all)])
-#        N_flat = np.zeros((len(N_range)-1)*(len(U_range)-1))
-#        U_flat = N_flat.copy()
-#        #print(len(N_range))
-#        #print(len(U_range))
-#        #print(len(K_all))
-#        #print(fi_NU.shape)
-#        for i_R, K_i in enumerate(K_all):
-#            N_data_i = N_data_all[i_R]
-#            U_data_i = U_data_all[i_R]
-#            #print(N_data_i.shape)
-#            #print(U_data_i.shape)
-#            #print(NU_range.shape)
-#            hist_NU = np.histogram2d(N_data_i,U_data_i,NU_range)
-#            #print(hist_NU[0].shape)
-#            #print(hist_NU[1].shape)
-#            #print(hist_NU[2].shape)
-#            fi_NU[:,:,i_R] = hist_NU[0]
-#            self.K_all[i_R] = np.sum(hist_NU[0])
-#        i_NU = 0    
-#            
-#        for i_N, N_i in enumerate(hist_NU[1][:-1]):
-#            for i_U, U_i in enumerate(hist_NU[2][:-1]):
-#                N_flat[i_NU] = N_i
-#                U_flat[i_NU] = U_i
-#                i_NU += 1
-#        #print(N_flat.shape)
-#        #print(U_flat.shape)
-#        #print(fi_NU[:,:,0].shape)
-#        
-##        plt.scatter(N_flat,U_flat,c=fi_NU[:,:,0].reshape(len(N_flat)))
-##        plt.xlabel('Number of Molecules')
-##        plt.ylabel('Energy (K)')
-##        plt.show()
-#        
-#        N_unique = np.unique(N_flat)
-#
-#        self.C_all = np.zeros(len(K_all))
-#        self.N_range = N_range
-#        self.fi_NU, self.N_flat, self.U_flat, self.N_unique = fi_NU, N_flat, U_flat, N_unique
-        
+                
     def min_max_all_data(self):
         
         N_data_all, U_data_all, K_all = self.N_data_all, self.U_data_all, self.K_all
@@ -405,18 +355,18 @@ class MBAR_GCMC():
         plt.legend()
         plt.show()
         
-    def plot_VLE(self,Temp_VLE_all):
-        
-        rhov, rhol = self.calc_rho(Temp_VLE_all)
-
-        plt.plot(rhov,Temp_VLE_all,'bo',mfc='None',markersize=8)
-        plt.plot(rhol,Temp_VLE_all,'bo',mfc='None',markersize=8,label='This Work')
-        plt.plot(rhol_Potoff,Tsat_Potoff,'ks',mfc='None',markersize=8)
-        plt.plot(rhov_Potoff,Tsat_Potoff,'ks',mfc='None',markersize=8,label='Potoff et al.')
-        plt.xlabel('Density (kg/m$^3$)')
-        plt.ylabel('Temperature (K)')
-        plt.legend()
-        plt.show()
+#    def plot_VLE(self,Temp_VLE_all):
+#        
+#        rhov, rhol = self.calc_rho(Temp_VLE_all)
+#
+#        plt.plot(rhov,Temp_VLE_all,'bo',mfc='None',markersize=8)
+#        plt.plot(rhol,Temp_VLE_all,'bo',mfc='None',markersize=8,label='This Work')
+#        plt.plot(rhol_Potoff,Tsat_Potoff,'ks',mfc='None',markersize=8)
+#        plt.plot(rhov_Potoff,Tsat_Potoff,'ks',mfc='None',markersize=8,label='Potoff et al.')
+#        plt.xlabel('Density (kg/m$^3$)')
+#        plt.ylabel('Temperature (K)')
+#        plt.legend()
+#        plt.show()
         
     def build_MBAR_sim(self):
         ####From multiple_state_point_practice       
@@ -444,7 +394,7 @@ class MBAR_GCMC():
 #                jend = jstart+N_k[jT]
 #                u_kn_sim[iT,jstart:jend] = U_to_u(U_data_all[jT],Temp,mu,N_data_all[jT])                
 #                jstart = jend
-
+        
         mbar = MBAR(u_kn_sim,N_k)
         
         Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)[0]
@@ -460,14 +410,15 @@ class MBAR_GCMC():
         
         ### From multiple_state_point_practice        
         Temp_VLE_all = np.concatenate((Temp_sim,Temp_VLE))
-        N_k_VLE = np.append(N_k,np.zeros(len(Temp_VLE)))
-        
+        N_k_all = self.K_all[:]
+        N_k_all.extend([0]*len(Temp_VLE))
+
         u_kn_VLE = np.zeros([len(Temp_VLE),sumN_k])
         u_kn = np.concatenate((u_kn_sim,u_kn_VLE))
         
         f_k_guess = np.concatenate((f_k_sim,np.zeros(len(Temp_VLE))))
         
-        self.u_kn, self.f_k_guess, self.N_k_VLE, self.jT0 = u_kn, f_k_guess, N_k_VLE,jT0
+        self.u_kn, self.f_k_guess, self.N_k_all, self.jT0 = u_kn, f_k_guess, N_k_all,jT0
         
     def solve_VLE(self,Temp_VLE):
         
@@ -518,18 +469,20 @@ class MBAR_GCMC():
         plt.show()
         
         print("Effective sample numbers")
-        print (mbar.computeEffectiveSampleNumber())
-        print('\nWhich is approximately '+str(mbar.computeEffectiveSampleNumber()/self.sumN_k*100.)+'% of the total snapshots')
-        
+        print (self.mbar.computeEffectiveSampleNumber())
+        print('\nWhich is approximately '+str(self.mbar.computeEffectiveSampleNumber()/self.sumN_k*100.)+'% of the total snapshots')
+    
+        self.mu_opt = mu_opt
+    
     def sqdeltaW(self,mu_VLE):
         
-        jT0, U_flat, Nmol_flat,Ncut, f_k_guess, Temp_VLE, u_kn, N_k_VLE = self.jT0, self.U_flat, self.Nmol_flat, self.Ncut,self.f_k_guess, self.Temp_VLE, self.u_kn, self.N_k_VLE
-        
+        jT0, U_flat, Nmol_flat,Ncut, f_k_guess, Temp_VLE, u_kn, N_k_all = self.jT0, self.U_flat, self.Nmol_flat, self.Ncut,self.f_k_guess, self.Temp_VLE, self.u_kn, self.N_k_all
+
         for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_VLE)):
             
             u_kn[jT0+jT,:] = U_to_u(U_flat,Temp,mu,Nmol_flat)
-        print(u_kn.shape,N_k_VLE.shape,f_k_guess.shape)
-        mbar = MBAR(u_kn,N_k_VLE,initial_f_k=f_k_guess)
+
+        mbar = MBAR(u_kn,N_k_all,initial_f_k=f_k_guess)
     
         sumWliq = np.sum(mbar.W_nk[:,jT0:][Nmol_flat>Ncut],axis=0)
         sumWvap = np.sum(mbar.W_nk[:,jT0:][Nmol_flat<=Ncut],axis=0)
@@ -538,8 +491,30 @@ class MBAR_GCMC():
         ### Store previous solutions to speed-up future convergence
         Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)[0]
         self.f_k_guess = Deltaf_ij[0,:]
-                     
+        self.mbar, self.sumWliq, self.sumWvap  = mbar, sumWliq, sumWvap
+              
         return sqdeltaW_VLE
+    
+    def plot_VLE(self):
+        
+        Nmol_flat, Ncut, mbar, sumWliq, sumWvap, Mw, Vbox, jT0, Temp_VLE = self.Nmol_flat, self.Ncut, self.mbar, self.sumWliq, self.sumWvap, self.Mw, self.Vbox_all[0], self.jT0, self.Temp_VLE
+        
+        Nliq = np.sum(mbar.W_nk[:,jT0:][Nmol_flat>Ncut].T*Nmol_flat[Nmol_flat>Ncut],axis=1)/sumWliq #Must renormalize by the liquid or vapor phase
+        Nvap = np.sum(mbar.W_nk[:,jT0:][Nmol_flat<=Ncut].T*Nmol_flat[Nmol_flat<=Ncut],axis=1)/sumWvap
+        
+        rholiq = Nliq/Vbox * Mw / N_A * gmtokg / Ang3tom3 #[kg/m3]
+        rhovap = Nvap/Vbox * Mw / N_A * gmtokg / Ang3tom3 #[kg/m3]
+           
+        plt.plot(rhovap,Temp_VLE,'ro',label='MBAR-GCMC')
+        plt.plot(rholiq,Temp_VLE,'ro')
+        plt.plot(rhov_Potoff,Tsat_Potoff,'ks',mfc='None',label='Potoff')
+        plt.plot(rhol_Potoff,Tsat_Potoff,'ks',mfc='None')
+        plt.xlabel(r'$\rho$ (kg/m$^3$)')
+        plt.ylabel(r'$T$ (K)')
+        plt.xlim([0,650])
+        plt.ylim([320,520])
+        plt.legend()
+        plt.show()
         
 filepaths = []
         
@@ -568,142 +543,9 @@ MBAR_GCMC_trial = MBAR_GCMC(filepaths,use_stored_C=False)
 #Temp_VLE_all = np.array([460,410])
 Temp_VLE_all = np.array([500,490,480,470,460,450,440,430,420,410,400,390,380,370,360,350,340,330,320])
 MBAR_GCMC_trial.solve_VLE(Temp_VLE_all)
+MBAR_GCMC_trial.plot_VLE()
 #Temp_VLE_all = np.array([480.,330.])
 #Temp_VLE_all = Tsat_Potoff
 #MBAR_GCMC_trial.calc_rho(Temp_VLE_all)
 #MBAR_GCMC_trial.diff_area_peaks(-4023.,480.,plot=True)
-MBAR_GCMC_trial.plot_VLE(Temp_VLE_all)
-
-assert 1 == 0
-
-#### Working for two states
-T0 = 510. #[K]
-mu0 = -4127. #[K]
-Lbox = 35. #[Angstrom]
-Vbox = Lbox**3 #[Angstrom^3]
-
-T1 = 480. #[K]
-mu1 = -3980 #[K]
-
-NU0 = np.loadtxt('H:/MBAR_GCMC/hexane_Potoff/510/his1a.dat',skiprows=1)
-NU1 = np.loadtxt('H:/MBAR_GCMC/hexane_Potoff/480/his4a.dat',skiprows=1)
-
-U0 = NU0[:,1]
-N0 = NU0[:,0]
-
-U1 = NU1[:,1]
-N1 = NU1[:,0]
-
-u00=U_to_u(U0,T0,mu0,N0)
-u01=U_to_u(U1,T0,mu0,N1)
-u10=U_to_u(U0,T1,mu1,N0)
-u11=U_to_u(U1,T1,mu1,N1)
-
-T2 = 480. #[K]
-mu2 = -4023 #[K]
-
-u20 = U_to_u(U0,T2,mu2,N0)
-u21 = U_to_u(U1,T2,mu2,N1)
-      
-N_k = np.array([len(u00),len(u11),0]) # The number of samples from each state
-N_K = np.sum(N_k)
-              
-u_kn = np.zeros([3,len(u00)+len(u11)])
-u_kn[0,:len(u00)] = u00
-u_kn[0,len(u00):] = u01     
-u_kn[1,:len(u00)] = u10
-u_kn[1,len(u00):] = u11    
-u_kn[2,:len(u00)] = u20
-u_kn[2,len(u00):] = u21   
-     
-N_kn = np.zeros(len(u00)+len(u11))
-N_kn[:len(u00)] = N0
-N_kn[len(u00):] = N1     
-              
-mbar = MBAR(u_kn,N_k)
-
-Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)
-print("effective sample numbers")
-print (mbar.computeEffectiveSampleNumber())
-print('\nWhich is approximately '+str(mbar.computeEffectiveSampleNumber()/N_K*100.)+'%')
-
-NAk, dNAk = mbar.computeExpectations(N_kn) # Average number of molecules
-NAk_alt = np.zeros(len(N_k))
-for i in range(len(N_k)):
-    NAk_alt[i] = np.sum(mbar.W_nk[:,i]*N_kn)
-    
-print(NAk)
-
-Nscan = np.arange(60,100)
-
-sqdeltaW0 = np.zeros(len(Nscan))
-
-for iN, Ni in enumerate(Nscan):
-
-    sumWliq = np.sum(mbar.W_nk[:,0][N_kn>Ni])
-    sumWvap = np.sum(mbar.W_nk[:,0][N_kn<=Ni])
-    sqdeltaW0[iN] = (sumWliq - sumWvap)**2
-
-plt.plot(Nscan,sqdeltaW0,'ko')
-plt.xlabel(r'$N_{\rm cut}$')
-plt.ylabel(r'$(\Delta W_0^{\rm sat})^2$')
-plt.show()
-                        
-Ncut = Nscan[np.argmin(sqdeltaW0)]
-
-mu_scan = np.linspace(-4150,-3950,200)
-sqdeltaWi = np.zeros(len(mu_scan))
-Nliq = np.zeros(len(mu_scan))
-Nvap = np.zeros(len(mu_scan))
-
-Ti = 500 #[K]
-nStates = len(N_k)
-                                     
-for imu, mui in enumerate(mu_scan):
-  
-    ui0 = U_to_u(U0,Ti,mui,N0) #Keeping epsilon and sigma constant for now
-    ui1 = U_to_u(U1,Ti,mui,N1) #Keeping epsilon and sigma constant for now
-                
-    u_kn[nStates,:len(u00)] = ui0
-    u_kn[nStates,len(u00):] = ui1
-    
-    mbar = MBAR(u_kn,N_k)
-    
-    (Deltaf_ij, dDeltaf_ij, Theta_ij) = mbar.getFreeEnergyDifferences(return_theta=True)
-    
-    sumWliq = np.sum(mbar.W_nk[:,nStates][N_kn>Ncut])
-    sumWvap = np.sum(mbar.W_nk[:,nStates][N_kn<=Ncut])
-    sqdeltaWi[imu] = (sumWliq - sumWvap)**2
-
-#    Nliq[imu], dNliq = mbar.computeExpectations(N0[N0>Ncut])
-#    Nvap[imu], dNvap = mbar.computeExpectations(N0[N0<Ncut])
-    
-    Nliq[imu] = np.sum(mbar.W_nk[:,nStates][N_kn>Ncut]*N_kn[N_kn>Ncut])/sumWliq #Must renormalize by the liquid or vapor phase
-    Nvap[imu] = np.sum(mbar.W_nk[:,nStates][N_kn<=Ncut]*N_kn[N_kn<=Ncut])/sumWvap
-          
-plt.plot(mu_scan,sqdeltaWi,'k-')
-plt.xlabel(r'$\mu$ (K)')
-plt.ylabel(r'$(\Delta W_1^{\rm sat})^2$')
-plt.show()
-
-plt.plot(mu_scan,Nliq,'r-',label='Liquid')
-plt.plot(mu_scan,Nvap,'b--',label='Vapor')
-plt.plot([mu_scan[np.argmin(sqdeltaWi)],mu_scan[np.argmin(sqdeltaWi)]],[0,np.max(Nliq)],'k--',label='Equilibrium')
-plt.xlabel(r'$\mu$ (K)')
-plt.ylabel(r'$N$')
-plt.legend()
-plt.show()
-
-rholiq = Nliq[np.argmin(sqdeltaWi)]/Vbox * Mw_hexane / N_A * gmtokg / Ang3tom3 #[kg/m3]
-rhovap = Nvap[np.argmin(sqdeltaWi)]/Vbox * Mw_hexane / N_A * gmtokg / Ang3tom3 #[kg/m3]
-           
-plt.plot(rhovap,Ti,'bo')
-plt.plot(rholiq,Ti,'ro')
-plt.plot(rhov_Potoff,Tsat_Potoff,'ks',mfc='None')
-plt.plot(rhol_Potoff,Tsat_Potoff,'ks',mfc='None')
-plt.xlabel(r'$\rho$ (kg/m$^3$)')
-plt.ylabel(r'$T$ (K)')
-plt.xlim([0,650])
-plt.ylim([320,520])
-plt.show()
-###
+#MBAR_GCMC_trial.plot_VLE(Temp_VLE_all)

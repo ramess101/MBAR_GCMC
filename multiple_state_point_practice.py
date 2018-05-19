@@ -121,7 +121,7 @@ jT0 = len(Temp_sim)
 Ncut = 81
 
 def sqdeltaW(mu_VLE):
-    
+    print(U_flat.shape,U_flat[:10],Nmol_flat.shape,Nmol_flat[:10])
     for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_VLE)):
         
         u_kn[jT0+jT,:] = U_to_u(U_flat,Temp,mu,Nmol_flat)
