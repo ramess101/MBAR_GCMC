@@ -91,7 +91,9 @@ def GOLDEN_multi(func,guesses,lower_bounds,upper_bounds,TOL,maxit):
     nit = 0
     while (np.abs(X3-X0) > TOL*(np.abs(X1)+np.abs(X2))).any() and nit < maxit:
         for i, (F1, F2) in enumerate(zip(F1_all,F2_all)):
-            if F1 == F2: F1 + (np.random.random(1) - 0.5)*10e-10, print('F1 and F2 were equal')
+            if F1 == F2: 
+                F1 + (np.random.random(1) - 0.5)*10e-10 
+                print('F1 and F2 were equal')
             if F2 < F1:
                 X0[i] = X1[i]
                 X1[i] = X2[i]

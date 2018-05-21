@@ -1,14 +1,10 @@
-# -*- coding: utf-8 -*-
 """
 MBAR GCMC
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import minimize
 from pymbar import MBAR
-import sys
-import pdb
 from Golden_search_multi import GOLDEN_multi
 
 # Physical constants
@@ -19,256 +15,29 @@ Ang3tom3 = 10**-30
 gmtokg = 1e-3
 kb = 1.3806485e-23 #[J/K]
 Jm3tobar = 1e-5
-Rg = 8.314472 #[J/mol/K]
-
-Mw_hexane  = 12.0109*6.+1.0079*(2.*6.+2.) #[gm/mol]
+Rg = kb*N_A #[J/mol/K]
 
 Tsat_Potoff = np.array([500,490,480,470,460,450,440,430,420,410,400,390,380,370,360,350,340,330,320])
 rhol_Potoff = np.array([366.018,395.855,422.477,444.562,463.473,480.498,496.217,510.897,524.727,537.821,550.308,562.197,573.494,584.216,594.369,604.257,614.026,623.44,631.598])
 rhov_Potoff = np.array([112.352,90.541,72.249,58.283,47.563,39.028,32.053,26.27,21.441,17.397,14.013,11.19,8.846,6.913,5.331,4.05,3.023,2.213,1.584])     
 Psat_Potoff = np.array([27.697,23.906,20.521,17.529,14.889,12.563,10.522,8.738,7.19,5.857,4.717,3.753,2.946,2.279,1.734,1.296,0.949,0.68,0.476])
-Zsat_Potoff = Psat_Potoff / rhov_Potoff / Tsat_Potoff * Mw_hexane / Rg * gmtokg / Jm3tobar
-
-def U_to_u(Uint,Temp,mu,Nmol):
-    '''
-    Converts internal energy, temperature, chemical potential, and number of molecules into reduced potential energy 
-    
-    inputs:
-        Uint: internal energy (K)
-        Temp: Temperature (K)
-        mu: Chemical potential (K)
-        Nmol: number of molecules
-    outputs:
-        Ureduced: reduced potential energy
-    '''
-    beta = 1./Temp #[1/K]
-    Ureduced = beta*(Uint) - beta*mu*Nmol  #[dimensionless]
-    return Ureduced
 
 class MBAR_GCMC():
-    def __init__(self,filepaths,use_stored_C=False):
+    def __init__(self,filepaths,Mw,compare_literature=False):
         self.filepaths = filepaths
-        self.extract_all_data()
-        self.min_max_all_data()
-#        self.calc_fi_NU()
+        self.extract_all_sim_data()
+        self.min_max_sim_data()
         self.build_MBAR_sim()
-#        if use_stored_C:
-#            self.C_all = C_stored
-#        else:    
-#            self.solve_C()
-        self.Ncut = 81
-        self.Mw = Mw_hexane 
-#        
-        #self.solve_mu(480)
-        #self.calc_P_NU_muT(-4127,500)
-        
-    def calc_rho(self,Temp_VLE_all):
-        
-        rho_vapor = np.zeros(len(Temp_VLE_all))
-        rho_liquid = np.zeros(len(Temp_VLE_all))
-        
-        for iT, Temp_VLE in enumerate(Temp_VLE_all):
-            
-            mu_VLE = self.solve_mu(Temp_VLE,refined=True)
-            
-            P_NU_muT, N_muT = self.calc_P_NU_muT(mu_VLE,Temp_VLE)
-            N_unique = self.N_unique
-            N_cut = self.N_cut
-            Vbox = self.Vbox_all[0]
-            #print(P_NU_muT)
-            #print(N_muT)
-            Nave_vapor = np.sum(N_muT[N_unique<=N_cut]*N_unique[N_unique<=N_cut])/np.sum(N_muT[N_unique<=N_cut])
-            Nave_liquid = np.sum(N_muT[N_unique>N_cut]*N_unique[N_unique>N_cut])/np.sum(N_muT[N_unique>N_cut])
-            #print(Nave_vapor,Nave_liquid)
-            rho_vapor[iT] = Nave_vapor / Vbox
-            rho_liquid[iT] = Nave_liquid / Vbox
-        
-        rho_vapor *= self.Mw / N_A * gmtokg / Ang3tom3 #[kg/m3]
-        rho_liquid *= self.Mw / N_A * gmtokg / Ang3tom3 #[kg/m3]
-        
-        return rho_vapor, rho_liquid
-        
-    def solve_mu(self,Temp,refined=False):
-        
-        mu_min = self.mu_all.min() - 20. #Start with the most negative (with a buffer)
-        
-        maxit = 1000
-        converged = False
-        
-        mu_old = mu_min
-        it = 0
-        diff_area_peaks_old = self.diff_area_peaks(mu_old,Temp)
-        
-        while it < maxit or not converged:
-            
-            mu_new = mu_old + 10.
-            
-            diff_area_peaks_new = self.diff_area_peaks(mu_new,Temp)
-            
-            if diff_area_peaks_new * diff_area_peaks_old < 0: # If there is a sign change
-            
-                converged = True
-                mu_opt = (mu_new + mu_old)/2.
-                         
-            else:
+        self.Ncut = self.solve_Ncut()
+        self.Mw = Mw
+        self.compare_literature = compare_literature
                 
-                mu_old = mu_new.copy()
-                diff_area_peaks_old = diff_area_peaks_new.copy()
-                
-            it += 1  
-            
-        if refined:
-                
-            SSE = lambda mu: self.diff_area_peaks(mu,Temp)**2*1e15
-            
-            guess = mu_opt     
-    
-            bnds = ((mu_old,mu_new),)                        
-                                            
-            opt = minimize(SSE,guess,bounds=bnds) 
-
-            mu_opt = opt.x[0]                              
-        
-        return mu_opt
-            
-        #return mu_opt
-# This approach had problems because it would just converged to 
-#        
-#        SSE = lambda mu: self.diff_area_peaks(mu,Temp)**2*1e15
-#        
-#        guess = self.mu_all[0]     
-#
-#        bnds = ((None,self.mu_all.min()),)                        
-#                                        
-#        opt = minimize(SSE,guess,bounds=bnds)                               
-#        #print(opt)
-#        return opt.x[0]
-    
-    def diff_area_peaks(self,mu,Temp,verbose=False,plot=False):
-        P_NU_muT, N_muT = self.calc_P_NU_muT(mu,Temp)
-        N_unique = self.N_unique
-
-        N_cut = self.N_cut
-        
-        area_vapor = np.sum(N_muT[N_unique<=N_cut])
-        area_liquid = np.sum(N_muT[N_unique>N_cut])
-        diff_area = area_liquid - area_vapor
-        
-        if verbose:
-            print(area_vapor)
-            print(area_liquid)
-            print(diff_area)
-            
-        if plot:
-            
-            rhov_Temp_Potoff = rhov_Potoff[Tsat_Potoff==Temp]
-            rhol_Temp_Potoff = rhol_Potoff[Tsat_Potoff==Temp]
-        
-            rhov_Temp_Potoff /= self.Mw / N_A * gmtokg / Ang3tom3 #[kg/m3]
-            rhol_Temp_Potoff /= self.Mw / N_A * gmtokg / Ang3tom3 #[kg/m3]
-
-            Nv_Temp_Potoff = rhov_Temp_Potoff * self.Vbox_all[0]
-            Nl_Temp_Potoff = rhol_Temp_Potoff * self.Vbox_all[0]
-            
-#            for iT, Temp_i in enumerate(self.Temp_all):
-#                    
-#                if Temp_i == Temp:
-#                        
-#                    plt.hist(self.N_data_all[iT],bins=self.N_range,normed=True,label='Simulation')
-                    
-            plt.plot(N_unique,N_muT,'k-')
-            plt.plot(N_unique[N_unique<=N_cut],N_muT[N_unique<=N_cut],'r--',label='Vapor')
-            plt.plot(N_unique[N_unique>N_cut],N_muT[N_unique>N_cut],'b:',label='Liquid')
-            plt.plot([Nv_Temp_Potoff,Nv_Temp_Potoff],[0,np.max(N_muT)],'k-',label='Potoff Vapor')
-            plt.plot([Nl_Temp_Potoff,Nl_Temp_Potoff],[0,np.max(N_muT)],'k-',label='Potoff Liquid')
-            plt.xlabel('Number of Molecules')
-            plt.ylabel('PDF')
-            plt.legend()
-            plt.title(r'$\mu = $'+str(mu)+' K, T = '+str(Temp)+' K')
-            plt.show()
-        
-        return diff_area
-    
-    def solve_C(self):
-        
-        C_old, mu_all, Temp_all = self.C_all.copy(), self.mu_all, self.Temp_all
-#        C_new = np.zeros(len(C_old)) # This approach appears to converge slightly faster
-        TOL = 1e-5
-        
-        maxit = 1000
-#        print(self.C_all)
-        for iteration in range(maxit):
-
-            i = 0
-            
-            for mu_i, Temp_i in zip(mu_all, Temp_all):
-            
-                p_NU_i, N_NU_i = self.calc_P_NU_muT(mu_i,Temp_i)
-                #print(p_NU_i.shape)
-                sum_p_NU_i = np.sum(p_NU_i)
-#                print(sum_p_NU_i)
-#                print(np.sum(N_NU_i))
-                self.C_all[i] = np.log(sum_p_NU_i)
-#                print(self.C_all)
-#                C_new[i] = np.log(sum_p_NU_i)                
-                i += 1 
-#            print(iteration)    
-#            self.C_all = C_new.copy()
-#            print(self.C_all)
-            if np.mean(np.abs(self.C_all-C_old)) < TOL:
-                print('Weights converged after '+str(iteration)+' iterations')
-                break
-            
-            if iteration == maxit-1:
-                print('Weights did not converge within '+str(iteration)+' iterations')
-            
-            C_old = self.C_all.copy()
-        #self.C_all = np.array([1.825916099,-4.550827154])
-            #print(self.C_all)
-        
-    def calc_P_NU_muT(self,mu,Temp):
-        fi_NU, K_all, mu_all, Temp_all, C_all, U_flat, N_flat = self.fi_NU, self.K_all, self.mu_all, self.Temp_all, self.C_all, self.U_flat, self.N_flat
-        sum_fi_flat = np.sum(fi_NU,axis=2).reshape(fi_NU.shape[0]*fi_NU.shape[1])
-        
-        beta = 1./Temp
-        
-        P_NU_muT = np.zeros(len(sum_fi_flat))
-        
-        for i_NU, sum_fi in enumerate(sum_fi_flat):
-            
-            if sum_fi > 0:
-                               
-                numerator = sum_fi * np.exp(-beta * U_flat[i_NU] + beta * mu * N_flat[i_NU])
-                denominator = 0
-                
-                for K_i, mu_i, Temp_i, C_i in zip(K_all,mu_all,Temp_all,C_all):
-                    beta_i = 1./Temp_i
-                    denominator += K_i * np.exp(-beta_i * U_flat[i_NU] + beta_i * mu_i * N_flat[i_NU] - C_i)
-                    
-                P_NU_muT[i_NU] = numerator / denominator
-
-        N_unique = self.N_unique
-        N_muT = np.zeros(len(N_unique))
-        
-        for i_N, N_i in enumerate(N_unique):
-            N_muT[i_N] = np.sum(P_NU_muT[N_flat==N_i])
-                        
-#        plt.scatter(N_flat,U_flat,c=P_NU_muT)
-#        plt.xlabel('Number of Molecules')
-#        plt.ylabel('Energy (K)')
-#        plt.show()
-#
-#        plt.plot(N_unique,N_muT)
-#        plt.xlabel('Number of Molecules')
-#        plt.ylabel('Count')
-#        plt.show()
-        
-#        print(P_NU_muT.shape)
-        return P_NU_muT, N_muT
-                
-    def min_max_all_data(self):
-        
-        N_data_all, U_data_all, K_all = self.N_data_all, self.U_data_all, self.K_all
+    def min_max_sim_data(self):
+        '''
+        For the purpose of plotting histograms, this finds the minimum and
+        maximum values of number of molecules, N, and internal energy, U
+        '''
+        N_data_sim, U_data_sim, K_sim = self.N_data_sim, self.U_data_sim, self.K_sim
         
         N_min = []
         N_max = []
@@ -276,13 +45,13 @@ class MBAR_GCMC():
         U_min = []
         U_max = []
         
-        for i_R, K_i in enumerate(K_all):
+        for i_R, K_i in enumerate(K_sim):
             
-            N_min.append(np.min(N_data_all[i_R]))
-            N_max.append(np.max(N_data_all[i_R]))
+            N_min.append(np.min(N_data_sim[i_R]))
+            N_max.append(np.max(N_data_sim[i_R]))
             
-            U_min.append(np.min(U_data_all[i_R]))
-            U_max.append(np.max(U_data_all[i_R]))
+            U_min.append(np.min(U_data_sim[i_R]))
+            U_max.append(np.max(U_data_sim[i_R]))
         
         N_min = np.min(N_min)
         N_max = np.max(N_max)
@@ -290,46 +59,57 @@ class MBAR_GCMC():
         U_min = np.min(U_min)
         U_max = np.max(U_max)
         
-        self.N_min, self.N_max, self.U_min, self.U_max = N_min, N_max, U_min, U_max
+        N_range = np.linspace(N_min,N_max,N_max-N_min+1)
+        U_range = np.linspace(U_min,U_max,200)
+        
+        self.N_min, self.N_max, self.U_min, self.U_max, self.N_range,self.U_range = N_min, N_max, U_min, U_max, N_range, U_range
                 
-    def extract_all_data(self):
+    def extract_all_sim_data(self):
+        '''
+        Parses the number of molecules, N, internal energy, U, snapshots, K, for the
+        simulated temperatures, Temp, volume, Vbox, and chemical potentials, mu
+        '''
         filepaths = self.filepaths
         
-        N_data_all = []
-        U_data_all = []
-        K_all = []
+        N_data_sim = []
+        U_data_sim = []
+        K_sim = []
         
-        N_min_all = []
-        N_max_all = []
+        N_min_sim = []
+        N_max_sim = []
         
-        U_min_all = []
-        U_max_all = []
+        U_min_sim = []
+        U_max_sim = []
         
-        Temp_all = np.zeros(len(filepaths))
-        mu_all = np.zeros(len(filepaths))
-        Vbox_all = np.zeros(len(filepaths))
+        Temp_sim = np.zeros(len(filepaths))
+        mu_sim = np.zeros(len(filepaths))
+        Vbox_sim = np.zeros(len(filepaths))
         
         for ipath, filepath in enumerate(filepaths):
             N_data, U_data, Temp, mu, Vbox = self.extract_data(filepath)
             
-            Temp_all[ipath] = Temp
-            mu_all[ipath] = mu
-            Vbox_all[ipath] = Vbox
+            Temp_sim[ipath] = Temp
+            mu_sim[ipath] = mu
+            Vbox_sim[ipath] = Vbox
                     
-            N_data_all.append(N_data)
-            U_data_all.append(U_data)
-            K_all.append(len(N_data))
+            N_data_sim.append(N_data)
+            U_data_sim.append(U_data)
+            K_sim.append(len(N_data))
                     
-            N_min_all.append(np.min(N_data))
-            N_max_all.append(np.max(N_data))
+            N_min_sim.append(np.min(N_data))
+            N_max_sim.append(np.max(N_data))
              
-            U_min_all.append(np.min(U_data))
-            U_max_all.append(np.max(U_data))
+            U_min_sim.append(np.min(U_data))
+            U_max_sim.append(np.max(U_data))
 
             
-        self.Temp_all, self.mu_all, self.Vbox_all, self.N_data_all, self.U_data_all, self.K_all = Temp_all, mu_all, Vbox_all, N_data_all, U_data_all, K_all
+        self.Temp_sim, self.mu_sim, self.Vbox_sim, self.N_data_sim, self.U_data_sim, self.K_sim = Temp_sim, mu_sim, Vbox_sim, N_data_sim, U_data_sim, K_sim
             
     def extract_data(self,filepath):
+        '''
+        For a single filepath, returns the number of molecules, N, internal
+        energy, U, temperature, Temp, chemical potential, mu, and volumbe, Vbox
+        '''
         NU_data = np.loadtxt(filepath,skiprows=1)
         N_data = NU_data[:,0]
         U_data = NU_data[:,1] #[K]
@@ -341,211 +121,282 @@ class MBAR_GCMC():
         return N_data, U_data, Temp, mu, Vbox
     
     def plot_histograms(self):
-        N_data_all, N_range = self.N_data_all, self.N_range
-        mu_all, Temp_all = self.mu_all, self.Temp_all
+        '''
+        Plots the histograms for the number of molecules
+        '''
+        N_data_sim, N_range = self.N_data_sim, self.N_range
+        mu_sim, Temp_sim = self.mu_sim, self.Temp_sim
         
         plt.figure(figsize=(8,8))
         
-        for mu, Temp, N_data in zip(mu_all, Temp_all,N_data_all):
+        for mu, Temp, N_data in zip(mu_sim, Temp_sim,N_data_sim):
             
             plt.hist(N_data,bins=N_range,alpha=0.5,normed=True,label=r'$\mu = $'+str(int(mu))+' K, T = '+str(int(Temp))+' K')
+
+        plt.plot([self.Ncut,self.Ncut],[0,0.25*plt.gca().get_ylim()[1]],'k-',label=r'$N_{\rm cut} = $'+str(self.Ncut))
         
         plt.xlabel('Number of Molecules')
         plt.ylabel('Probability Density Function')
         plt.legend()
         plt.show()
         
-#    def plot_VLE(self,Temp_VLE_all):
-#        
-#        rhov, rhol = self.calc_rho(Temp_VLE_all)
-#
-#        plt.plot(rhov,Temp_VLE_all,'bo',mfc='None',markersize=8)
-#        plt.plot(rhol,Temp_VLE_all,'bo',mfc='None',markersize=8,label='This Work')
-#        plt.plot(rhol_Potoff,Tsat_Potoff,'ks',mfc='None',markersize=8)
-#        plt.plot(rhov_Potoff,Tsat_Potoff,'ks',mfc='None',markersize=8,label='Potoff et al.')
-#        plt.xlabel('Density (kg/m$^3$)')
-#        plt.ylabel('Temperature (K)')
-#        plt.legend()
-#        plt.show()
+    def U_to_u(self,Uint,Temp,mu,Nmol):
+        '''
+        Converts internal energy, temperature, chemical potential, and number of molecules into reduced potential energy 
+        
+        inputs:
+            Uint: internal energy (K)
+            Temp: Temperature (K)
+            mu: Chemical potential (K)
+            Nmol: number of molecules
+        outputs:
+            Ureduced: reduced potential energy
+        '''
+        beta = 1./Temp #[1/K]
+        Ureduced = beta*(Uint) - beta*mu*Nmol  #[dimensionless]
+        return Ureduced
         
     def build_MBAR_sim(self):
-        ####From multiple_state_point_practice       
-        ## N_k contains the number of snapshots from each state point simulated
-        ## Nmol_kn contains all of the Number of molecules in 1-d array
-        ## u_kn_sim contains all the reduced potential energies just for the simulated points
+        '''
+        Creates an instance of the MBAR object for just the simulated state points
+        N_k: contains the number of snapshots from each state point simulated
+        Nmol_kn: contains all of the Number of molecules in 1-d array
+        u_kn_sim: contains all the reduced potential energies just for the simulated points
+        f_k_sim: the converged reduced free energies for each simulated state point (used as initial guess for non-simulated state points)
+        '''         
         
-        Temp_sim, mu_sim, nSnapshots, U_data_all, N_data_all = self.Temp_all, self.mu_all, self.K_all, self.U_data_all, self.N_data_all
+        Temp_sim, mu_sim, nSnapshots, U_data_sim, N_data_sim = self.Temp_sim, self.mu_sim, self.K_sim, self.U_data_sim, self.N_data_sim
         
-        N_k = np.array(nSnapshots)
-        sumN_k = np.sum(N_k)
-        Nmol_flat = np.array(N_data_all).flatten()
-        U_flat = np.array(U_data_all).flatten()
-#        Nmol_kn = Nmol_kn.reshape([Nmol_kn.size])
+        N_k_sim = np.array(nSnapshots)
+        sumN_k = np.sum(N_k_sim)
+        Nmol_flat = np.array(N_data_sim).flatten()
+        U_flat = np.array(U_data_sim).flatten()
         u_kn_sim = np.zeros([len(Temp_sim),sumN_k])
         
         for iT, (Temp, mu) in enumerate(zip(Temp_sim, mu_sim)):
     
-            u_kn_sim[iT] = U_to_u(U_flat,Temp,mu,Nmol_flat)
-#            
-#            jstart = 0
-#            
-#            for jT in range(len(Temp_sim)):
-#                
-#                jend = jstart+N_k[jT]
-#                u_kn_sim[iT,jstart:jend] = U_to_u(U_data_all[jT],Temp,mu,N_data_all[jT])                
-#                jstart = jend
+            u_kn_sim[iT] = self.U_to_u(U_flat,Temp,mu,Nmol_flat)
         
-        mbar = MBAR(u_kn_sim,N_k)
+        mbar_sim = MBAR(u_kn_sim,N_k_sim)
         
-        Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)[0]
+        Deltaf_ij = mbar_sim.getFreeEnergyDifferences(return_theta=False)[0]
         f_k_sim = Deltaf_ij[0,:]        
-        print(f_k_sim)
+#        print(f_k_sim)
         
-        self.u_kn_sim, self.f_k_sim, self.Nmol_flat, self.U_flat, self.sumN_k, self.N_k = u_kn_sim, f_k_sim, Nmol_flat, U_flat, sumN_k, N_k
+        self.u_kn_sim, self.f_k_sim, self.Nmol_flat, self.U_flat, self.sumN_k, self.N_k_sim, self.mbar_sim = u_kn_sim, f_k_sim, Nmol_flat, U_flat, sumN_k, N_k_sim, mbar_sim
+    
+    def solve_Ncut(self,show_plot=False):
+        '''
+        The MBAR_GCMC class uses a cutoff in the number of molecules, Ncut, to 
+        distinguish between liquid and vapor phases. The value of Ncut is determined
+        by equating the pressures at the bridge, i.e. the sum of the weights for
+        the highest temperature simulated should be equal in the vapor and
+        liquid phases.
+        '''
+        mbar_sim, Nmol_flat = self.mbar_sim,self.Nmol_flat
         
-    def build_MBAR_VLE_matrices(self,Temp_VLE):
-        Temp_sim, U_flat, Nmol_flat,u_kn_sim,f_k_sim,N_k,sumN_k = self.Temp_all, self.U_flat,self.Nmol_flat,self.u_kn_sim,self.f_k_sim,self.N_k,self.sumN_k
+        Nscan = np.arange(60,100)
         
-        jT0 = len(Temp_sim)
+        sqdeltaW_bridge = np.zeros(len(Nscan))
+        bridge_index = np.argmax(self.Temp_sim)
         
-        ### From multiple_state_point_practice        
-        Temp_VLE_all = np.concatenate((Temp_sim,Temp_VLE))
-        N_k_all = self.K_all[:]
+        for iN, Ni in enumerate(Nscan):
+        
+            sumWliq_bridge = np.sum(mbar_sim.W_nk[:,bridge_index][Nmol_flat>Ni])
+            sumWvap_bridge = np.sum(mbar_sim.W_nk[:,bridge_index][Nmol_flat<=Ni])
+            sqdeltaW_bridge[iN] = (sumWliq_bridge - sumWvap_bridge)**2
+        
+        if show_plot:
+        
+            plt.plot(Nscan,sqdeltaW_bridge,'k-')
+            plt.xlabel(r'$N_{\rm cut}$')
+            plt.ylabel(r'$(\Delta W_{\rm bridge}^{\rm sat})^2$')
+            plt.show()
+                                
+        Ncut = Nscan[np.argmin(sqdeltaW_bridge)]
+        print('Liquid and vapor phase is divided by Nmol = '+str(Ncut))
+    
+        return Ncut
+    
+    def build_MBAR_VLE_matrices(self):
+        '''
+        Build u_kn, N_k, and f_k_guess by appending the u_kn_sim, N_k_sim, and
+        f_k_sim with empty matrices of the appropriate dimensions, determined by
+        the number of VLE points desired.
+        '''
+        Temp_VLE, Temp_sim, u_kn_sim,f_k_sim,sumN_k = self.Temp_VLE,self.Temp_sim, self.u_kn_sim,self.f_k_sim,self.sumN_k
+        
+        # nTsim is used to keep track of the number of simulation temperatures
+        nTsim = len(Temp_sim)
+        
+#        Temp_VLE_all = np.concatenate((Temp_sim,Temp_VLE))
+        N_k_all = self.K_sim[:]
         N_k_all.extend([0]*len(Temp_VLE))
 
         u_kn_VLE = np.zeros([len(Temp_VLE),sumN_k])
-        u_kn = np.concatenate((u_kn_sim,u_kn_VLE))
+        u_kn_all = np.concatenate((u_kn_sim,u_kn_VLE))
         
         f_k_guess = np.concatenate((f_k_sim,np.zeros(len(Temp_VLE))))
         
-        self.u_kn, self.f_k_guess, self.N_k_all, self.jT0 = u_kn, f_k_guess, N_k_all,jT0
+        self.u_kn_all, self.f_k_guess, self.N_k_all, self.nTsim = u_kn_all, f_k_guess, N_k_all,nTsim
         
-    def solve_VLE(self,Temp_VLE):
+    def mu_guess_bounds(self):
+        '''
+        Start with reasonable guess for mu and provide bounds for optimizer
+        '''
         
-        mu_sim, Temp_sim = self.mu_all, self.Temp_all
-        self.Temp_VLE = Temp_VLE
+        mu_sim, Temp_sim, Temp_VLE = self.mu_sim, self.Temp_sim, self.Temp_VLE
         
-        self.build_MBAR_VLE_matrices(Temp_VLE)
-        
-        ### Optimization of mu
         ### Bounds for mu
         mu_sim_low = np.ones(len(Temp_VLE))*mu_sim.min()
         mu_sim_high = np.ones(len(Temp_VLE))*mu_sim.max()
         
         Temp_sim_mu_low = Temp_sim[np.argmin(mu_sim)]
         Temp_sim_mu_high = Temp_sim[np.argmax(mu_sim)]
-        print(mu_sim,Temp_sim)
-        ### Guess for mu
+
+        ### Guess for mu determined by the mu at the lowest and highest temperatures
         mu_guess = lambda Temp: mu_sim_high + (mu_sim_low - mu_sim_high)/(Temp_sim_mu_low-Temp_sim_mu_high) * (Temp-Temp_sim_mu_high)
         
         mu_VLE_guess = mu_guess(Temp_VLE)
         mu_VLE_guess[mu_VLE_guess<mu_sim.min()] = mu_sim.min()
         mu_VLE_guess[mu_VLE_guess>mu_sim.max()] = mu_sim.max()
         
+        ### Buffer for the lower and upper bounds. Necessary for Golden search.
         mu_lower_bound = mu_sim_low*1.005
         mu_upper_bound = mu_sim_high*0.995
         
-        print(r'$(\Delta W)^2$ for $\mu_{\rm guess}$ =')
-        print(self.sqdeltaW(mu_VLE_guess))
+        return mu_VLE_guess, mu_lower_bound, mu_upper_bound
         
-        ### Optimize mu
+    def solve_VLE(self,Temp_VLE,show_plot=False):
+        '''
+        Determine optimal values of mu that result in equal pressures by 
+        minimizing the square difference of the weights in the liquid and vapor
+        phases. Subsequentally, calls the function to compute the saturation
+        properties.
+        '''
+        
+        self.Temp_VLE = Temp_VLE
+
+        self.build_MBAR_VLE_matrices()
+        mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_guess_bounds()
+        
+        ### Optimization of mu
         
         mu_opt = GOLDEN_multi(self.sqdeltaW,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.0001,maxit=30)
         sqdeltaW_opt = self.sqdeltaW(mu_opt)
         
-        plt.plot(Temp_VLE,mu_opt,'k-',label=r'$\mu_{\rm opt}$')
-        plt.plot(Temp_sim,mu_sim,'ro',mfc='None',label='Simulation')
-        plt.plot(Temp_VLE,mu_VLE_guess,'b--',label=r'$\mu_{\rm guess}$')
-        plt.xlabel(r'$T$ (K)')
-        plt.ylabel(r'$\mu_{\rm opt}$ (K)')
-        plt.xlim([300,550])
-        plt.ylim([-4200,-3600])
-        plt.legend()
-        plt.show()
-        
-        plt.plot(Temp_VLE,sqdeltaW_opt,'ko')
-        plt.xlabel(r'$T$ (K)')
-        plt.ylabel(r'$(\Delta W^{\rm sat})^2$')
-        plt.show()
-        
-        print("Effective sample numbers")
-        print (self.mbar.computeEffectiveSampleNumber())
-        print('\nWhich is approximately '+str(self.mbar.computeEffectiveSampleNumber()/self.sumN_k*100.)+'% of the total snapshots')
-    
         self.mu_opt = mu_opt
-    
-    def sqdeltaW(self,mu_VLE):
         
-        jT0, U_flat, Nmol_flat,Ncut, f_k_guess, Temp_VLE, u_kn, N_k_all = self.jT0, self.U_flat, self.Nmol_flat, self.Ncut,self.f_k_guess, self.Temp_VLE, self.u_kn, self.N_k_all
+        self.calc_rhosat()
+        
+        if show_plot:
+        
+            plt.plot(Temp_VLE,mu_opt,'k-',label=r'$\mu_{\rm opt}$')
+            plt.plot(self.Temp_sim,self.mu_sim,'ro',mfc='None',label='Simulation')
+            plt.plot(Temp_VLE,mu_VLE_guess,'b--',label=r'$\mu_{\rm guess}$')
+            plt.xlabel(r'$T$ (K)')
+            plt.ylabel(r'$\mu_{\rm opt}$ (K)')
+            plt.xlim([300,550])
+            plt.ylim([-4200,-3600])
+            plt.legend()
+            plt.show()
+            
+            plt.plot(Temp_VLE,sqdeltaW_opt,'ko')
+            plt.xlabel(r'$T$ (K)')
+            plt.ylabel(r'$(\Delta W^{\rm sat})^2$')
+            plt.show()
+            
+            print("Effective number of samples")
+            print (self.mbar.computeEffectiveSampleNumber())
+            print('\nWhich is approximately '+str(self.mbar.computeEffectiveSampleNumber()/self.sumN_k*100.)+'% of the total snapshots')
+     
+    def sqdeltaW(self,mu_VLE):
+        '''
+        Computes the square difference between the sum of the weights in the
+        vapor and liquid phases.
+        Stores the optimal reduced free energy as f_k_guess for future iterations
+        Stores mbar, sumWliq, and sumWvap for computing VLE properties if converged
+        '''
+        
+        nTsim, U_flat, Nmol_flat,Ncut, f_k_guess, Temp_VLE, u_kn_all, N_k_all = self.nTsim, self.U_flat, self.Nmol_flat, self.Ncut,self.f_k_guess, self.Temp_VLE, self.u_kn_all, self.N_k_all
 
         for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_VLE)):
             
-            u_kn[jT0+jT,:] = U_to_u(U_flat,Temp,mu,Nmol_flat)
+            u_kn_all[nTsim+jT,:] = self.U_to_u(U_flat,Temp,mu,Nmol_flat)
 
-        mbar = MBAR(u_kn,N_k_all,initial_f_k=f_k_guess)
+        mbar = MBAR(u_kn_all,N_k_all,initial_f_k=f_k_guess)
     
-        sumWliq = np.sum(mbar.W_nk[:,jT0:][Nmol_flat>Ncut],axis=0)
-        sumWvap = np.sum(mbar.W_nk[:,jT0:][Nmol_flat<=Ncut],axis=0)
+        sumWliq = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat>Ncut],axis=0)
+        sumWvap = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat<=Ncut],axis=0)
         sqdeltaW_VLE = (sumWliq-sumWvap)**2
 
-        ### Store previous solutions to speed-up future convergence
+        ### Store previous solutions to speed-up future convergence of MBAR
         Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)[0]
         self.f_k_guess = Deltaf_ij[0,:]
         self.mbar, self.sumWliq, self.sumWvap  = mbar, sumWliq, sumWvap
               
         return sqdeltaW_VLE
     
-    def plot_VLE(self):
+    def calc_rhosat(self):
+        '''
+        Computes the saturated liquid and vapor densities
+        '''
+        Nmol_flat, Ncut, mbar, sumWliq, sumWvap, Mw, Vbox, nTsim = self.Nmol_flat, self.Ncut, self.mbar, self.sumWliq, self.sumWvap, self.Mw, self.Vbox_sim[0], self.nTsim
         
-        Nmol_flat, Ncut, mbar, sumWliq, sumWvap, Mw, Vbox, jT0, Temp_VLE = self.Nmol_flat, self.Ncut, self.mbar, self.sumWliq, self.sumWvap, self.Mw, self.Vbox_all[0], self.jT0, self.Temp_VLE
-        
-        Nliq = np.sum(mbar.W_nk[:,jT0:][Nmol_flat>Ncut].T*Nmol_flat[Nmol_flat>Ncut],axis=1)/sumWliq #Must renormalize by the liquid or vapor phase
-        Nvap = np.sum(mbar.W_nk[:,jT0:][Nmol_flat<=Ncut].T*Nmol_flat[Nmol_flat<=Ncut],axis=1)/sumWvap
+        Nliq = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat>Ncut].T*Nmol_flat[Nmol_flat>Ncut],axis=1)/sumWliq #Must renormalize by the liquid or vapor phase
+        Nvap = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat<=Ncut].T*Nmol_flat[Nmol_flat<=Ncut],axis=1)/sumWvap
         
         rholiq = Nliq/Vbox * Mw / N_A * gmtokg / Ang3tom3 #[kg/m3]
         rhovap = Nvap/Vbox * Mw / N_A * gmtokg / Ang3tom3 #[kg/m3]
+        
+        self.rholiq, self.rhovap = rholiq, rhovap
+    
+    def plot_VLE(self):
+        '''
+        Plots the saturation densities and compares with literature values if available
+        '''
+        Temp_VLE, rholiq, rhovap = self.Temp_VLE, self.rholiq, self.rhovap
            
         plt.plot(rhovap,Temp_VLE,'ro',label='MBAR-GCMC')
         plt.plot(rholiq,Temp_VLE,'ro')
-        plt.plot(rhov_Potoff,Tsat_Potoff,'ks',mfc='None',label='Potoff')
-        plt.plot(rhol_Potoff,Tsat_Potoff,'ks',mfc='None')
+        
+        if self.compare_literature:
+            plt.plot(rhov_Potoff,Tsat_Potoff,'ks',mfc='None',label='Potoff')
+            plt.plot(rhol_Potoff,Tsat_Potoff,'ks',mfc='None')
+        
         plt.xlabel(r'$\rho$ (kg/m$^3$)')
         plt.ylabel(r'$T$ (K)')
-        plt.xlim([0,650])
-        plt.ylim([320,520])
+        plt.xlim([-10,1.04*rholiq.max()])
+        plt.ylim([0.98*Temp_VLE.min(),1.02*Temp_VLE.max()])
         plt.legend()
         plt.show()
-        
-filepaths = []
-        
-#root_path = 'H:/GOMC_practice/GCMC/hexane_replicates/'
-#Temp_range = ['510','480','450','420','390','360','330','460','410']
-#hist_num=['2']*len(Temp_range)
 
-root_path = 'hexane_Potoff/'
-Temp_range = ['510','470','430','480','450','420','390','360','330']
-hist_num=['1','2','3','4','5','6','7','8','9']
-
-for iT, Temp in enumerate(Temp_range):
+def main():
+            
+    filepaths = []
+            
+    root_path = 'hexane_Potoff/'
+    Temp_range = ['510','470','430','480','450','420','390','360','330']
+    hist_num=['1','2','3','4','5','6','7','8','9']
     
-    hist_name='/his'+hist_num[iT]+'a.dat' #Only if loading hexane_Potoff
-    
-    filepaths.append(root_path+Temp+hist_name)
+    for iT, Temp in enumerate(Temp_range):
+        
+        hist_name='/his'+hist_num[iT]+'a.dat' #Only if loading hexane_Potoff
+        
+        filepaths.append(root_path+Temp+hist_name)
 
-MBAR_GCMC_trial = MBAR_GCMC(filepaths,use_stored_C=False)
-#MBAR_GCMC_trial.solve_VLE(Temp_VLE_all)
-#print(MBAR_GCMC_trial.K_all)
-#print(MBAR_GCMC_trial.N_min)
-#print(MBAR_GCMC_trial.fi_NU)
-#MBAR_GCMC_trial.plot_histograms()
-#C_stored = MBAR_GCMC_trial.C_all
-#Temp_VLE_all = np.array([420,390,360])
-#Temp_VLE_all = np.array([460,410])
-Temp_VLE_all = np.array([500,490,480,470,460,450,440,430,420,410,400,390,380,370,360,350,340,330,320])
-MBAR_GCMC_trial.solve_VLE(Temp_VLE_all)
-MBAR_GCMC_trial.plot_VLE()
-#Temp_VLE_all = np.array([480.,330.])
-#Temp_VLE_all = Tsat_Potoff
-#MBAR_GCMC_trial.calc_rho(Temp_VLE_all)
-#MBAR_GCMC_trial.diff_area_peaks(-4023.,480.,plot=True)
-#MBAR_GCMC_trial.plot_VLE(Temp_VLE_all)
+    Mw_hexane  = 12.0109*6.+1.0079*(2.*6.+2.) #[gm/mol]
+    
+    Temp_VLE_plot = Tsat_Potoff
+    
+    MBAR_GCMC_trial = MBAR_GCMC(filepaths,Mw_hexane,compare_literature=True)
+    MBAR_GCMC_trial.plot_histograms()
+    MBAR_GCMC_trial.solve_VLE(Temp_VLE_plot)
+    MBAR_GCMC_trial.plot_VLE()
+    
+if __name__ == '__main__':
+    '''
+    python MBAR_GCMC_class.py  
+    '''
+
+    main()   
