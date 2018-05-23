@@ -75,6 +75,9 @@ class MBAR_GCMC():
         U_data_sim = []
         K_sim = []
         
+        Nmol_flat = np.array([])
+        U_flat = np.array([])
+        
         N_min_sim = []
         N_max_sim = []
         
@@ -95,15 +98,18 @@ class MBAR_GCMC():
             N_data_sim.append(N_data)
             U_data_sim.append(U_data)
             K_sim.append(len(N_data))
-                    
+            
+            Nmol_flat = np.append(Nmol_flat,N_data)
+            U_flat = np.append(U_flat,U_data)
+            
+#            print(N_data_sim)        
             N_min_sim.append(np.min(N_data))
             N_max_sim.append(np.max(N_data))
              
             U_min_sim.append(np.min(U_data))
             U_max_sim.append(np.max(U_data))
-
-            
-        self.Temp_sim, self.mu_sim, self.Vbox_sim, self.N_data_sim, self.U_data_sim, self.K_sim = Temp_sim, mu_sim, Vbox_sim, N_data_sim, U_data_sim, K_sim
+   
+        self.Temp_sim, self.mu_sim, self.Vbox_sim, self.N_data_sim, self.U_data_sim, self.K_sim, self.Nmol_flat, self.U_flat = Temp_sim, mu_sim, Vbox_sim, N_data_sim, U_data_sim, K_sim, Nmol_flat, U_flat
             
     def extract_data(self,filepath):
         '''
@@ -165,12 +171,12 @@ class MBAR_GCMC():
         f_k_sim: the converged reduced free energies for each simulated state point (used as initial guess for non-simulated state points)
         '''         
         
-        Temp_sim, mu_sim, nSnapshots, U_data_sim, N_data_sim = self.Temp_sim, self.mu_sim, self.K_sim, self.U_data_sim, self.N_data_sim
+        Temp_sim, mu_sim, nSnapshots, Nmol_flat, U_flat = self.Temp_sim, self.mu_sim, self.K_sim, self.Nmol_flat, self.U_flat
         
         N_k_sim = np.array(nSnapshots)
         sumN_k = np.sum(N_k_sim)
-        Nmol_flat = np.array(N_data_sim).flatten()
-        U_flat = np.array(U_data_sim).flatten()
+#        Nmol_flat = np.array(N_data_sim).flatten()
+#        U_flat = np.array(U_data_sim).flatten()
         u_kn_sim = np.zeros([len(Temp_sim),sumN_k])
         
         for iT, (Temp, mu) in enumerate(zip(Temp_sim, mu_sim)):
@@ -183,7 +189,7 @@ class MBAR_GCMC():
         f_k_sim = Deltaf_ij[0,:]        
 #        print(f_k_sim)
         
-        self.u_kn_sim, self.f_k_sim, self.Nmol_flat, self.U_flat, self.sumN_k, self.N_k_sim, self.mbar_sim = u_kn_sim, f_k_sim, Nmol_flat, U_flat, sumN_k, N_k_sim, mbar_sim
+        self.u_kn_sim, self.f_k_sim, self.sumN_k, self.N_k_sim, self.mbar_sim = u_kn_sim, f_k_sim, sumN_k, N_k_sim, mbar_sim
     
     def solve_Ncut(self,show_plot=False):
         '''
@@ -375,9 +381,14 @@ def main():
             
     filepaths = []
             
-    root_path = 'hexane_Potoff/'
+#    root_path = 'hexane_Potoff/'
+#    Temp_range = ['510','470','430','480','450','420','390','360','330']
+#    hist_num=['1','2','3','4','5','6','7','8','9']
+    
+#    root_path = 'hexane_Potoff_replicates/'
+    root_path = 'hexane_Potoff_replicates_2/'
     Temp_range = ['510','470','430','480','450','420','390','360','330']
-    hist_num=['1','2','3','4','5','6','7','8','9']
+    hist_num=['2','2','2','2','2','2','2','2','2']
     
     for iT, Temp in enumerate(Temp_range):
         
