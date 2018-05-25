@@ -62,7 +62,7 @@ def GOLDEN_multi(func,guesses,lower_bounds,upper_bounds,TOL,maxit):
     outputs:
         XMIN: n-dimensional array of optimal values
     '''
-    
+    ### I need to fix this for when the initial bounds are not adequate
     AX_all = lower_bounds.copy()
     CX_all = upper_bounds.copy()
     BX_all = guesses.copy()
@@ -102,6 +102,7 @@ def GOLDEN_multi(func,guesses,lower_bounds,upper_bounds,TOL,maxit):
 #                F2 = f_eval(X2)
                 Xnew_all[i] = X2[i]
                 flagnew_all[i] = 2
+                #print(str(i)+' has flag =2')
             else:
                 X3[i] = X2[i]
                 X2[i] = X1[i]
@@ -110,6 +111,7 @@ def GOLDEN_multi(func,guesses,lower_bounds,upper_bounds,TOL,maxit):
 #                F1 = f_eval(X1)
                 Xnew_all[i] = X1[i]
                 flagnew_all[i] = 1
+                #print(str(i)+' has flag =1')
         Fnew_all = func(Xnew_all) #Only a single function evaluation for new set of Xs
         for i, (fi, Fi) in enumerate(zip(flagnew_all,Fnew_all)):
             if fi == 1:
@@ -117,6 +119,7 @@ def GOLDEN_multi(func,guesses,lower_bounds,upper_bounds,TOL,maxit):
             elif fi == 2:
                 F2_all[i] = Fi 
         nit += 1
+        #print(nit,np.abs(X3-X0) > TOL*(np.abs(X1)+np.abs(X2)))
 #        print(X0,X1,X2,X3)           
     for i, (F1, F2) in enumerate(zip(F1_all,F2_all)):
         if F1 < F2:
@@ -144,7 +147,7 @@ def main():
         print('function call')     
         return [f_eval1(x[0]),f_eval2(x[1])]                             
     
-    guess = np.array([0.8,1.0143,1.2])
+    guess = np.array([0,1.0143,18])
     
     xplot = np.linspace(min(guess),max(guess),50)
     yplot = f_eval([xplot,xplot])

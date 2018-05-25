@@ -10,8 +10,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 from pymbar import MBAR
-import sys
-import pdb
 from Golden_search_multi import GOLDEN_multi
 
 # Physical constants

@@ -22,15 +22,11 @@ rhol_Potoff = np.array([366.018,395.855,422.477,444.562,463.473,480.498,496.217,
 rhov_Potoff = np.array([112.352,90.541,72.249,58.283,47.563,39.028,32.053,26.27,21.441,17.397,14.013,11.19,8.846,6.913,5.331,4.05,3.023,2.213,1.584])     
 Psat_Potoff = np.array([27.697,23.906,20.521,17.529,14.889,12.563,10.522,8.738,7.19,5.857,4.717,3.753,2.946,2.279,1.734,1.296,0.949,0.68,0.476])
 
-Tsat_RP = Tsat_Potoff.copy()
-rhol_RP = np.array([347.36,389.23,418.49,442.04,462.17,479.97,496.1,510.95,524.81,537.86,550.24,562.07,573.42,584.36,594.94,605.21,615.21,624.97,634.52])
-rhov_RP = np.array([125.56,93.163,73.332,59.059,48.08,39.332,32.217,26.355,21.489,17.433,14.048,11.227,8.8855,6.9524,5.369,4.0846,3.0551,2.2413,1.6087])
-Psat_RP = np.array([27.122,23.386,20.093,17.178,14.601,12.329,10.334,8.5925,7.0804,5.7771,4.6628,3.7185,2.9266,2.2701,1.7327,1.2993,0.95522,0.68708,0.48232])
-
 class MBAR_GCMC():
-    def __init__(self,root_path,filepaths,Mw,compare_literature=False):
+    def __init__(self,root_path,filepaths,Mw,eps_scale,compare_literature=False):
         self.root_path = root_path
         self.filepaths = filepaths
+        self.eps_scale = eps_scale
         self.extract_all_sim_data()
         self.min_max_sim_data()
         self.build_MBAR_sim()
@@ -139,18 +135,27 @@ class MBAR_GCMC():
         N_data_sim, N_range = self.N_data_sim, self.N_range
         mu_sim, Temp_sim = self.mu_sim, self.Temp_sim
         
-        plt.figure(figsize=(8,8))
+#        plt.figure(figsize=(8,8))
+
+        color_list = ['r','g','b','y','m','c','brown','orange','pink','grey']
+        if mu_sim[0] == -4127: 
+            color_list = ['g']*20
+        else:
+            color_list = ['b']*20
+                         
+        plt.plot([],[],'g')
+        plt.plot([],[],'b')
         
-        for mu, Temp, N_data in zip(mu_sim, Temp_sim,N_data_sim):
+        for isim, (mu, Temp, N_data) in enumerate(zip(mu_sim, Temp_sim,N_data_sim)):
             
-            plt.hist(N_data,bins=N_range,alpha=0.5,normed=True,label=r'$\mu = $'+str(int(mu))+' K, T = '+str(int(Temp))+' K')
+            plt.hist(N_data,bins=N_range,color=color_list[isim],alpha=0.5,normed=True,label=r'$\mu = $'+str(int(mu))+' K, T = '+str(int(Temp))+' K')
 
         plt.plot([self.Ncut,self.Ncut],[0,0.25*plt.gca().get_ylim()[1]],'k-',label=r'$N_{\rm cut} = $'+str(self.Ncut))
         
         plt.xlabel('Number of Molecules')
         plt.ylabel('Probability Density Function')
-        plt.legend()
-        plt.show()
+        plt.legend([r'$\epsilon = \epsilon_{\rm Potoff}$',r'$\epsilon = 1.05 \epsilon_{\rm Potoff}$'])
+#        plt.show()
         
     def plot_2dhistograms(self):
         '''
@@ -172,19 +177,24 @@ class MBAR_GCMC():
 #        plt.show()
         
         color_list = ['r','g','b','y','m','c','brown','orange','pink','grey']
-
-        plt.figure(figsize=(8,8))
+        if mu_sim[0] == -4127: 
+            color_list = ['g']*20
+        else:
+            color_list = ['b']*20
+                         
+        plt.plot([],[],'go')
+        plt.plot([],[],'bo')
 
         for isim, (mu, Temp, N_data, U_data) in enumerate(zip(mu_sim, Temp_sim,N_data_sim,U_data_sim)):
             plt.plot(N_data,U_data,'o',color=color_list[isim],markersize=0.5,alpha=0.05)
             plt.plot([],[],'o',color=color_list[isim],label=r'$\mu = $'+str(int(mu))+' K, T = '+str(int(Temp))+' K')
 
-        plt.plot([self.Ncut,self.Ncut],[plt.gca().get_ylim()[0],plt.gca().get_ylim()[1]],'k-',label=r'$N_{\rm cut} = $'+str(self.Ncut))
+#        plt.plot([self.Ncut,self.Ncut],[plt.gca().get_ylim()[0],plt.gca().get_ylim()[1]],'k-',label=r'$N_{\rm cut} = $'+str(self.Ncut))
         
         plt.xlabel('Number of Molecules')
         plt.ylabel('Internal Energy (K)')
-        plt.legend()
-        plt.show()
+        plt.legend([r'$\epsilon = \epsilon_{\rm Potoff}$',r'$\epsilon = 1.05 \epsilon_{\rm Potoff}$'])
+#        plt.show()
         
     def U_to_u(self,Uint,Temp,mu,Nmol):
         '''
@@ -310,7 +320,7 @@ class MBAR_GCMC():
         ### Buffer for the lower and upper bounds. Necessary for Golden search.
         mu_lower_bound = mu_sim_low*1.005
         mu_upper_bound = mu_sim_high*0.995
-        
+        print(mu_lower_bound,mu_upper_bound)
         return mu_VLE_guess, mu_lower_bound, mu_upper_bound
         
     def solve_VLE(self,Temp_VLE,show_plot=True):
@@ -328,14 +338,12 @@ class MBAR_GCMC():
         
         ### Optimization of mu
         
-        mu_opt = GOLDEN_multi(self.sqdeltaW,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.0001,maxit=30)
+        mu_opt = GOLDEN_multi(self.sqdeltaW,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.00001,maxit=30)
         sqdeltaW_opt = self.sqdeltaW(mu_opt)
         
         self.mu_opt = mu_opt
         
         self.calc_rhosat()
-        
-        self.print_VLE()
         
         if show_plot:
         
@@ -370,7 +378,7 @@ class MBAR_GCMC():
 
         for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_VLE)):
             
-            u_kn_all[nTsim+jT,:] = self.U_to_u(U_flat*1.05,Temp,mu,Nmol_flat)
+            u_kn_all[nTsim+jT,:] = self.U_to_u(U_flat*self.eps_scale,Temp,mu,Nmol_flat)
 
         mbar = MBAR(u_kn_all,N_k_all,initial_f_k=f_k_guess)
     
@@ -404,70 +412,65 @@ class MBAR_GCMC():
         Plots the saturation densities and compares with literature values if available
         '''
         Temp_VLE, rholiq, rhovap = self.Temp_VLE, self.rholiq, self.rhovap
+        
+        if self.mu_sim[0] == -4127: 
+            color = 'g'
+            shape = 'o'
+        else:
+            color = 'b'
+            shape = 's'
+                         
+        plt.plot([],[],'go',mfc='None')
+        plt.plot([],[],'bs',mfc='None')
            
-        plt.plot(rhov_RP,Tsat_RP,'k-',label='REFPROP')
-        plt.plot(rhol_RP,Tsat_RP,'k-',label='REFPROP')
+        plt.plot(rhovap,Temp_VLE,color+shape,mfc='None',label='MBAR-GCMC')
+        plt.plot(rholiq,Temp_VLE,color+shape,mfc='None')
         
-        plt.plot(rhovap,Temp_VLE,'ro',label='MBAR-GCMC')
-        plt.plot(rholiq,Temp_VLE,'ro')
-        
-        if self.compare_literature:
-            plt.plot(rhov_Potoff,Tsat_Potoff,'ks',mfc='None',label='Potoff')
-            plt.plot(rhol_Potoff,Tsat_Potoff,'ks',mfc='None')
+#        if self.compare_literature:
+#            plt.plot(rhov_Potoff,Tsat_Potoff,'ks',mfc='None',label='Potoff')
+#            plt.plot(rhol_Potoff,Tsat_Potoff,'ks',mfc='None')
         
         plt.xlabel(r'$\rho$ (kg/m$^3$)')
         plt.ylabel(r'$T$ (K)')
         plt.xlim([-10,1.04*rholiq.max()])
         plt.ylim([0.98*Temp_VLE.min(),1.02*Temp_VLE.max()])
-        plt.legend()
-        plt.show()
-        
-    def print_VLE(self):
-        '''
-        Prints the saturation densities and compares with literature values if available
-        '''
-        Temp_VLE, rholiq, rhovap = self.Temp_VLE, self.rholiq, self.rhovap
-        
-        fT = open(self.root_path+'Tsat','w')
-        fv = open(self.root_path+'rhovsat','w')
-        fl = open(self.root_path+'rholsat','w')
-        for Temp, rhov, rhol in zip(Temp_VLE,rhovap,rholiq):
-            fT.write(str(Temp)+'\n')
-            fv.write(str(rhov)+'\n')
-            fl.write(str(rhol)+'\n')   
-        fT.close()
-        fv.close()
-        fl.close()
+        plt.title(r'$\epsilon = 1.05 \epsilon_{\rm Potoff}$')
+        plt.legend([r'$\epsilon_{\rm ref} = \epsilon_{\rm Potoff}$',r'$\epsilon_{\rm ref} = 1.05 \epsilon_{\rm Potoff}$'])
+#        plt.show()
 
 def main():
-         
-    filepaths = []
+    
+    plt.figure(figsize=(8,8))
+    
+    for root_path, eps_scale in zip(['hexane_Potoff_replicates/','hexane_eps_scaled/'],[1.05,1.0]):
+        
+        filepaths = []
+                
+    #    root_path = 'hexane_Potoff/'
+    #    hist_num=['1','2','3','4','5','6','7','8','9']
+        
+    #    root_path = 'hexane_Potoff_replicates/'
+#        root_path = 'hexane_Potoff_replicates_2/'
+    #    root_path = 'hexane_eps_scaled/'
+        Temp_range = ['510','470','430','480','450','420','390','360','330']
+        hist_num=['2','2','2','2','2','2','2','2','2']
+        
+        for iT, Temp in enumerate(Temp_range):
             
-#    root_path = 'hexane_Potoff/'
-#    hist_num=['1','2','3','4','5','6','7','8','9']
+            hist_name='/his'+hist_num[iT]+'a.dat' #Only if loading hexane_Potoff
+            
+            filepaths.append(root_path+Temp+hist_name)
     
-#    root_path = 'hexane_Potoff_replicates/'
-    root_path = 'hexane_Potoff_replicates_2/'
-#    root_path = 'hexane_eps_scaled/'
-    Temp_range = ['510','470','430','480','450','420','390','360','330']
-    hist_num=['2','2','2','2','2','2','2','2','2']
-    
-    for iT, Temp in enumerate(Temp_range):
+        Mw_hexane  = 12.0109*6.+1.0079*(2.*6.+2.) #[gm/mol]
         
-        hist_name='/his'+hist_num[iT]+'a.dat' #Only if loading hexane_Potoff
+        Temp_VLE_plot = Tsat_Potoff
         
-        filepaths.append(root_path+Temp+hist_name)
-
-    Mw_hexane  = 12.0109*6.+1.0079*(2.*6.+2.) #[gm/mol]
-    
-    Temp_VLE_plot = Tsat_Potoff
-    
-    MBAR_GCMC_trial = MBAR_GCMC(root_path,filepaths,Mw_hexane,compare_literature=True)
-    MBAR_GCMC_trial.plot_histograms()
-    MBAR_GCMC_trial.plot_2dhistograms()
-    MBAR_GCMC_trial.solve_VLE(Temp_VLE_plot)
-    MBAR_GCMC_trial.plot_VLE()
-    
+        MBAR_GCMC_trial = MBAR_GCMC(root_path,filepaths,Mw_hexane,eps_scale,compare_literature=True)
+#        MBAR_GCMC_trial.plot_histograms()
+#        MBAR_GCMC_trial.plot_2dhistograms()
+        MBAR_GCMC_trial.solve_VLE(Temp_VLE_plot)
+        MBAR_GCMC_trial.plot_VLE()
+        
 if __name__ == '__main__':
     '''
     python MBAR_GCMC_class.py  
