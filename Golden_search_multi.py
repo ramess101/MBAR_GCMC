@@ -66,6 +66,82 @@ def GOLDEN_multi(func,guesses,lower_bounds,upper_bounds,TOL,maxit):
     AX_all = lower_bounds.copy()
     CX_all = upper_bounds.copy()
     BX_all = guesses.copy()
+
+    FA_all = func(AX_all)
+    FB_all = func(BX_all)
+    FC_all = func(CX_all)
+    
+    if (FB_all < FA_all).all() and (FB_all < FC_all).all():
+        print('This is a well initialized system')
+    else:
+        recompute_C = False
+        recompute_A = False
+        recompute_B = False
+        initialized = False
+        while not initialized:
+#            plt.plot(BX_all,FB_all,'k-')
+#            plt.plot(AX_all,FA_all,'b-')
+#            plt.plot(CX_all,FC_all,'r-')
+#            plt.show()
+            for i, (ai,bi,ci,fa,fb,fc) in enumerate(zip(AX_all,BX_all,CX_all,FA_all,FB_all,FC_all)):
+                plt.plot([ai,bi,ci],[fa,fb,fc])
+                if fb > fa and fb < fc: #Guess is greater than lower bound but less than upper bound
+                    AX_all[i] = ai - (bi - ai)
+                    BX_all[i] = ai
+                    CX_all[i] = bi
+                    FB_all[i] = fa
+                    FC_all[i] = fb
+                    recompute_A = True
+                    print('Guess is higher than lower bound')
+                elif fb > fc and fb < fa: #Guess is greater than upper bound but less than lower bound
+                    CX_all[i] = ci + (ci - bi)
+                    BX_all[i] = ci
+                    AX_all[i] = bi
+                    FB_all[i] = fc
+                    FA_all[i] = fb
+                    recompute_C = True
+                    print('Guess is higher than upper bound')
+                elif fb > 0.999:
+                    BX_all[i] = ai + (ci-ai)*np.random.random()
+                    recompute_B = True
+                    print('Guess is non-informative, equal to 1')
+                elif np.abs(fb - fa)/fa < 1e-3 and np.abs(fb - fc)/fc < 1e-3:
+                    if np.random.rand() < 0.5:
+                        BX_all[i] = (bi + ci)/2.
+                    else:
+                        BX_all[i] = (bi + ai)/2.
+                    recompute_B = True
+                    print('Guess is almost equal to bounds')
+                elif fb > fa and fb > fc: #Guess is greater than both the lower and upper bound
+                    print('This function appears to be multimodal')
+                    break
+            plt.show()
+            if recompute_C:
+                FC_all = func(CX_all)
+                initialized=False
+            if recompute_A:
+                FA_all = func(AX_all)
+                initialized=False
+            if recompute_B:
+                FB_all = func(BX_all)
+                initialized=False
+            if not recompute_C and not recompute_A and not recompute_B:
+                initialized=True
+                print('This is a well initialized system')
+            recompute_C = False
+            recompute_A = False
+            recompute_B = False
+    
+#    for i, (ai,bi,ci,fa,fb,fc) in enumerate(zip(AX_all,BX_all,CX_all,FA_all,FB_all,FC_all)):
+#        while fb > fa and fb < fc: #Guess is greater than lower bound but less than upper bound
+#            CX_all[i] = ai - (bi - ai)
+#        while fb > fa and fb > fc: #Guess is greater than both the lower and upper bound
+#            print('This function appears to be multimodal')
+#            break
+#        while fb > fc and fb < fa: #Guess is greater than upper bound but less than lower bound
+#            AX_all[i] = ci + (ci - bi)
+#        if fb < fa and fb < fc:
+#            print('This is a well initialized system')
     
     nfun = len(AX_all) #Number of functions being optimized
     
@@ -77,7 +153,7 @@ def GOLDEN_multi(func,guesses,lower_bounds,upper_bounds,TOL,maxit):
     X3 = CX_all.copy()
     X1 = BX_all.copy()
     X2 = BX_all.copy()
-    
+            
     for i, (AX, BX, CX) in enumerate(zip(AX_all,BX_all,CX_all)):
         if np.abs(CX-BX) > np.abs(BX-AX):
             X1[i] = BX
@@ -147,9 +223,9 @@ def main():
         print('function call')     
         return [f_eval1(x[0]),f_eval2(x[1])]                             
     
-    guess = np.array([0,1.0143,18])
+    guess = np.array([0.95,1.0143,18])
     
-    xplot = np.linspace(min(guess),max(guess),50)
+    xplot = np.linspace(-20,20,50)
     yplot = f_eval([xplot,xplot])
     
     plt.plot(xplot,yplot[0],label='Function')
