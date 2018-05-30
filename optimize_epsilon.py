@@ -27,6 +27,14 @@ rhol_RP = np.array([347.36,389.23,418.49,442.04,462.17,479.97,496.1,510.95,524.8
 rhov_RP = np.array([125.56,93.163,73.332,59.059,48.08,39.332,32.217,26.355,21.489,17.433,14.048,11.227,8.8855,6.9524,5.369,4.0846,3.0551,2.2413,1.6087])
 Psat_RP = np.array([27.122,23.386,20.093,17.178,14.601,12.329,10.334,8.5925,7.0804,5.7771,4.6628,3.7185,2.9266,2.2701,1.7327,1.2993,0.95522,0.68708,0.48232])
 
+RMS_rhol = lambda rhol: np.sqrt(np.mean((rhol - rhol_RP)**2))
+MAPD_rhol = lambda rhol: np.mean(np.abs((rhol - rhol_RP)/rhol_RP*100.))
+AD_rhol = lambda rhol: np.mean((rhol - rhol_RP)/rhol_RP*100.)
+
+RMS_rhov = lambda rhov: np.sqrt(np.mean((rhov - rhov_RP)**2))
+MAPD_rhov = lambda rhov: np.mean(np.abs((rhov - rhov_RP)/rhov_RP*100.))
+AD_rhov = lambda rhov: np.mean((rhov - rhov_RP)/rhov_RP*100.)
+
 class MBAR_GCMC():
     def __init__(self,root_path,filepaths,Mw,compare_literature=False):
         self.root_path = root_path
@@ -123,10 +131,8 @@ class MBAR_GCMC():
         energy, U, temperature, Temp, chemical potential, mu, and volumbe, Vbox
         '''
         NU_data = np.loadtxt(filepath,skiprows=1)
-        subset_size = 1000
-        subset_data = np.random.choice(np.arange(0,len(NU_data)),size=subset_size,replace=False)
-        N_data = NU_data[subset_data,0]
-        U_data = NU_data[subset_data,1] #[K]
+        N_data = NU_data[:,0]
+        U_data = NU_data[:,1] #[K]
         mu_V_T = np.genfromtxt(filepath,skip_footer=len(NU_data))
         Temp = mu_V_T[0] #[K]
         mu = mu_V_T[2] #[K]
@@ -311,11 +317,11 @@ class MBAR_GCMC():
         
         ### Buffer for the lower and upper bounds. Necessary for Golden search.
         mu_lower_bound = mu_sim_low*1.02
-        mu_upper_bound = mu_sim_high*0.995
+        mu_upper_bound = mu_sim_high*0.98
         
         return mu_VLE_guess, mu_lower_bound, mu_upper_bound
         
-    def solve_VLE(self,Temp_VLE,show_plot=True):
+    def solve_VLE(self,Temp_VLE,eps_scaled,show_plot=False):
         '''
         Determine optimal values of mu that result in equal pressures by 
         minimizing the square difference of the weights in the liquid and vapor
@@ -324,23 +330,30 @@ class MBAR_GCMC():
         '''
         
         self.Temp_VLE = Temp_VLE
-
+        
         self.build_MBAR_VLE_matrices()
         mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_guess_bounds()
         
-        ### Optimization of mu
-        mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE)
-        mu_opt = GOLDEN_multi(self.sqdeltaW,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.0001,maxit=30)
-        sqdeltaW_opt = self.sqdeltaW(mu_opt)
+        sqdeltaW_scaled = lambda mu: self.sqdeltaW(mu,eps_scaled)
         
+        ### Optimization of mu
+#        try:
+#            mu_VLE_guess = self.mu_opt
+#        except:
+#            mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE,eps_scaled)
+        mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE,eps_scaled)    
+        mu_opt = GOLDEN_multi(sqdeltaW_scaled,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.0001,maxit=30)
+
         self.mu_opt = mu_opt
         
         self.calc_rhosat()
         
-        self.print_VLE()
+#        self.print_VLE()
         
         if show_plot:
         
+            sqdeltaW_opt = self.sqdeltaW(mu_opt)
+            
             plt.plot(Temp_VLE,mu_opt,'k-',label=r'$\mu_{\rm opt}$')
             plt.plot(self.Temp_sim,self.mu_sim,'ro',mfc='None',label='Simulation')
             plt.plot(Temp_VLE,mu_VLE_guess,'b--',label=r'$\mu_{\rm guess}$')
@@ -360,7 +373,7 @@ class MBAR_GCMC():
             print (self.mbar.computeEffectiveSampleNumber())
             print('\nWhich is approximately '+str(self.mbar.computeEffectiveSampleNumber()/self.sumN_k*100.)+'% of the total snapshots')
      
-    def sqdeltaW(self,mu_VLE):
+    def sqdeltaW(self,mu_VLE,eps_scaled):
         '''
         Computes the square difference between the sum of the weights in the
         vapor and liquid phases.
@@ -372,7 +385,7 @@ class MBAR_GCMC():
 
         for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_VLE)):
             
-            u_kn_all[nTsim+jT,:] = self.U_to_u(U_flat,Temp,mu,Nmol_flat)
+            u_kn_all[nTsim+jT,:] = self.U_to_u(eps_scaled*U_flat,Temp,mu,Nmol_flat)
 
         mbar = MBAR(u_kn_all,N_k_all,initial_f_k=f_k_guess)
     
@@ -441,7 +454,7 @@ class MBAR_GCMC():
         fv.close()
         fl.close()
         
-    def mu_scan(self,Temp_VLE):
+    def mu_scan(self,Temp_VLE,eps_scaled):
         '''
         Plots a scan of mu to help visualize the optimization.
         '''
@@ -456,17 +469,77 @@ class MBAR_GCMC():
         
         for i, mu in enumerate(mu_range):
             mu_array = mu*np.ones(len(Temp_VLE))
-            sqdeltaW_plot[i] = self.sqdeltaW(mu_array)
+            sqdeltaW_plot[i] = self.sqdeltaW(mu_array,eps_scaled)
         plt.plot(mu_range,sqdeltaW_plot)
         plt.xlabel(r'$\mu$ (K)')
         plt.ylabel(r'$(\Delta W^{\rm sat})^2$')
         plt.show()
         
         mu_opt = mu_range[sqdeltaW_plot.argmin(axis=0)]
-        mu_lower = mu_range[sqdeltaW_plot.argmin(axis=0)-1]
-        mu_upper = mu_range[sqdeltaW_plot.argmin(axis=0)+1]
+        mu_lower = mu_opt - (mu_range[1]-mu_range[0]) #mu_range[sqdeltaW_plot.argmin(axis=0)-1]
+        mu_upper = mu_opt + (mu_range[1]-mu_range[0]) #mu_range[sqdeltaW_plot.argmin(axis=0)+1]
         
         return mu_opt, mu_lower, mu_upper
+    
+    def eps_scan(self,Temp_VLE):
+        
+        self.Temp_VLE = Temp_VLE
+        
+        eps_range = np.linspace(0.98,1.02,50)
+        
+        RMS_rhol_plot = np.zeros(len(eps_range))
+        AD_rhol_plot = np.zeros(len(eps_range))
+        MAPD_rhol_plot = np.zeros(len(eps_range))
+
+        RMS_rhov_plot = np.zeros(len(eps_range))
+        AD_rhov_plot = np.zeros(len(eps_range))
+        MAPD_rhov_plot = np.zeros(len(eps_range))
+        
+        for ieps, eps_scaled in enumerate(eps_range):
+            
+            self.solve_VLE(self.Temp_VLE, eps_scaled)
+            RMS_rhol_plot[ieps] = RMS_rhol(self.rholiq)
+            AD_rhol_plot[ieps] = AD_rhol(self.rholiq)
+            MAPD_rhol_plot[ieps] = MAPD_rhol(self.rholiq)
+            
+            RMS_rhov_plot[ieps] = RMS_rhov(self.rhovap)        
+            AD_rhov_plot[ieps] = AD_rhov(self.rhovap)
+            MAPD_rhov_plot[ieps] = MAPD_rhov(self.rhovap)
+            
+            print(AD_rhol_plot[ieps],AD_rhov_plot[ieps])
+            
+        plt.figure(figsize=(8,8))
+        
+        plt.plot(eps_range,RMS_rhol_plot,'r-',label=r'$\rho_{\rm liq}$')
+        plt.plot(eps_range,RMS_rhov_plot,'b--',label=r'$\rho_{\rm vap}$')
+        plt.xlabel(r'$\epsilon / \epsilon_{\rm Potoff}$')
+        plt.ylabel(r'Root-mean-square')
+                    
+        plt.legend()
+        plt.savefig('RMS_eps_scan.pdf')
+        plt.show()
+
+        plt.figure(figsize=(8,8))
+        
+        plt.plot(eps_range,AD_rhol_plot,'r-',label=r'$\rho_{\rm liq}$')
+        plt.plot(eps_range,AD_rhov_plot,'b--',label=r'$\rho_{\rm vap}$')
+        plt.xlabel(r'$\epsilon / \epsilon_{\rm Potoff}$')
+        plt.ylabel(r'Average percent deviation')
+            
+        plt.legend()
+        plt.savefig('AD_eps_scan.pdf')
+        plt.show()
+        
+        plt.figure(figsize=(8,8))
+        
+        plt.plot(eps_range,MAPD_rhol_plot,'r-',label=r'$\rho_{\rm liq}$')
+        plt.plot(eps_range,MAPD_rhov_plot,'b--',label=r'$\rho_{\rm vap}$')
+        plt.xlabel(r'$\epsilon / \epsilon_{\rm Potoff}$')
+        plt.ylabel(r'Mean absolute percent deviation')
+                    
+        plt.legend()
+        plt.savefig('MAPD_eps_scan.pdf')
+        plt.show()
         
 def main():
        
@@ -475,8 +548,8 @@ def main():
 #    root_path = 'hexane_Potoff/'
 #    hist_num=['1','2','3','4','5','6','7','8','9']
     
-    root_path = 'hexane_Potoff_replicates/'
-#    root_path = 'hexane_Potoff_replicates_2/'
+#    root_path = 'hexane_Potoff_replicates/'
+    root_path = 'hexane_Potoff_replicates_2/'
 #    root_path = 'hexane_eps_scaled/'
     Temp_range = ['510','470','430','480','450','420','390','360','330']
     hist_num=['2','2','2','2','2','2','2','2','2']
@@ -494,9 +567,10 @@ def main():
     MBAR_GCMC_trial = MBAR_GCMC(root_path,filepaths,Mw_hexane,compare_literature=True)
 #    MBAR_GCMC_trial.plot_histograms()
 #    MBAR_GCMC_trial.plot_2dhistograms()
-    MBAR_GCMC_trial.solve_VLE(Temp_VLE_plot)
-    MBAR_GCMC_trial.plot_VLE()
+#    MBAR_GCMC_trial.solve_VLE(Temp_VLE_plot)
+#    MBAR_GCMC_trial.plot_VLE()
 #    MBAR_GCMC_trial.mu_scan(Temp_VLE_plot)
+    MBAR_GCMC_trial.eps_scan(Temp_VLE_plot)
     
 if __name__ == '__main__':
     '''
