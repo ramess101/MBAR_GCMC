@@ -123,8 +123,10 @@ class MBAR_GCMC():
         energy, U, temperature, Temp, chemical potential, mu, and volumbe, Vbox
         '''
         NU_data = np.loadtxt(filepath,skiprows=1)
-        N_data = NU_data[:,0]
-        U_data = NU_data[:,1] #[K]
+        subset_size = 1000
+        subset_data = np.random.choice(np.arange(0,len(NU_data)),size=subset_size,replace=False)
+        N_data = NU_data[subset_data,0]
+        U_data = NU_data[subset_data,1] #[K]
         mu_V_T = np.genfromtxt(filepath,skip_footer=len(NU_data))
         Temp = mu_V_T[0] #[K]
         mu = mu_V_T[2] #[K]
@@ -370,7 +372,7 @@ class MBAR_GCMC():
 
         for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_VLE)):
             
-            u_kn_all[nTsim+jT,:] = self.U_to_u(U_flat*1.05,Temp,mu,Nmol_flat)
+            u_kn_all[nTsim+jT,:] = self.U_to_u(U_flat,Temp,mu,Nmol_flat)
 
         mbar = MBAR(u_kn_all,N_k_all,initial_f_k=f_k_guess)
     
