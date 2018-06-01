@@ -6,10 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pymbar import MBAR
 from Golden_search_multi import GOLDEN_multi
-
-### Figure font size
-font = {'size' : '18'}
-plt.rc('font',**font)
+from scipy import stats
 
 # Physical constants
 N_A = 6.02214086e23 #[/mol]
@@ -21,23 +18,26 @@ kb = 1.3806485e-23 #[J/K]
 Jm3tobar = 1e-5
 Rg = kb*N_A #[J/mol/K]
 
-RMS_rhol = lambda rhol,rhol_RP: np.sqrt(np.mean((rhol - rhol_RP)**2))
-MAPD_rhol = lambda rhol,rhol_RP: np.mean(np.abs((rhol - rhol_RP)/rhol_RP*100.))
-AD_rhol = lambda rhol,rhol_RP: np.mean((rhol - rhol_RP)/rhol_RP*100.)
+Tsat_Potoff = np.array([500,490,480,470,460,450,440,430,420,410,400,390,380,370,360,350,340,330,320])
+rhol_Potoff = np.array([366.018,395.855,422.477,444.562,463.473,480.498,496.217,510.897,524.727,537.821,550.308,562.197,573.494,584.216,594.369,604.257,614.026,623.44,631.598])
+rhov_Potoff = np.array([112.352,90.541,72.249,58.283,47.563,39.028,32.053,26.27,21.441,17.397,14.013,11.19,8.846,6.913,5.331,4.05,3.023,2.213,1.584])     
+Psat_Potoff = np.array([27.697,23.906,20.521,17.529,14.889,12.563,10.522,8.738,7.19,5.857,4.717,3.753,2.946,2.279,1.734,1.296,0.949,0.68,0.476])
 
-RMS_rhov = lambda rhov,rhov_RP: np.sqrt(np.mean((rhov - rhov_RP)**2))
-MAPD_rhov = lambda rhov,rhov_RP: np.mean(np.abs((rhov - rhov_RP)/rhov_RP*100.))
-AD_rhov = lambda rhov,rhov_RP: np.mean((rhov - rhov_RP)/rhov_RP*100.)
+Tsat_RP = Tsat_Potoff.copy()
+rhol_RP = np.array([347.36,389.23,418.49,442.04,462.17,479.97,496.1,510.95,524.81,537.86,550.24,562.07,573.42,584.36,594.94,605.21,615.21,624.97,634.52])
+rhov_RP = np.array([125.56,93.163,73.332,59.059,48.08,39.332,32.217,26.355,21.489,17.433,14.048,11.227,8.8855,6.9524,5.369,4.0846,3.0551,2.2413,1.6087])
+Psat_RP = np.array([27.122,23.386,20.093,17.178,14.601,12.329,10.334,8.5925,7.0804,5.7771,4.6628,3.7185,2.9266,2.2701,1.7327,1.2993,0.95522,0.68708,0.48232])
 
 class MBAR_GCMC():
     def __init__(self,root_path,filepaths,Mw,trim_data=False,compare_literature=False):
         self.root_path = root_path
         self.filepaths = filepaths
-        self.trim_data = trim_data 
+        self.trim_data = trim_data            
         self.extract_all_sim_data()
         self.min_max_sim_data()
         self.build_MBAR_sim()
         self.Ncut = self.solve_Ncut()
+#        self.calc_abs_press_int()
         self.Mw = Mw
         self.compare_literature = compare_literature
                 
@@ -127,7 +127,7 @@ class MBAR_GCMC():
         '''
         NU_data = np.loadtxt(filepath,skiprows=1)
         if self.trim_data:
-            subset_size = 5000
+            subset_size = 1000
         else:
             subset_size = len(NU_data)
         subset_data = np.random.choice(np.arange(0,len(NU_data)),size=subset_size,replace=False)
@@ -221,6 +221,9 @@ class MBAR_GCMC():
         
         Temp_sim, mu_sim, nSnapshots, Nmol_flat, U_flat = self.Temp_sim, self.mu_sim, self.K_sim, self.Nmol_flat, self.U_flat
         
+        # nTsim is used to keep track of the number of simulation temperatures
+        nTsim = len(Temp_sim)
+        
         N_k_sim = np.array(nSnapshots)
         sumN_k = np.sum(N_k_sim)
 #        Nmol_flat = np.array(N_data_sim).flatten()
@@ -237,7 +240,7 @@ class MBAR_GCMC():
         f_k_sim = Deltaf_ij[0,:]        
 #        print(f_k_sim)
         
-        self.u_kn_sim, self.f_k_sim, self.sumN_k, self.N_k_sim, self.mbar_sim = u_kn_sim, f_k_sim, sumN_k, N_k_sim, mbar_sim
+        self.u_kn_sim, self.f_k_sim, self.sumN_k, self.N_k_sim, self.mbar_sim, self.nTsim = u_kn_sim, f_k_sim, sumN_k, N_k_sim, mbar_sim, nTsim
     
     def solve_Ncut(self,show_plot=False):
         '''
@@ -278,10 +281,10 @@ class MBAR_GCMC():
         f_k_sim with empty matrices of the appropriate dimensions, determined by
         the number of VLE points desired.
         '''
-        Temp_VLE, Temp_sim, u_kn_sim,f_k_sim,sumN_k = self.Temp_VLE,self.Temp_sim, self.u_kn_sim,self.f_k_sim,self.sumN_k
+        Temp_VLE, u_kn_sim,f_k_sim,sumN_k = self.Temp_VLE,self.u_kn_sim,self.f_k_sim,self.sumN_k
         
-        # nTsim is used to keep track of the number of simulation temperatures
-        nTsim = len(Temp_sim)
+#        # nTsim is used to keep track of the number of simulation temperatures
+#        nTsim = len(Temp_sim)
         
 #        Temp_VLE_all = np.concatenate((Temp_sim,Temp_VLE))
         N_k_all = self.K_sim[:]
@@ -292,7 +295,7 @@ class MBAR_GCMC():
         
         f_k_guess = np.concatenate((f_k_sim,np.zeros(len(Temp_VLE))))
         
-        self.u_kn_all, self.f_k_guess, self.N_k_all, self.nTsim = u_kn_all, f_k_guess, N_k_all,nTsim
+        self.u_kn_all, self.f_k_guess, self.N_k_all = u_kn_all, f_k_guess, N_k_all
         
     def mu_guess_bounds(self):
         '''
@@ -317,11 +320,11 @@ class MBAR_GCMC():
         
         ### Buffer for the lower and upper bounds. Necessary for Golden search.
         mu_lower_bound = mu_sim_low*1.02
-        mu_upper_bound = mu_sim_high*0.98
+        mu_upper_bound = mu_sim_high*0.995
         
         return mu_VLE_guess, mu_lower_bound, mu_upper_bound
         
-    def solve_VLE(self,Temp_VLE,eps_scaled=1.,show_plot=False):
+    def solve_VLE(self,Temp_VLE,show_plot=True):
         '''
         Determine optimal values of mu that result in equal pressures by 
         minimizing the square difference of the weights in the liquid and vapor
@@ -330,30 +333,25 @@ class MBAR_GCMC():
         '''
         
         self.Temp_VLE = Temp_VLE
-        
+
         self.build_MBAR_VLE_matrices()
         mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_guess_bounds()
         
-        sqdeltaW_scaled = lambda mu: self.sqdeltaW(mu,eps_scaled)
-        
         ### Optimization of mu
-#        try:
-#            mu_VLE_guess = self.mu_opt
-#        except:
-#            mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE,eps_scaled)
-        mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE,eps_scaled)    
-        mu_opt = GOLDEN_multi(sqdeltaW_scaled,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.0001,maxit=30)
-
+        mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE)
+        mu_opt = GOLDEN_multi(self.sqdeltaW,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.0001,maxit=30)
+        sqdeltaW_opt = self.sqdeltaW(mu_opt)
+        
+        self.f_k_opt = self.f_k_guess
         self.mu_opt = mu_opt
         
         self.calc_rhosat()
+        self.calc_Psat()
         
-#        self.print_VLE()
+        self.print_VLE()
         
         if show_plot:
         
-            sqdeltaW_opt = self.sqdeltaW(mu_opt)
-            
             plt.plot(Temp_VLE,mu_opt,'k-',label=r'$\mu_{\rm opt}$')
             plt.plot(self.Temp_sim,self.mu_sim,'ro',mfc='None',label='Simulation')
             plt.plot(Temp_VLE,mu_VLE_guess,'b--',label=r'$\mu_{\rm guess}$')
@@ -373,7 +371,7 @@ class MBAR_GCMC():
             print (self.mbar.computeEffectiveSampleNumber())
             print('\nWhich is approximately '+str(self.mbar.computeEffectiveSampleNumber()/self.sumN_k*100.)+'% of the total snapshots')
      
-    def sqdeltaW(self,mu_VLE,eps_scaled):
+    def sqdeltaW(self,mu_VLE):
         '''
         Computes the square difference between the sum of the weights in the
         vapor and liquid phases.
@@ -385,7 +383,7 @@ class MBAR_GCMC():
 
         for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_VLE)):
             
-            u_kn_all[nTsim+jT,:] = self.U_to_u(eps_scaled*U_flat,Temp,mu,Nmol_flat)
+            u_kn_all[nTsim+jT,:] = self.U_to_u(U_flat,Temp,mu,Nmol_flat)
 
         mbar = MBAR(u_kn_all,N_k_all,initial_f_k=f_k_guess)
     
@@ -414,7 +412,7 @@ class MBAR_GCMC():
         
         self.rholiq, self.rhovap = rholiq, rhovap
     
-    def plot_VLE(self,Tsat_RP,rhol_RP,rhov_RP,Tsat_Potoff,rhol_Potoff,rhov_Potoff):
+    def plot_VLE(self):
         '''
         Plots the saturation densities and compares with literature values if available
         '''
@@ -454,7 +452,7 @@ class MBAR_GCMC():
         fv.close()
         fl.close()
         
-    def mu_scan(self,Temp_VLE,eps_scaled,show_plot=False):
+    def mu_scan(self,Temp_VLE):
         '''
         Plots a scan of mu to help visualize the optimization.
         '''
@@ -469,95 +467,174 @@ class MBAR_GCMC():
         
         for i, mu in enumerate(mu_range):
             mu_array = mu*np.ones(len(Temp_VLE))
-            sqdeltaW_plot[i] = self.sqdeltaW(mu_array,eps_scaled)
-        
-        if show_plot:
-            plt.plot(mu_range,sqdeltaW_plot)
-            plt.xlabel(r'$\mu$ (K)')
-            plt.ylabel(r'$(\Delta W^{\rm sat})^2$')
-            plt.show()
+            sqdeltaW_plot[i] = self.sqdeltaW(mu_array)
+        plt.plot(mu_range,sqdeltaW_plot)
+        plt.xlabel(r'$\mu$ (K)')
+        plt.ylabel(r'$(\Delta W^{\rm sat})^2$')
+        plt.show()
         
         mu_opt = mu_range[sqdeltaW_plot.argmin(axis=0)]
-        mu_lower = mu_opt - (mu_range[1]-mu_range[0]) #mu_range[sqdeltaW_plot.argmin(axis=0)-1]
-        mu_upper = mu_opt + (mu_range[1]-mu_range[0]) #mu_range[sqdeltaW_plot.argmin(axis=0)+1]
+        mu_lower = mu_range[sqdeltaW_plot.argmin(axis=0)-1]
+        mu_upper = mu_range[sqdeltaW_plot.argmin(axis=0)+1]
         
         return mu_opt, mu_lower, mu_upper
     
-    def eps_scan(self,Temp_VLE,rhol_RP,rhov_RP,rhol_Potoff,rhov_Potoff,eps_low,eps_high,neps,compound,remove_low_high_Tsat=False):
+    def calc_abs_press_int(self,show_plot=True):
+        '''
+        Fits ln(Xi) with respect to N for low-density vapor
+        '''
+        Temp_sim, u_kn_sim,f_k_sim,sumN_k = self.Temp_sim, self.u_kn_sim,self.f_k_sim,self.sumN_k
+        nTsim, U_flat, Nmol_flat,Ncut = self.nTsim, self.U_flat, self.Nmol_flat, self.Ncut
         
-        self.Temp_VLE = Temp_VLE
+        Temp_IG = 430.# 510.# 1.0*Temp_sim.max()
+        # nTsim is used to keep track of the number of simulation temperatures
+        nTsim = len(Temp_sim)
+        mu_IG = np.linspace(2.*self.mu_sim.min(),5.*self.mu_sim.min(),50)
+        mu_IG = np.linspace(1.*self.mu_sim[2],10.*self.mu_sim[2],2)
+        mu_IG = np.linspace(2.*self.mu_sim[2],10.*self.mu_sim[2],2)
         
-        if remove_low_high_Tsat:  #Remove the low T and high T ends for more stable results
-            self.Temp_VLE = self.Temp_VLE[2:-2]
-            rhol_RP = rhol_RP[2:-2]
-            rhov_RP = rhov_RP[2:-2]
-            rhol_Potoff = rhol_Potoff[2:-2]
-            rhov_Potoff = rhov_Potoff[2:-2]
-        
-        eps_range = np.linspace(eps_low,eps_high,neps)
-        
-        RMS_rhol_plot = np.zeros(len(eps_range))
-        AD_rhol_plot = np.zeros(len(eps_range))
-        MAPD_rhol_plot = np.zeros(len(eps_range))
+#        Temp_VLE_all = np.concatenate((Temp_sim,Temp_VLE))
+        N_k_all = self.K_sim[:]
+        N_k_all.extend([0]*len(mu_IG))
 
-        RMS_rhov_plot = np.zeros(len(eps_range))
-        AD_rhov_plot = np.zeros(len(eps_range))
-        MAPD_rhov_plot = np.zeros(len(eps_range))
+        u_kn_IG = np.zeros([len(mu_IG),sumN_k])
+        u_kn_all = np.concatenate((u_kn_sim,u_kn_IG))
         
-        for ieps, eps_scaled in enumerate(eps_range):
-            
-            self.solve_VLE(self.Temp_VLE, eps_scaled)
-            RMS_rhol_plot[ieps] = RMS_rhol(self.rholiq,rhol_RP) 
-            AD_rhol_plot[ieps] = AD_rhol(self.rholiq,rhol_RP)
-            MAPD_rhol_plot[ieps] = MAPD_rhol(self.rholiq,rhol_RP)
-            
-            RMS_rhov_plot[ieps] = RMS_rhov(self.rhovap,rhov_RP)        
-            AD_rhov_plot[ieps] = AD_rhov(self.rhovap,rhov_RP)
-            MAPD_rhov_plot[ieps] = MAPD_rhov(self.rhovap,rhov_RP)
-            
-#            print(AD_rhol_plot[ieps],AD_rhov_plot[ieps])
-            
-        plt.figure(figsize=(8,8))
-        
-        plt.plot(eps_range,RMS_rhol_plot,'r-',label=r'$\rho_{\rm liq}$')
-        plt.plot(eps_range,RMS_rhov_plot,'b--',label=r'$\rho_{\rm vap}$')
-        plt.plot(1,RMS_rhol(rhol_Potoff,rhol_RP),'rs',label=r'$\rho_{\rm liq}$, Potoff')
-        plt.plot(1,RMS_rhol(rhov_Potoff,rhov_RP),'bo',label=r'$\rho_{\rm vap}$, Potoff')    
-        plt.xlabel(r'$\epsilon / \epsilon_{\rm Potoff}$')
-        plt.ylabel(r'Root-mean-square')
-        plt.title(compound)
-                    
-        plt.legend()
-        plt.savefig('figures/'+compound+'_RMS_eps_scan.pdf')
-        plt.show()
+        f_k_guess = np.concatenate((f_k_sim,np.zeros(len(mu_IG))))
 
-        plt.figure(figsize=(8,8))
-        
-        plt.plot(eps_range,AD_rhol_plot,'r-',label=r'$\rho_{\rm liq}$')
-        plt.plot(eps_range,AD_rhov_plot,'b--',label=r'$\rho_{\rm vap}$')
-        plt.plot(1,AD_rhol(rhol_Potoff,rhol_RP),'rs',label=r'$\rho_{\rm liq}$, Potoff')
-        plt.plot(1,AD_rhol(rhov_Potoff,rhov_RP),'bo',label=r'$\rho_{\rm vap}$, Potoff')
-        plt.xlabel(r'$\epsilon / \epsilon_{\rm Potoff}$')
-        plt.ylabel(r'Average percent deviation')
-        plt.title(compound)
+        for jT, mu in enumerate(mu_IG):
             
-        plt.legend()
-        plt.savefig('figures/'+compound+'_AD_eps_scan.pdf')
+            u_kn_all[nTsim+jT,:] = self.U_to_u(U_flat,Temp_IG,mu,Nmol_flat)
+
+        mbar = MBAR(u_kn_all,N_k_all,initial_f_k=f_k_guess)
+    
+        plt.plot(Nmol_flat[Nmol_flat<Ncut],mbar.W_nk[:,-1][Nmol_flat<Ncut],'ko')
         plt.show()
         
-        plt.figure(figsize=(8,8))
+        W_sum = np.zeros(50)
         
-        plt.plot(eps_range,MAPD_rhol_plot,'r-',label=r'$\rho_{\rm liq}$')
-        plt.plot(eps_range,MAPD_rhov_plot,'b--',label=r'$\rho_{\rm vap}$')
-        plt.plot(1,MAPD_rhol(rhol_Potoff,rhol_RP),'rs',label=r'$\rho_{\rm liq}$, Potoff')
-        plt.plot(1,MAPD_rhol(rhov_Potoff,rhov_RP),'bo',label=r'$\rho_{\rm vap}$, Potoff')
-        plt.xlabel(r'$\epsilon / \epsilon_{\rm Potoff}$')
-        plt.ylabel(r'Mean absolute percent deviation')
-        plt.title(compound)
-                    
-        plt.legend()
-        plt.savefig('figures/'+compound+'_MAPD_eps_scan.pdf')
+        for N in np.arange(0,50):
+            
+            W_sum[N] = np.sum(mbar.W_nk[:,-1][Nmol_flat==N])
+            
+        plt.plot(np.arange(0,50),W_sum)
         plt.show()
+            
+        sumW_IG = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat>0],axis=0)
+         
+        Nmol_IG = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat>0].T*Nmol_flat[Nmol_flat>0],axis=1)/sumW_IG
+        
+        ### Store previous solutions to speed-up future convergence of MBAR
+        Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)[0]
+        f_k_IG = Deltaf_ij[0,nTsim:]
+        press_IG = Nmol_IG*kb*Temp_IG/self.Vbox_sim[0] / Ang3tom3 * Jm3tobar
+        Psat = (press_IG[1]/kb/Temp_IG*self.Vbox_sim[0])
+        Psat = (1. - f_k_IG[0] + f_k_IG[1])*kb*Temp_IG/self.Vbox_sim[0] / Ang3tom3 * Jm3tobar
+        Psat = (Nmol_IG[1] - f_k_IG[0] + f_k_IG[1])*kb*Temp_IG/self.Vbox_sim[0] / Ang3tom3 * Jm3tobar
+        print(f_k_IG,Nmol_IG,press_IG,Psat)
+        
+        fit=stats.linregress(Nmol_IG,-f_k_IG)
+        
+        if show_plot:
+
+            plt.figure(figsize=[6,6])
+            plt.plot(Nmol_IG,-f_k_IG,'k-')
+            plt.xlabel('Number of Molecules')
+            plt.ylabel(r'$\ln(\Xi)$')
+            plt.show()
+            
+            print('Slope for ideal gas is 1, actual slope is: '+str(fit.slope))
+            print('Intercept for absolute pressure is:'+str(fit.intercept))
+        
+        self.abs_press_int, self.Temp_IG, self.f_k_IG, self.Nmol_IG = fit.intercept, Temp_IG, f_k_IG, Nmol_IG
+        
+    def calc_Psat(self):
+        '''
+        Computes the saturated vapor pressure
+        '''
+        self.calc_abs_press_int()
+        f_k_opt, nTsim, Temp_VLE, Vbox, abs_press_int, Temp_IG = self.f_k_opt, self.nTsim, self.Temp_VLE, self.Vbox_sim[0], self.abs_press_int, self.Temp_IG
+        print(f_k_opt)
+        print(f_k_opt[:nTsim+1])
+        print(f_k_opt[nTsim:])
+#        abs_press_int += 0.7
+#        print(abs_press_int)
+#        Psat = kb * Temp_VLE / Vbox * (-f_k_opt[nTsim:] - abs_press_int) / Ang3tom3 * Jm3tobar
+        Psat1 = kb * Temp_VLE / Vbox * (-f_k_opt[nTsim:]) / Ang3tom3 * Jm3tobar
+        Psat2 = kb * Temp_VLE / Vbox * (-abs_press_int) / Ang3tom3 * Jm3tobar
+        Psat = Psat1 + Psat2
+        print(Psat)
+        print(kb*Temp_VLE/Vbox*(-f_k_opt[nTsim:])/Ang3tom3*Jm3tobar)
+        print(kb*Temp_VLE/Vbox*(-abs_press_int)/Ang3tom3*Jm3tobar)
+        print(kb*Temp_IG/Vbox*(-abs_press_int)/Ang3tom3*Jm3tobar)
+        print((Psat-Psat_Potoff)/kb / Temp_VLE * Vbox * Ang3tom3 / Jm3tobar)
+        
+#        Psat = (self.Nmol_IG[1] - f_k_opt[nTsim:] + self.f_k_IG[1])*kb*Temp_VLE/self.Vbox_sim[0] / Ang3tom3 * Jm3tobar
+#        Psat = (self.Nmol_IG[1] - f_k_opt[nTsim:] + self.f_k_IG[1])*kb*Temp_VLE/self.Vbox_sim[0] / Ang3tom3 * Jm3tobar
+        print(f_k_opt[nTsim:],Temp_VLE.shape,self.f_k_IG,self.Nmol_IG,Psat)
+        print(self.Nmol_IG[1] - f_k_opt[nTsim:] + self.f_k_IG[1])
+        
+        plt.plot(Temp_VLE,f_k_opt[nTsim:])
+        plt.plot([self.Temp_IG]*2,self.f_k_IG,'ko')
+        plt.show()
+        
+        Psat_ig = self.rhovap * Rg * Temp_VLE / self.Mw / gmtokg * Jm3tobar
+        print(Psat_ig)
+        plt.figure(figsize=[6,6])
+        plt.plot(1./Temp_VLE,np.log10(Psat),'ro',mfc='None',label='MBAR-GCMC')
+        plt.plot(1./Temp_VLE,np.log10(Psat2),'rv',mfc='None',label='MBAR-GCMC')
+        plt.plot(1./Tsat_Potoff,np.log10(Psat_Potoff),'ks',mfc='None',label='Potoff')
+        plt.plot(1./Temp_VLE,np.log10(Psat_ig),'r--',label='Ideal gas')
+        plt.plot(1./Tsat_RP,np.log10(Psat_RP),'k-',label='REFPROP')
+        plt.xlabel(r'$1/T (K)$')
+        plt.ylabel(r'$\log_{\rm 10}(P_{\rm v}^{\rm sat}/\rm bar)$')
+        plt.xticks([1./Temp_VLE.max(),1./Temp_VLE.min()])
+        plt.legend()
+        plt.show()
+        
+        plt.figure(figsize=[6,6])
+        plt.plot(Temp_VLE,np.log10(Psat),'ro',mfc='None',label='MBAR-GCMC')
+        plt.plot(Temp_VLE,np.log10(Psat2),'rv',mfc='None',label='MBAR-GCMC')
+        plt.plot(Tsat_Potoff,np.log10(Psat_Potoff),'ks',mfc='None',label='Potoff')
+        plt.plot(Temp_VLE,np.log10(Psat_ig),'r--',label='Ideal gas')
+        plt.plot(Tsat_RP,np.log10(Psat_RP),'k-',label='REFPROP')
+        plt.xlabel(r'$T (K)$')
+        plt.ylabel(r'$\log_{\rm 10}(P_{\rm v}^{\rm sat}/\rm bar)$')
+#        plt.xticks([Temp_VLE.max(),1./Temp_VLE.min()])
+        plt.legend()
+        plt.show()
+        
+        plt.figure(figsize=[6,6])
+        plt.plot(Temp_VLE,Psat,'ro',mfc='None',label='MBAR-GCMC')
+        plt.plot(Temp_VLE,Psat1,'rs',mfc='None',label='MBAR-GCMC')
+        plt.plot(Temp_VLE,Psat2,'rv',mfc='None',label='MBAR-GCMC')
+        plt.plot(Tsat_Potoff,Psat_Potoff,'ks',mfc='None',label='Potoff')
+        plt.plot(Temp_VLE,Psat_ig,'r--',label='Ideal gas')
+        plt.plot(Tsat_RP,Psat_RP,'k-',label='REFPROP')
+        plt.xlabel(r'$T (K)$')
+        plt.ylabel(r'$P_{\rm v}^{\rm sat} (\rm bar)$')
+#        plt.xticks([Temp_VLE.max(),1./Temp_VLE.min()])
+        plt.legend()
+        plt.show()
+        
+        plt.figure(figsize=[6,6])
+        plt.plot(Temp_VLE,Psat-Psat_Potoff,'ro',mfc='None')
+        plt.xlabel(r'$T (K)$')
+        plt.ylabel(r'$P_{\rm v,MBAR}^{\rm sat} - P_{\rm v,Potoff}^{\rm sat}$ (bar)')
+#        plt.xticks([Temp_VLE.max(),1./Temp_VLE.min()])
+        plt.legend()
+        plt.show()
+        
+        plt.figure(figsize=[6,6])
+        plt.plot(Temp_VLE,(Psat-Psat_Potoff)/Psat_Potoff*100.,'ro',mfc='None')
+        plt.xlabel(r'$T (K)$')
+        plt.ylabel(r'$(P_{\rm v,MBAR}^{\rm sat} - P_{\rm v,Potoff}^{\rm sat})/P_{\rm v,Potoff}^{\rm sat}) \times 100$ % (bar)')
+#        plt.xticks([Temp_VLE.max(),1./Temp_VLE.min()])
+        plt.legend()
+        plt.show()
+        
+        self.Psat = Psat
+        
         
 def main():
        
@@ -566,8 +643,8 @@ def main():
 #    root_path = 'hexane_Potoff/'
 #    hist_num=['1','2','3','4','5','6','7','8','9']
     
-#    root_path = 'hexane_Potoff_replicates/'
-    root_path = 'hexane_Potoff_replicates_2/'
+    root_path = 'hexane_Potoff_replicates/'
+#    root_path = 'hexane_Potoff_replicates_2/'
 #    root_path = 'hexane_eps_scaled/'
     Temp_range = ['510','470','430','480','450','420','390','360','330']
     hist_num=['2','2','2','2','2','2','2','2','2']
@@ -582,13 +659,12 @@ def main():
     
     Temp_VLE_plot = Tsat_Potoff
 #    Temp_VLE_plot = np.array([360., 350.])
-    MBAR_GCMC_trial = MBAR_GCMC(root_path,filepaths,Mw_hexane,compare_literature=True)
-#    MBAR_GCMC_trial.plot_histograms()
+    MBAR_GCMC_trial = MBAR_GCMC(root_path,filepaths,Mw_hexane,trim_data=True,compare_literature=True)
+    MBAR_GCMC_trial.plot_histograms()
 #    MBAR_GCMC_trial.plot_2dhistograms()
-#    MBAR_GCMC_trial.solve_VLE(Temp_VLE_plot)
-#    MBAR_GCMC_trial.plot_VLE()
+    MBAR_GCMC_trial.solve_VLE(Temp_VLE_plot)
+    MBAR_GCMC_trial.plot_VLE()
 #    MBAR_GCMC_trial.mu_scan(Temp_VLE_plot)
-    MBAR_GCMC_trial.eps_scan(Temp_VLE_plot)
     
 if __name__ == '__main__':
     '''

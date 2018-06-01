@@ -17,20 +17,11 @@ kb = 1.3806485e-23 #[J/K]
 Jm3tobar = 1e-5
 Rg = kb*N_A #[J/mol/K]
 
-Tsat_Potoff = np.array([500,490,480,470,460,450,440,430,420,410,400,390,380,370,360,350,340,330,320])
-rhol_Potoff = np.array([366.018,395.855,422.477,444.562,463.473,480.498,496.217,510.897,524.727,537.821,550.308,562.197,573.494,584.216,594.369,604.257,614.026,623.44,631.598])
-rhov_Potoff = np.array([112.352,90.541,72.249,58.283,47.563,39.028,32.053,26.27,21.441,17.397,14.013,11.19,8.846,6.913,5.331,4.05,3.023,2.213,1.584])     
-Psat_Potoff = np.array([27.697,23.906,20.521,17.529,14.889,12.563,10.522,8.738,7.19,5.857,4.717,3.753,2.946,2.279,1.734,1.296,0.949,0.68,0.476])
-
-Tsat_RP = Tsat_Potoff.copy()
-rhol_RP = np.array([347.36,389.23,418.49,442.04,462.17,479.97,496.1,510.95,524.81,537.86,550.24,562.07,573.42,584.36,594.94,605.21,615.21,624.97,634.52])
-rhov_RP = np.array([125.56,93.163,73.332,59.059,48.08,39.332,32.217,26.355,21.489,17.433,14.048,11.227,8.8855,6.9524,5.369,4.0846,3.0551,2.2413,1.6087])
-Psat_RP = np.array([27.122,23.386,20.093,17.178,14.601,12.329,10.334,8.5925,7.0804,5.7771,4.6628,3.7185,2.9266,2.2701,1.7327,1.2993,0.95522,0.68708,0.48232])
-
 class MBAR_GCMC():
-    def __init__(self,root_path,filepaths,Mw,compare_literature=False):
+    def __init__(self,root_path,filepaths,Mw,trim_data=False,compare_literature=False):
         self.root_path = root_path
         self.filepaths = filepaths
+        self.trim_data = trim_data            
         self.extract_all_sim_data()
         self.min_max_sim_data()
         self.build_MBAR_sim()
@@ -123,7 +114,10 @@ class MBAR_GCMC():
         energy, U, temperature, Temp, chemical potential, mu, and volumbe, Vbox
         '''
         NU_data = np.loadtxt(filepath,skiprows=1)
-        subset_size = 1000
+        if self.trim_data:
+            subset_size = 1000
+        else:
+            subset_size = len(NU_data)
         subset_data = np.random.choice(np.arange(0,len(NU_data)),size=subset_size,replace=False)
         N_data = NU_data[subset_data,0]
         U_data = NU_data[subset_data,1] #[K]
@@ -401,7 +395,7 @@ class MBAR_GCMC():
         
         self.rholiq, self.rhovap = rholiq, rhovap
     
-    def plot_VLE(self):
+    def plot_VLE(self,Tsat_RP,rhol_RP,rhov_RP,Tsat_Potoff,rhol_Potoff,rhov_Potoff):
         '''
         Plots the saturation densities and compares with literature values if available
         '''
@@ -414,6 +408,7 @@ class MBAR_GCMC():
         plt.plot(rholiq,Temp_VLE,'ro')
         
         if self.compare_literature:
+                    
             plt.plot(rhov_Potoff,Tsat_Potoff,'ks',mfc='None',label='Potoff')
             plt.plot(rhol_Potoff,Tsat_Potoff,'ks',mfc='None')
         
@@ -489,7 +484,7 @@ def main():
 
     Mw_hexane  = 12.0109*6.+1.0079*(2.*6.+2.) #[gm/mol]
     
-    Temp_VLE_plot = Tsat_Potoff
+#    Temp_VLE_plot = Tsat_Potoff
 #    Temp_VLE_plot = np.array([360., 350.])
     MBAR_GCMC_trial = MBAR_GCMC(root_path,filepaths,Mw_hexane,compare_literature=True)
 #    MBAR_GCMC_trial.plot_histograms()
