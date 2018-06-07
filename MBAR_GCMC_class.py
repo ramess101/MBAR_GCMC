@@ -115,7 +115,7 @@ class MBAR_GCMC():
         '''
         NU_data = np.loadtxt(filepath,skiprows=1)
         if self.trim_data:
-            subset_size = 1000
+            subset_size = 5000
         else:
             subset_size = len(NU_data)
         subset_data = np.random.choice(np.arange(0,len(NU_data)),size=subset_size,replace=False)
@@ -227,7 +227,7 @@ class MBAR_GCMC():
         
         self.u_kn_sim, self.f_k_sim, self.sumN_k, self.N_k_sim, self.mbar_sim = u_kn_sim, f_k_sim, sumN_k, N_k_sim, mbar_sim
     
-    def solve_Ncut(self,show_plot=False):
+    def solve_Ncut(self,method=2,show_plot=False):
         '''
         The MBAR_GCMC class uses a cutoff in the number of molecules, Ncut, to 
         distinguish between liquid and vapor phases. The value of Ncut is determined
@@ -237,27 +237,64 @@ class MBAR_GCMC():
         '''
         mbar_sim, Nmol_flat = self.mbar_sim,self.Nmol_flat
         
-        Nscan = np.arange(60,100)
-        
-        sqdeltaW_bridge = np.zeros(len(Nscan))
         bridge_index = np.argmax(self.Temp_sim)
         
-        for iN, Ni in enumerate(Nscan):
+        if method == 1:
         
-            sumWliq_bridge = np.sum(mbar_sim.W_nk[:,bridge_index][Nmol_flat>Ni])
-            sumWvap_bridge = np.sum(mbar_sim.W_nk[:,bridge_index][Nmol_flat<=Ni])
-            sqdeltaW_bridge[iN] = (sumWliq_bridge - sumWvap_bridge)**2
-        
-        if show_plot:
-        
-            plt.plot(Nscan,sqdeltaW_bridge,'k-')
-            plt.xlabel(r'$N_{\rm cut}$')
-            plt.ylabel(r'$(\Delta W_{\rm bridge}^{\rm sat})^2$')
-            plt.show()
+            Nscan = np.arange(60,100)
+            
+            sqdeltaW_bridge = np.zeros(len(Nscan))
+            
+            for iN, Ni in enumerate(Nscan):
+            
+                sumWliq_bridge = np.sum(mbar_sim.W_nk[:,bridge_index][Nmol_flat>Ni])
+                sumWvap_bridge = np.sum(mbar_sim.W_nk[:,bridge_index][Nmol_flat<=Ni])
+                sqdeltaW_bridge[iN] = (sumWliq_bridge - sumWvap_bridge)**2
+            
+            if show_plot:
+            
+                plt.plot(Nscan,sqdeltaW_bridge,'k-')
+                plt.xlabel(r'$N_{\rm cut}$')
+                plt.ylabel(r'$(\Delta W_{\rm bridge}^{\rm sat})^2$')
+                plt.show()
                                 
-        Ncut = Nscan[np.argmin(sqdeltaW_bridge)]
+            Ncut = Nscan[np.argmin(sqdeltaW_bridge)]
+        
+        elif method == 2:
+        
+            ### Alternative method that finds the minimum between the two peaks
+            ### Note that this might not be best since noisy data could move Ncut quite a bit
+            Nmol_bridge = self.N_data_sim[bridge_index]
+            
+            Nmol_mid = (Nmol_bridge.min()+Nmol_bridge.max())/2.
+            
+            Nmol_low = Nmol_bridge[Nmol_bridge<=Nmol_mid]
+            Nmol_high = Nmol_bridge[Nmol_bridge>=Nmol_mid]
+            
+            Nmol_low_count,Nmol_low_bins = np.histogram(Nmol_low,bins=int(Nmol_low.max()-Nmol_low.min()))
+            Nmol_high_count,Nmol_high_bins = np.histogram(Nmol_high,bins=int(Nmol_high.max()-Nmol_high.min()))
+            
+            Nmol_low_peak = Nmol_low_bins[:-2][np.argmax(Nmol_low_count[:-1])] #Need to remove final bin
+            Nmol_high_peak = Nmol_high_bins[:-2][np.argmax(Nmol_high_count[:-1])]
+            
+            Nmol_valley = Nmol_bridge[Nmol_bridge>=Nmol_low_peak]
+            Nmol_valley = Nmol_valley[Nmol_valley<=Nmol_high_peak]
+            
+            if show_plot:
+            
+                plt.hist(Nmol_bridge,bins=int(Nmol_bridge.max()-Nmol_bridge.min()+1),color='w')
+                plt.hist(Nmol_low,bins=int(Nmol_low.max()-Nmol_low.min()+1),color='b',alpha=0.3)
+                plt.hist(Nmol_high,bins=int(Nmol_high.max()-Nmol_high.min()+1),color='r',alpha=0.3)
+                plt.hist(Nmol_valley,bins=int(Nmol_valley.max()-Nmol_valley.min()+1),color='k',alpha=0.3)
+                plt.xlabel('N')
+                plt.ylabel('Count')
+                plt.show()
+            
+            Nmol_valley_count, Nmol_valley_bins = np.histogram(Nmol_valley,bins=int(Nmol_valley.max()-Nmol_valley.min()))
+            Ncut = int(Nmol_valley_bins[:-2][np.argmin(Nmol_valley_count[:-1])])
+        
         print('Liquid and vapor phase is divided by Nmol = '+str(Ncut))
-    
+
         return Ncut
     
     def build_MBAR_VLE_matrices(self):
@@ -327,6 +364,7 @@ class MBAR_GCMC():
         mu_opt = GOLDEN_multi(self.sqdeltaW,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.0001,maxit=30)
         sqdeltaW_opt = self.sqdeltaW(mu_opt)
         
+        self.f_k_opt = self.f_k_guess.copy()
         self.mu_opt = mu_opt
         
         self.calc_rhosat()

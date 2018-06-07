@@ -1,0 +1,34 @@
+Full Name	GOMC	REFPROP
+2-methylpropane	2MPropane	ISOBUTAN
+2-methylbutane	2MButane	IPENTANE
+2,2-dimethylpropane	22DMPropane	NEOPENTN
+2-methylpentane	2MPentane	IHEXANE
+3-methylpentane	3MPentane	3METHYLPENTANE
+2,2-dimethylbutane	22DMButane	22DIMETHYLBUTANE
+2,3-dimethylbutane	23DMButane	23DIMETHYLBUTANE
+2-methylhexane	2MHexane	NONE
+3-methylhexane	3MHexane	NONE
+3-ethylpentane	3EPentane	NONE
+2,2-dimethylpentane	22DMPentane	NONE
+2,3-dimethylpentane	23DMPentane	NONE
+2,4-dimethylpentane	24DMPentane	NONE
+3,3-dimethylpentane	33DMPentane	NONE
+2,2,3-trimethylbutane	223TMButane	NONE
+2-methylheptane	2MHeptane	NONE
+3-methylheptane	3MHeptane	NONE
+4-methylheptane	4MHeptane	NONE
+3-ethylhexane	3EHexane	NONE
+2,2-dimethylhexane	22DMHexane	NONE
+2,3-dimethylhexane	23DMHexane	NONE
+2,4-dimethylhexane	24DMHexane	NONE
+2,5-dimethylhexane	25DMHexane	NONE
+3,3-dimethylhexane	33DMHexane	NONE
+3,4-dimethylhexane	34DMHexane	NONE
+2-methyl-3-ethylpentane	2M3EPentane	NONE
+3-methyl-3-ethylpentane	3M3EPentane	NONE
+2,2,3-trimethylpentane	223TMPentane	NONE
+2,2,4-trimethylpentane	224TMPentane	IOCTANE
+2,3,3-trimethylpentane	233TMPentane	NONE
+2,3,4-trimethylpentane	234TMPentane	NONE
+2,2,3,3-tetramethyl butane	2233TetraMButane	NONE
+3-ethyl-3-methyl-pentane	3M3EPentane	NONE

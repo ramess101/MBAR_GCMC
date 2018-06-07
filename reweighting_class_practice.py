@@ -391,7 +391,7 @@ class histogram_reweighting():
     def plot_VLE(self,Temp_VLE_all):
         
         rhov, rhol = self.calc_rho(Temp_VLE_all)
-#        Psat = self.calc_Psat(Temp_VLE_all)
+        Psat = self.calc_Psat(Temp_VLE_all)
         
         plt.plot(rhov,Temp_VLE_all,'bo',mfc='None',markersize=8)
         plt.plot(rhol,Temp_VLE_all,'bo',mfc='None',markersize=8,label='This Work')
@@ -402,12 +402,12 @@ class histogram_reweighting():
         plt.legend()
         plt.show()
         
-#        plt.plot(1000./Temp_VLE_all,np.log10(Psat),'bo',mfc='None',markersize=8,label='This Work')
-#        plt.plot(1000./Tsat_Potoff,np.log10(Psat_Potoff),'ks',mfc='None',markersize=8,label='Potoff et al.')
-#        plt.xlabel('1000/T (K)')
-#        plt.ylabel(r'$\log_{10}(P_v^{sat}/bar)$')
-#        plt.legend()
-#        plt.show()
+        plt.plot(1000./Temp_VLE_all,np.log10(Psat),'bo',mfc='None',markersize=8,label='This Work')
+        plt.plot(1000./Tsat_Potoff,np.log10(Psat_Potoff),'ks',mfc='None',markersize=8,label='Potoff et al.')
+        plt.xlabel('1000/T (K)')
+        plt.ylabel(r'$\log_{10}(P_v^{sat}/bar)$')
+        plt.legend()
+        plt.show()
 #        
     def calc_Psat(self,Temp_VLE_all):
         
@@ -481,7 +481,7 @@ for iT, Temp in enumerate(Temp_range):
     
     filepaths.append(root_path+Temp+hist_name)
 
-hist_trial = histogram_reweighting(filepaths,use_stored_C=True)
+hist_trial = histogram_reweighting(filepaths,use_stored_C=False)
 print(hist_trial.K_all)
 #print(hist_trial.N_min)
 #print(hist_trial.fi_NU)
