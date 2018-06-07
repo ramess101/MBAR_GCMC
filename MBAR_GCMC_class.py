@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pymbar import MBAR
 from Golden_search_multi import GOLDEN_multi
+from scipy import stats
 
 # Physical constants
 N_A = 6.02214086e23 #[/mol]
@@ -222,7 +223,7 @@ class MBAR_GCMC():
         mbar_sim = MBAR(u_kn_sim,N_k_sim)
         
         Deltaf_ij = mbar_sim.getFreeEnergyDifferences(return_theta=False)[0]
-        f_k_sim = Deltaf_ij[0,:]        
+        f_k_sim = Deltaf_ij[:,0]        
 #        print(f_k_sim)
         
         self.u_kn_sim, self.f_k_sim, self.sumN_k, self.N_k_sim, self.mbar_sim = u_kn_sim, f_k_sim, sumN_k, N_k_sim, mbar_sim
@@ -368,6 +369,7 @@ class MBAR_GCMC():
         self.mu_opt = mu_opt
         
         self.calc_rhosat()
+        self.calc_Psat()
         
         self.print_VLE()
         
@@ -378,7 +380,7 @@ class MBAR_GCMC():
             plt.plot(Temp_VLE,mu_VLE_guess,'b--',label=r'$\mu_{\rm guess}$')
             plt.xlabel(r'$T$ (K)')
             plt.ylabel(r'$\mu_{\rm opt}$ (K)')
-            plt.xlim([300,550])
+#            plt.xlim([300,550])
 #            plt.ylim([-4200,-3600])
             plt.legend()
             plt.show()
@@ -386,6 +388,10 @@ class MBAR_GCMC():
             plt.plot(Temp_VLE,sqdeltaW_opt,'ko')
             plt.xlabel(r'$T$ (K)')
             plt.ylabel(r'$(\Delta W^{\rm sat})^2$')
+            plt.show()
+            
+            plt.plot(Temp_VLE,self.f_k_opt[self.nTsim:])
+            plt.plot([self.Temp_IG]*len(self.f_k_IG),self.f_k_IG,'ko')
             plt.show()
             
             print("Effective number of samples")
@@ -411,10 +417,11 @@ class MBAR_GCMC():
         sumWliq = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat>Ncut],axis=0)
         sumWvap = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat<=Ncut],axis=0)
         sqdeltaW_VLE = (sumWliq-sumWvap)**2
+        ### It could be better to use just the absolute difference between the two
         
         ### Store previous solutions to speed-up future convergence of MBAR
         Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)[0]
-        self.f_k_guess = Deltaf_ij[0,:]
+        self.f_k_guess = Deltaf_ij[:,0]
         self.mbar, self.sumWliq, self.sumWvap  = mbar, sumWliq, sumWvap
               
         return sqdeltaW_VLE
@@ -433,22 +440,27 @@ class MBAR_GCMC():
         
         self.rholiq, self.rhovap = rholiq, rhovap
     
-    def plot_VLE(self,Tsat_RP,rhol_RP,rhov_RP,Tsat_Potoff,rhol_Potoff,rhov_Potoff):
+    def plot_VLE(self,compare_RP=False,Tsat_RP=[],rhol_RP=[],rhov_RP=[],Psat_RP=[],Tsat_lit=[],rhol_lit=[],rhov_lit=[],Psat_lit=[]):
         '''
         Plots the saturation densities and compares with literature values if available
+        This could be compressed significantly with some for loops.
         '''
-        Temp_VLE, rholiq, rhovap = self.Temp_VLE, self.rholiq, self.rhovap
-           
-        plt.plot(rhov_RP,Tsat_RP,'k-',label='REFPROP')
-        plt.plot(rhol_RP,Tsat_RP,'k-')
+        Temp_VLE, rholiq, rhovap, Psat = self.Temp_VLE, self.rholiq, self.rhovap, self.Psat
         
+        Psat_ig = rhovap * Rg * Temp_VLE / self.Mw / gmtokg * Jm3tobar
+        
+        if compare_RP:
+        
+            plt.plot(rhov_RP,Tsat_RP,'k-',label='REFPROP')
+            plt.plot(rhol_RP,Tsat_RP,'k-')
+            
         plt.plot(rhovap,Temp_VLE,'ro',label='MBAR-GCMC')
         plt.plot(rholiq,Temp_VLE,'ro')
         
         if self.compare_literature:
                     
-            plt.plot(rhov_Potoff,Tsat_Potoff,'ks',mfc='None',label='Potoff')
-            plt.plot(rhol_Potoff,Tsat_Potoff,'ks',mfc='None')
+            plt.plot(rhov_lit,Tsat_lit,'ks',mfc='None',label='Potoff')
+            plt.plot(rhol_lit,Tsat_lit,'ks',mfc='None')
         
         plt.xlabel(r'$\rho$ (kg/m$^3$)')
         plt.ylabel(r'$T$ (K)')
@@ -456,23 +468,198 @@ class MBAR_GCMC():
         plt.ylim([0.98*Temp_VLE.min(),1.02*Temp_VLE.max()])
         plt.legend()
         plt.show()
+                
+        plt.figure(figsize=[6,6])
+        
+        if compare_RP:
+            plt.plot(1./Tsat_RP,np.log10(Psat_RP),'k-',label='REFPROP') 
+        
+        plt.plot(1./Temp_VLE,np.log10(Psat),'ro',label='MBAR-GCMC')
+        plt.plot(1./Temp_VLE,np.log10(Psat_ig),'r--',label='Ideal gas')
+        
+        if self.compare_literature:
+                    
+            plt.plot(1./Tsat_lit,np.log10(Psat_lit),'ks',mfc='None',label='Potoff')
+        
+        plt.xlabel(r'$1/T^{\rm sat} (K)$')
+        plt.ylabel(r'$\log_{\rm 10}(P_{\rm v}^{\rm sat}/\rm bar)$')
+        plt.xticks([1./Temp_VLE.max(),1./Temp_VLE.min()])
+        plt.legend()
+        plt.show()
+        
+        plt.figure(figsize=[6,6])
+        
+        if compare_RP:
+            plt.plot(Tsat_RP,np.log10(Psat_RP),'k-',label='REFPROP') 
+        
+        plt.plot(Temp_VLE,np.log10(Psat),'ro',label='MBAR-GCMC')
+        plt.plot(Temp_VLE,np.log10(Psat_ig),'r--',label='Ideal gas')
+        
+        if self.compare_literature:
+                    
+            plt.plot(Tsat_lit,np.log10(Psat_lit),'ks',mfc='None',label='Potoff')
+        
+        plt.xlabel(r'$T^{\rm sat} (K)$')
+        plt.ylabel(r'$\log_{\rm 10}(P_{\rm v}^{\rm sat}/\rm bar)$')
+        plt.legend()
+        plt.show()
+        
+        if compare_RP:
+            
+            Temp_compare = Temp_VLE[Temp_VLE >= max([Tsat_RP.min(), Temp_VLE.min()])]
+            rhovap_compare = rhovap[Temp_VLE >= max([Tsat_RP.min(), Temp_VLE.min()])]
+            rholiq_compare = rholiq[Temp_VLE >= max([Tsat_RP.min(), Temp_VLE.min()])]
+            Psat_compare = Psat[Temp_VLE >= max([Tsat_RP.min(), Temp_VLE.min()])]
+            
+            rhovap_compare = rhovap_compare[Temp_compare <= min([Tsat_RP.max(), Temp_VLE.max()])]
+            rholiq_compare = rholiq_compare[Temp_compare <= min([Tsat_RP.max(), Temp_VLE.max()])]
+            Psat_compare = Psat_compare[Temp_compare <= min([Tsat_RP.max(), Temp_VLE.max()])]
+            
+            Temp_compare = Temp_compare[Temp_compare <= min([Tsat_RP.max(), Temp_VLE.max()])]
+            
+            rhov_RP_compare = np.interp(Temp_compare,Tsat_RP,rhov_RP)
+            rhol_RP_compare = np.interp(Temp_compare,Tsat_RP,rhol_RP)
+            Psat_RP_compare = np.interp(Temp_compare,Tsat_RP,Psat_RP)
+                        
+            plt.figure(figsize=[6,6])
+            plt.plot(Temp_compare,rhovap_compare-rhov_RP_compare,'ro',mfc='None')
+            plt.xlabel(r'$T^{\rm sat} (K)$')
+            plt.ylabel(r'$\rho_{\rm v,MBAR}^{\rm sat} - \rho_{\rm v,REFPROP}^{\rm sat}$ (kg/m$^3$)')
+            plt.legend()
+            plt.show()
+            
+            plt.figure(figsize=[6,6])
+            plt.plot(Temp_compare,(rhovap_compare-rhov_RP_compare)/rhov_RP_compare*100.,'ro',mfc='None')
+            plt.xlabel(r'$T^{\rm sat} (K)$')
+            plt.ylabel(r'$(\rho_{\rm v,MBAR}^{\rm sat} - \rho_{\rm v,REFPROP}^{\rm sat})/\rho_{\rm v,REFPROP}^{\rm sat}) \times 100$ %')
+            plt.legend()
+            plt.show()
+        
+            plt.figure(figsize=[6,6])
+            plt.plot(Temp_compare,rholiq_compare-rhol_RP_compare,'ro',mfc='None')
+            plt.xlabel(r'$T^{\rm sat} (K)$')
+            plt.ylabel(r'$\rho_{\rm l,MBAR}^{\rm sat} - \rho_{\rm l,REFPROP}^{\rm sat}$ (kg/m$^3$)')
+            plt.legend()
+            plt.show()
+            
+            plt.figure(figsize=[6,6])
+            plt.plot(Temp_compare,(rholiq_compare-rhol_RP_compare)/rhol_RP_compare*100.,'ro',mfc='None')
+            plt.xlabel(r'$T^{\rm sat} (K)$')
+            plt.ylabel(r'$(\rho_{\rm l,MBAR}^{\rm sat} - \rho_{\rm l,REFPROP}^{\rm sat})/\rho_{\rm l,REFPROP}^{\rm sat}) \times 100$ %')
+            plt.legend()
+            plt.show()
+            
+            plt.figure(figsize=[6,6])
+            plt.plot(Temp_compare,Psat_compare-Psat_RP_compare,'ro',mfc='None')
+            plt.xlabel(r'$T^{\rm sat} (K)$')
+            plt.ylabel(r'$P_{\rm v,MBAR}^{\rm sat} - P_{\rm v,REFPROP}^{\rm sat}$ (bar)')
+            plt.legend()
+            plt.show()
+            
+            plt.figure(figsize=[6,6])
+            plt.plot(Temp_compare,(Psat_compare-Psat_RP_compare)/Psat_RP_compare*100.,'ro',mfc='None')
+            plt.xlabel(r'$T^{\rm sat} (K)$')
+            plt.ylabel(r'$(P_{\rm v,MBAR}^{\rm sat} - P_{\rm v,REFPROP}^{\rm sat})/P_{\rm v,REFPROP}^{\rm sat}) \times 100$ %')
+            plt.legend()
+            plt.show()
+        
+        if self.compare_literature:
+            
+#            if not (Temp_VLE==Tsat_lit).all():
+#            rholiq = rholiq[Temp_VLE.argsort()]            
+#            Temp_compare = Temp_VLE[Temp_VLE >= max([Tsat_lit.min(), Temp_VLE.min()])]
+#            rhovap_compare = rhovap[Temp_VLE >= max([Tsat_lit.min(), Temp_VLE.min()])]
+#            rholiq_compare = rholiq[Temp_VLE >= max([Tsat_lit.min(), Temp_VLE.min()])]
+#            Psat_compare = Psat[Temp_VLE >= max([Tsat_lit.min(), Temp_VLE.min()])]
+#            
+#            rhovap_compare = rhovap_compare[Temp_compare <= min([Tsat_lit.max(), Temp_VLE.max()])]
+#            rholiq_compare = rholiq_compare[Temp_compare <= min([Tsat_lit.max(), Temp_VLE.max()])]
+#            Psat_compare = Psat_compare[Temp_compare <= min([Tsat_lit.max(), Temp_VLE.max()])]
+#            
+#            Temp_compare = Temp_compare[Temp_compare <= min([Tsat_lit.max(), Temp_VLE.max()])]
+#            
+#            #This requires that Tsat_lit is sorted from smallest to greatest
+#            
+#            rhov_lit_compare = np.interp(Temp_compare,Tsat_lit,rhov_lit)
+#            rhol_lit_compare = np.interp(Temp_compare,Tsat_lit,rhol_lit)
+#            Psat_lit_compare = np.interp(Temp_compare,Tsat_lit,Psat_lit)
+            
+            ### For now, just assume Temp_VLE = Tsat_lit
+
+            Temp_compare = Temp_VLE[Tsat_lit==Temp_VLE]
+            rhovap_compare = rhovap[Tsat_lit==Temp_VLE]
+            rholiq_compare = rholiq[Tsat_lit==Temp_VLE]
+            Psat_compare = Psat[Tsat_lit==Temp_VLE]
+            
+            rhov_lit_compare = rhov_lit[Tsat_lit==Temp_VLE]
+            rhol_lit_compare = rhol_lit[Tsat_lit==Temp_VLE]
+            Psat_lit_compare = Psat_lit[Tsat_lit==Temp_VLE]
+            
+#            print(Temp_compare,Tsat_lit,Temp_VLE)
+#            print(rhol_lit_compare,rholiq_compare)
+#            print(Psat_lit_compare,Psat_compare)
+            
+            plt.figure(figsize=[6,6])
+            plt.plot(Temp_compare,rhovap_compare-rhov_lit_compare,'ro',mfc='None')
+            plt.xlabel(r'$T^{\rm sat} (K)$')
+            plt.ylabel(r'$\rho_{\rm v,MBAR}^{\rm sat} - \rho_{\rm v,lit}^{\rm sat}$ (kg/m$^3$)')
+            plt.legend()
+            plt.show()
+            
+            plt.figure(figsize=[6,6])
+            plt.plot(Temp_compare,(rhovap_compare-rhov_lit_compare)/rhov_lit_compare*100.,'ro',mfc='None')
+            plt.xlabel(r'$T^{\rm sat} (K)$')
+            plt.ylabel(r'$(\rho_{\rm v,MBAR}^{\rm sat} - \rho_{\rm v,lit}^{\rm sat})/\rho_{\rm v,lit}^{\rm sat}) \times 100$ %')
+            plt.legend()
+            plt.show()
+        
+            plt.figure(figsize=[6,6])
+            plt.plot(Temp_compare,rholiq_compare-rhol_lit_compare,'ro',mfc='None')
+            plt.xlabel(r'$T^{\rm sat} (K)$')
+            plt.ylabel(r'$\rho_{\rm l,MBAR}^{\rm sat} - \rho_{\rm l,lit}^{\rm sat}$ (kg/m$^3$)')
+            plt.legend()
+            plt.show()
+            
+            plt.figure(figsize=[6,6])
+            plt.plot(Temp_compare,(rholiq_compare-rhol_lit_compare)/rhol_lit_compare*100.,'ro',mfc='None')
+            plt.xlabel(r'$T^{\rm sat} (K)$')
+            plt.ylabel(r'$(\rho_{\rm l,MBAR}^{\rm sat} - \rho_{\rm l,lit}^{\rm sat})/\rho_{\rm l,lit}^{\rm sat}) \times 100$ %')
+            plt.legend()
+            plt.show()
+        
+            plt.figure(figsize=[6,6])
+            plt.plot(Temp_compare,Psat_compare-Psat_lit_compare,'ro',mfc='None')
+            plt.xlabel(r'$T^{\rm sat} (K)$')
+            plt.ylabel(r'$P_{\rm v,MBAR}^{\rm sat} - P_{\rm v,lit}^{\rm sat}$ (bar)')
+            plt.legend()
+            plt.show()
+            
+            plt.figure(figsize=[6,6])
+            plt.plot(Temp_compare,(Psat_compare-Psat_lit_compare)/Psat_lit_compare*100.,'ro',mfc='None')
+            plt.xlabel(r'$T^{\rm sat} (K)$')
+            plt.ylabel(r'$(P_{\rm v,MBAR}^{\rm sat} - P_{\rm v,lit}^{\rm sat})/P_{\rm v,lit}^{\rm sat}) \times 100$ %')
+            plt.legend()
+            plt.show()
         
     def print_VLE(self):
         '''
         Prints the saturation densities and compares with literature values if available
         '''
-        Temp_VLE, rholiq, rhovap = self.Temp_VLE, self.rholiq, self.rhovap
+        Temp_VLE, rholiq, rhovap,Psat = self.Temp_VLE, self.rholiq, self.rhovap,self.Psat
         
         fT = open(self.root_path+'Tsat','w')
         fv = open(self.root_path+'rhovsat','w')
         fl = open(self.root_path+'rholsat','w')
-        for Temp, rhov, rhol in zip(Temp_VLE,rhovap,rholiq):
+        fp = open(self.root_path+'Psat','w')
+        for Temp, rhov, rhol,Pv in zip(Temp_VLE,rhovap,rholiq,Psat):
             fT.write(str(Temp)+'\n')
             fv.write(str(rhov)+'\n')
-            fl.write(str(rhol)+'\n')   
+            fl.write(str(rhol)+'\n')
+            fp.write(str(Pv)+'\n')
         fT.close()
         fv.close()
         fl.close()
+        fp.close()
         
     def mu_scan(self,Temp_VLE):
         '''
@@ -500,6 +687,74 @@ class MBAR_GCMC():
         mu_upper = mu_range[sqdeltaW_plot.argmin(axis=0)+1]
         
         return mu_opt, mu_lower, mu_upper
+    
+    def calc_abs_press_int(self,show_plot=True):
+        '''
+        Fits ln(Xi) with respect to N for low-density vapor
+        '''
+        Temp_sim, u_kn_sim,f_k_sim,sumN_k = self.Temp_sim, self.u_kn_sim,self.f_k_sim,self.sumN_k
+        nTsim, U_flat, Nmol_flat,Ncut = self.nTsim, self.U_flat, self.Nmol_flat, self.Ncut
+        
+        Temp_IG = np.min(Temp_sim[self.mu_sim == self.mu_sim.min()]) 
+#        print(Temp_IG)
+
+        mu_IG = np.linspace(2.*self.mu_opt[self.Temp_VLE==Temp_IG],5.*self.mu_opt[self.Temp_VLE==Temp_IG],10)
+
+        N_k_all = self.K_sim[:]
+        N_k_all.extend([0]*len(mu_IG))
+
+        u_kn_IG = np.zeros([len(mu_IG),sumN_k])
+        u_kn_all = np.concatenate((u_kn_sim,u_kn_IG))
+        
+        f_k_guess = np.concatenate((f_k_sim,np.zeros(len(mu_IG))))
+
+        for jT, mu in enumerate(mu_IG):
+            
+            u_kn_all[nTsim+jT,:] = self.U_to_u(U_flat,Temp_IG,mu,Nmol_flat)
+
+        mbar = MBAR(u_kn_all,N_k_all,initial_f_k=f_k_guess)
+                
+        sumW_IG = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat<Ncut],axis=0)
+         
+        Nmol_IG = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat<Ncut].T*Nmol_flat[Nmol_flat<Ncut],axis=1)/sumW_IG
+#        print(sumW_IG,Nmol_IG)
+#        print(mbar.W_nk[:,nTsim:][Nmol_flat<Ncut].T)
+#        print(mbar.W_nk[:,nTsim:][Nmol_flat<Ncut].T*Nmol_flat[Nmol_flat<Ncut])
+        ### Store previous solutions to speed-up future convergence of MBAR
+        Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)[0]
+        f_k_IG = Deltaf_ij[nTsim:,0]
+#        print(f_k_sim,f_k_guess[:nTsim+1],Deltaf_ij[0,:nTsim],f_k_IG)#,Nmol_IG,press_IG,Psat)
+
+        fit=stats.linregress(Nmol_IG[mu_IG<2.*self.mu_sim.min()],f_k_IG[mu_IG<2.*self.mu_sim.min()])
+        
+        if show_plot:
+            
+            Nmol_plot = np.linspace(Nmol_IG.min(),Nmol_IG.max(),50)
+            lnXi_plot = fit.intercept + fit.slope*Nmol_plot
+
+            plt.figure(figsize=[6,6])
+            plt.plot(Nmol_IG,f_k_IG,'bo',mfc='None',label='MBAR-GCMC')
+            plt.plot(Nmol_plot,lnXi_plot,'k-',label='Linear fit')
+            plt.xlabel('Number of Molecules')
+            plt.ylabel(r'$\ln(\Xi)$')
+            plt.legend()
+            plt.show()
+            
+            print('Slope for ideal gas is 1, actual slope is: '+str(fit.slope))
+            print('Intercept for absolute pressure is:'+str(fit.intercept))
+        
+        self.abs_press_int, self.Temp_IG, self.f_k_IG, self.Nmol_IG = fit.intercept, Temp_IG, f_k_IG, Nmol_IG
+        
+    def calc_Psat(self):
+        '''
+        Computes the saturated vapor pressure
+        '''
+        self.calc_abs_press_int()
+        f_k_opt, nTsim, Temp_VLE, Vbox, abs_press_int, Temp_IG = self.f_k_opt, self.nTsim, self.Temp_VLE, self.Vbox_sim[0], self.abs_press_int, self.Temp_IG
+        
+        Psat = kb * Temp_VLE * (f_k_opt[nTsim:]-np.log(2.) - abs_press_int) / Vbox / Ang3tom3 * Jm3tobar
+
+        self.Psat = Psat
         
 def main():
        
