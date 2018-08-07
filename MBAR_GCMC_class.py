@@ -363,7 +363,6 @@ class MBAR_GCMC():
         ### Optimization of mu
         mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE)
         mu_opt = GOLDEN_multi(self.sqdeltaW,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.0001,maxit=30)
-        sqdeltaW_opt = self.sqdeltaW(mu_opt)
         
         self.f_k_opt = self.f_k_guess.copy()
         self.mu_opt = mu_opt
@@ -374,6 +373,8 @@ class MBAR_GCMC():
         self.print_VLE()
         
         if show_plot:
+            
+            sqdeltaW_opt = self.sqdeltaW(mu_opt)
         
             plt.plot(Temp_VLE,mu_opt,'k-',label=r'$\mu_{\rm opt}$')
             plt.plot(self.Temp_sim,self.mu_sim,'ro',mfc='None',label='Simulation')
@@ -752,7 +753,7 @@ class MBAR_GCMC():
         self.calc_abs_press_int()
         f_k_opt, nTsim, Temp_VLE, Vbox, abs_press_int, Temp_IG = self.f_k_opt, self.nTsim, self.Temp_VLE, self.Vbox_sim[0], self.abs_press_int, self.Temp_IG
         
-        Psat = kb * Temp_VLE * (f_k_opt[nTsim:]-np.log(2.) - abs_press_int) / Vbox / Ang3tom3 * Jm3tobar
+        Psat = kb * Temp_VLE * (f_k_opt[nTsim:]-np.log(2.) - abs_press_int) / Vbox / Ang3tom3 * Jm3tobar #-log(2) accounts for two phases
 
         self.Psat = Psat
         
@@ -763,9 +764,9 @@ def main():
 #    root_path = 'hexane_Potoff/'
 #    hist_num=['1','2','3','4','5','6','7','8','9']
     
-    root_path = 'hexane_Potoff_replicates/'
+#    root_path = 'hexane_Potoff_replicates/'
 #    root_path = 'hexane_Potoff_replicates_2/'
-#    root_path = 'hexane_eps_scaled/'
+    root_path = 'hexane_eps_scaled_wrong/'
     Temp_range = ['510','470','430','480','450','420','390','360','330']
     hist_num=['2','2','2','2','2','2','2','2','2']
     
@@ -777,7 +778,7 @@ def main():
 
     Mw_hexane  = 12.0109*6.+1.0079*(2.*6.+2.) #[gm/mol]
     
-#    Temp_VLE_plot = Tsat_Potoff
+    Temp_VLE_plot = Tsat_Potoff
 #    Temp_VLE_plot = np.array([360., 350.])
     MBAR_GCMC_trial = MBAR_GCMC(root_path,filepaths,Mw_hexane,compare_literature=True)
 #    MBAR_GCMC_trial.plot_histograms()

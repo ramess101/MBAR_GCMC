@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pymbar import MBAR
 from Golden_search_multi import GOLDEN_multi
+from scipy import stats
 
 ### Figure font size
 font = {'size' : '18'}
@@ -21,13 +22,17 @@ kb = 1.3806485e-23 #[J/K]
 Jm3tobar = 1e-5
 Rg = kb*N_A #[J/mol/K]
 
-RMS_rhol = lambda rhol,rhol_RP: np.sqrt(np.mean((rhol - rhol_RP)**2))
-MAPD_rhol = lambda rhol,rhol_RP: np.mean(np.abs((rhol - rhol_RP)/rhol_RP*100.))
-AD_rhol = lambda rhol,rhol_RP: np.mean((rhol - rhol_RP)/rhol_RP*100.)
+compute_RMS = lambda yhat,yset: np.sqrt(np.mean((yhat - yset)**2))
+compute_MAPD = lambda yhat,yset: np.mean(np.abs((yhat - yset)/yset*100.))
+compute_AD = lambda yhat,yset: np.mean((yhat - yset)/yset*100.)
 
-RMS_rhov = lambda rhov,rhov_RP: np.sqrt(np.mean((rhov - rhov_RP)**2))
-MAPD_rhov = lambda rhov,rhov_RP: np.mean(np.abs((rhov - rhov_RP)/rhov_RP*100.))
-AD_rhov = lambda rhov,rhov_RP: np.mean((rhov - rhov_RP)/rhov_RP*100.)
+#RMS_rhol = lambda rhol,rhol_RP: np.sqrt(np.mean((rhol - rhol_RP)**2))
+#MAPD_rhol = lambda rhol,rhol_RP: np.mean(np.abs((rhol - rhol_RP)/rhol_RP*100.))
+#AD_rhol = lambda rhol,rhol_RP: np.mean((rhol - rhol_RP)/rhol_RP*100.)
+#
+#RMS_rhov = lambda rhov,rhov_RP: np.sqrt(np.mean((rhov - rhov_RP)**2))
+#MAPD_rhov = lambda rhov,rhov_RP: np.mean(np.abs((rhov - rhov_RP)/rhov_RP*100.))
+#AD_rhov = lambda rhov,rhov_RP: np.mean((rhov - rhov_RP)/rhov_RP*100.)
 
 class MBAR_GCMC():
     def __init__(self,root_path,filepaths,Mw,trim_data=False,compare_literature=False):
@@ -234,12 +239,12 @@ class MBAR_GCMC():
         mbar_sim = MBAR(u_kn_sim,N_k_sim)
         
         Deltaf_ij = mbar_sim.getFreeEnergyDifferences(return_theta=False)[0]
-        f_k_sim = Deltaf_ij[0,:]        
+        f_k_sim = Deltaf_ij[:,0]        
 #        print(f_k_sim)
         
         self.u_kn_sim, self.f_k_sim, self.sumN_k, self.N_k_sim, self.mbar_sim = u_kn_sim, f_k_sim, sumN_k, N_k_sim, mbar_sim
     
-    def solve_Ncut(self,show_plot=False):
+    def solve_Ncut(self,method=2,show_plot=False):
         '''
         The MBAR_GCMC class uses a cutoff in the number of molecules, Ncut, to 
         distinguish between liquid and vapor phases. The value of Ncut is determined
@@ -249,27 +254,64 @@ class MBAR_GCMC():
         '''
         mbar_sim, Nmol_flat = self.mbar_sim,self.Nmol_flat
         
-        Nscan = np.arange(60,100)
-        
-        sqdeltaW_bridge = np.zeros(len(Nscan))
         bridge_index = np.argmax(self.Temp_sim)
         
-        for iN, Ni in enumerate(Nscan):
+        if method == 1:
         
-            sumWliq_bridge = np.sum(mbar_sim.W_nk[:,bridge_index][Nmol_flat>Ni])
-            sumWvap_bridge = np.sum(mbar_sim.W_nk[:,bridge_index][Nmol_flat<=Ni])
-            sqdeltaW_bridge[iN] = (sumWliq_bridge - sumWvap_bridge)**2
-        
-        if show_plot:
-        
-            plt.plot(Nscan,sqdeltaW_bridge,'k-')
-            plt.xlabel(r'$N_{\rm cut}$')
-            plt.ylabel(r'$(\Delta W_{\rm bridge}^{\rm sat})^2$')
-            plt.show()
+            Nscan = np.arange(60,100)
+            
+            sqdeltaW_bridge = np.zeros(len(Nscan))
+            
+            for iN, Ni in enumerate(Nscan):
+            
+                sumWliq_bridge = np.sum(mbar_sim.W_nk[:,bridge_index][Nmol_flat>Ni])
+                sumWvap_bridge = np.sum(mbar_sim.W_nk[:,bridge_index][Nmol_flat<=Ni])
+                sqdeltaW_bridge[iN] = (sumWliq_bridge - sumWvap_bridge)**2
+            
+            if show_plot:
+            
+                plt.plot(Nscan,sqdeltaW_bridge,'k-')
+                plt.xlabel(r'$N_{\rm cut}$')
+                plt.ylabel(r'$(\Delta W_{\rm bridge}^{\rm sat})^2$')
+                plt.show()
                                 
-        Ncut = Nscan[np.argmin(sqdeltaW_bridge)]
+            Ncut = Nscan[np.argmin(sqdeltaW_bridge)]
+        
+        elif method == 2:
+        
+            ### Alternative method that finds the minimum between the two peaks
+            ### Note that this might not be best since noisy data could move Ncut quite a bit
+            Nmol_bridge = self.N_data_sim[bridge_index]
+            
+            Nmol_mid = (Nmol_bridge.min()+Nmol_bridge.max())/2.
+            
+            Nmol_low = Nmol_bridge[Nmol_bridge<=Nmol_mid]
+            Nmol_high = Nmol_bridge[Nmol_bridge>=Nmol_mid]
+            
+            Nmol_low_count,Nmol_low_bins = np.histogram(Nmol_low,bins=int(Nmol_low.max()-Nmol_low.min()))
+            Nmol_high_count,Nmol_high_bins = np.histogram(Nmol_high,bins=int(Nmol_high.max()-Nmol_high.min()))
+            
+            Nmol_low_peak = Nmol_low_bins[:-2][np.argmax(Nmol_low_count[:-1])] #Need to remove final bin
+            Nmol_high_peak = Nmol_high_bins[:-2][np.argmax(Nmol_high_count[:-1])]
+            
+            Nmol_valley = Nmol_bridge[Nmol_bridge>=Nmol_low_peak]
+            Nmol_valley = Nmol_valley[Nmol_valley<=Nmol_high_peak]
+            
+            if show_plot:
+            
+                plt.hist(Nmol_bridge,bins=int(Nmol_bridge.max()-Nmol_bridge.min()+1),color='w')
+                plt.hist(Nmol_low,bins=int(Nmol_low.max()-Nmol_low.min()+1),color='b',alpha=0.3)
+                plt.hist(Nmol_high,bins=int(Nmol_high.max()-Nmol_high.min()+1),color='r',alpha=0.3)
+                plt.hist(Nmol_valley,bins=int(Nmol_valley.max()-Nmol_valley.min()+1),color='k',alpha=0.3)
+                plt.xlabel('N')
+                plt.ylabel('Count')
+                plt.show()
+            
+            Nmol_valley_count, Nmol_valley_bins = np.histogram(Nmol_valley,bins=int(Nmol_valley.max()-Nmol_valley.min()))
+            Ncut = int(Nmol_valley_bins[:-2][np.argmin(Nmol_valley_count[:-1])])
+        
         print('Liquid and vapor phase is divided by Nmol = '+str(Ncut))
-    
+
         return Ncut
     
     def build_MBAR_VLE_matrices(self):
@@ -343,10 +385,12 @@ class MBAR_GCMC():
 #            mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE,eps_scaled)
         mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE,eps_scaled)    
         mu_opt = GOLDEN_multi(sqdeltaW_scaled,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.0001,maxit=30)
-
+        
+        self.f_k_opt = self.f_k_guess.copy()
         self.mu_opt = mu_opt
         
         self.calc_rhosat()
+        self.calc_Psat(eps_scaled)
         
 #        self.print_VLE()
         
@@ -395,7 +439,7 @@ class MBAR_GCMC():
         
         ### Store previous solutions to speed-up future convergence of MBAR
         Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)[0]
-        self.f_k_guess = Deltaf_ij[0,:]
+        self.f_k_guess = Deltaf_ij[:,0]
         self.mbar, self.sumWliq, self.sumWvap  = mbar, sumWliq, sumWvap
               
         return sqdeltaW_VLE
@@ -483,7 +527,78 @@ class MBAR_GCMC():
         
         return mu_opt, mu_lower, mu_upper
     
-    def eps_scan(self,Temp_VLE,rhol_RP,rhov_RP,rhol_Potoff,rhov_Potoff,eps_low,eps_high,neps,compound,remove_low_high_Tsat=False):
+    def calc_abs_press_int(self,eps_scaled,show_plot=True):
+        '''
+        Fits ln(Xi) with respect to N for low-density vapor
+        '''
+        Temp_sim, u_kn_sim,f_k_sim,sumN_k = self.Temp_sim, self.u_kn_sim,self.f_k_sim,self.sumN_k
+        nTsim, U_flat, Nmol_flat,Ncut = self.nTsim, self.U_flat, self.Nmol_flat, self.Ncut
+        
+        Temp_IG = np.min(Temp_sim[self.mu_sim == self.mu_sim.min()]) 
+#        print(Temp_IG)
+
+#        mu_IG = np.linspace(2.*self.mu_opt[self.Temp_VLE==Temp_IG],5.*self.mu_opt[self.Temp_VLE==Temp_IG],10)
+        mu_IG = np.linspace(self.mu_sim.min(),3.*self.mu_sim.min(),10)
+
+        N_k_all = self.K_sim[:]
+        N_k_all.extend([0]*len(mu_IG))
+
+        u_kn_IG = np.zeros([len(mu_IG),sumN_k])
+        u_kn_all = np.concatenate((u_kn_sim,u_kn_IG))
+        
+        f_k_guess = np.concatenate((f_k_sim,np.zeros(len(mu_IG))))
+
+        for jT, mu in enumerate(mu_IG):
+            
+            u_kn_all[nTsim+jT,:] = self.U_to_u(eps_scaled*U_flat,Temp_IG,mu,Nmol_flat)
+
+        mbar = MBAR(u_kn_all,N_k_all,initial_f_k=f_k_guess)
+                
+        sumW_IG = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat<Ncut],axis=0)
+         
+        Nmol_IG = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat<Ncut].T*Nmol_flat[Nmol_flat<Ncut],axis=1)/sumW_IG
+#        print(sumW_IG,Nmol_IG)
+#        print(mbar.W_nk[:,nTsim:][Nmol_flat<Ncut].T)
+#        print(mbar.W_nk[:,nTsim:][Nmol_flat<Ncut].T*Nmol_flat[Nmol_flat<Ncut])
+        ### Store previous solutions to speed-up future convergence of MBAR
+        Deltaf_ij = mbar.getFreeEnergyDifferences(return_theta=False)[0]
+        f_k_IG = Deltaf_ij[nTsim:,0]
+#        print(f_k_sim,f_k_guess[:nTsim+1],Deltaf_ij[0,:nTsim],f_k_IG)#,Nmol_IG,press_IG,Psat)
+
+        fit=stats.linregress(Nmol_IG[mu_IG<2.*self.mu_sim.min()],f_k_IG[mu_IG<2.*self.mu_sim.min()])
+        
+        if show_plot:
+            
+            Nmol_plot = np.linspace(Nmol_IG.min(),Nmol_IG.max(),50)
+            lnXi_plot = fit.intercept + fit.slope*Nmol_plot
+
+            plt.figure(figsize=[6,6])
+            plt.plot(Nmol_IG,f_k_IG,'bo',mfc='None',label='MBAR-GCMC')
+            plt.plot(Nmol_plot,lnXi_plot,'k-',label='Linear fit')
+            plt.xlabel('Number of Molecules')
+            plt.ylabel(r'$\ln(\Xi)$')
+            plt.legend()
+            plt.show()
+            
+            print('Slope for ideal gas is 1, actual slope is: '+str(fit.slope))
+            print('Intercept for absolute pressure is:'+str(fit.intercept))
+        
+        self.abs_press_int, self.Temp_IG, self.f_k_IG, self.Nmol_IG = fit.intercept, Temp_IG, f_k_IG, Nmol_IG
+        
+    def calc_Psat(self,eps_scaled=1.):
+        '''
+        Computes the saturated vapor pressure
+        '''
+        try:
+            abs_press_int = self.abs_press_int
+        except:
+            self.calc_abs_press_int(eps_scaled)
+        f_k_opt, nTsim, Temp_VLE, Vbox, abs_press_int = self.f_k_opt, self.nTsim, self.Temp_VLE, self.Vbox_sim[0], self.abs_press_int
+        
+        Psat = kb * Temp_VLE * (f_k_opt[nTsim:]-np.log(2.) - abs_press_int) / Vbox / Ang3tom3 * Jm3tobar #-log(2) accounts for two phases
+        self.Psat = Psat
+    
+    def eps_scan(self,Temp_VLE,rhol_RP,rhov_RP,Psat_RP,rhol_Potoff,rhov_Potoff,Psat_Potoff,eps_low,eps_high,neps,compound,remove_low_high_Tsat=False):
         
         self.Temp_VLE = Temp_VLE
         
@@ -491,8 +606,10 @@ class MBAR_GCMC():
             self.Temp_VLE = self.Temp_VLE[2:-2]
             rhol_RP = rhol_RP[2:-2]
             rhov_RP = rhov_RP[2:-2]
+            Psat_RP = Psat_RP[2:-2]
             rhol_Potoff = rhol_Potoff[2:-2]
             rhov_Potoff = rhov_Potoff[2:-2]
+            Psat_Potoff = Psat_Potoff[2:-2]
         
         eps_range = np.linspace(eps_low,eps_high,neps)
         
@@ -504,16 +621,24 @@ class MBAR_GCMC():
         AD_rhov_plot = np.zeros(len(eps_range))
         MAPD_rhov_plot = np.zeros(len(eps_range))
         
+        RMS_logPsat_plot = np.zeros(len(eps_range))
+        AD_Psat_plot = np.zeros(len(eps_range))
+        MAPD_Psat_plot = np.zeros(len(eps_range))
+        
         for ieps, eps_scaled in enumerate(eps_range):
             
             self.solve_VLE(self.Temp_VLE, eps_scaled)
-            RMS_rhol_plot[ieps] = RMS_rhol(self.rholiq,rhol_RP) 
-            AD_rhol_plot[ieps] = AD_rhol(self.rholiq,rhol_RP)
-            MAPD_rhol_plot[ieps] = MAPD_rhol(self.rholiq,rhol_RP)
+            RMS_rhol_plot[ieps] = compute_RMS(self.rholiq,rhol_RP) 
+            AD_rhol_plot[ieps] = compute_AD(self.rholiq,rhol_RP)
+            MAPD_rhol_plot[ieps] = compute_MAPD(self.rholiq,rhol_RP)
             
-            RMS_rhov_plot[ieps] = RMS_rhov(self.rhovap,rhov_RP)        
-            AD_rhov_plot[ieps] = AD_rhov(self.rhovap,rhov_RP)
-            MAPD_rhov_plot[ieps] = MAPD_rhov(self.rhovap,rhov_RP)
+            RMS_rhov_plot[ieps] = compute_RMS(self.rhovap,rhov_RP)        
+            AD_rhov_plot[ieps] = compute_AD(self.rhovap,rhov_RP)
+            MAPD_rhov_plot[ieps] = compute_MAPD(self.rhovap,rhov_RP)
+            
+            RMS_logPsat_plot[ieps] = compute_RMS(np.log10(self.Psat),np.log10(Psat_RP))        
+            AD_Psat_plot[ieps] = compute_AD(self.Psat,Psat_RP)
+            MAPD_Psat_plot[ieps] = compute_MAPD(self.Psat,Psat_RP)
             
 #            print(AD_rhol_plot[ieps],AD_rhov_plot[ieps])
             
@@ -521,42 +646,51 @@ class MBAR_GCMC():
         
         plt.plot(eps_range,RMS_rhol_plot,'r-',label=r'$\rho_{\rm liq}$')
         plt.plot(eps_range,RMS_rhov_plot,'b--',label=r'$\rho_{\rm vap}$')
-        plt.plot(1,RMS_rhol(rhol_Potoff,rhol_RP),'rs',label=r'$\rho_{\rm liq}$, Potoff')
-        plt.plot(1,RMS_rhol(rhov_Potoff,rhov_RP),'bo',label=r'$\rho_{\rm vap}$, Potoff')    
+        plt.plot(eps_range,RMS_logPsat_plot,'g:',label=r'$\log_{\rm 10}(P^{\rm sat}_{\rm vap}/(\rm bar))$')
+        plt.plot(1,compute_RMS(rhol_Potoff,rhol_RP),'rs',label=r'$\rho_{\rm liq}$, Potoff')
+        plt.plot(1,compute_RMS(rhov_Potoff,rhov_RP),'bo',label=r'$\rho_{\rm vap}$, Potoff')
+        plt.plot(1,compute_RMS(Psat_Potoff,Psat_RP),'g^',label=r'$\log_{\rm 10}(P^{\rm sat}_{\rm vap}/(\rm bar))$, Potoff')
         plt.xlabel(r'$\epsilon / \epsilon_{\rm Potoff}$')
         plt.ylabel(r'Root-mean-square')
         plt.title(compound)
                     
         plt.legend()
-        plt.savefig('figures/'+compound+'_RMS_eps_scan.pdf')
+#        plt.savefig('figures/'+compound+'_RMS_eps_scan.pdf')
         plt.show()
 
         plt.figure(figsize=(8,8))
-        
-        plt.plot(eps_range,AD_rhol_plot,'r-',label=r'$\rho_{\rm liq}$')
-        plt.plot(eps_range,AD_rhov_plot,'b--',label=r'$\rho_{\rm vap}$')
-        plt.plot(1,AD_rhol(rhol_Potoff,rhol_RP),'rs',label=r'$\rho_{\rm liq}$, Potoff')
-        plt.plot(1,AD_rhol(rhov_Potoff,rhov_RP),'bo',label=r'$\rho_{\rm vap}$, Potoff')
+#        
+#        plt.plot(eps_range,AD_rhol_plot,'r-',label=r'$\rho_{\rm liq}$')
+#        plt.plot(eps_range,AD_rhov_plot,'b--',label=r'$\rho_{\rm vap}$')
+#        plt.plot(eps_range,AD_Psat_plot,'g:',label=r'$P^{\rm sat}_{\rm vap}$')
+        plt.plot(eps_range,AD_rhol_plot+compute_AD(rhol_Potoff,rhol_RP)-AD_rhol_plot[eps_range==1],'r-',label=r'$\rho_{\rm liq}$')
+        plt.plot(eps_range,AD_rhov_plot+compute_AD(rhov_Potoff,rhov_RP)-AD_rhov_plot[eps_range==1],'b--',label=r'$\rho_{\rm vap}$')
+        plt.plot(eps_range,AD_Psat_plot+compute_AD(Psat_Potoff,Psat_RP)-AD_Psat_plot[eps_range==1],'g:',label=r'$P^{\rm sat}_{\rm vap}$')
+        plt.plot(1,compute_AD(rhol_Potoff,rhol_RP),'rs',label=r'$\rho_{\rm liq}$, Potoff')
+        plt.plot(1,compute_AD(rhov_Potoff,rhov_RP),'bo',label=r'$\rho_{\rm vap}$, Potoff')
+        plt.plot(1,compute_AD(Psat_Potoff,Psat_RP),'g^',label=r'$P^{\rm sat}_{\rm vap}$, Potoff')
         plt.xlabel(r'$\epsilon / \epsilon_{\rm Potoff}$')
         plt.ylabel(r'Average percent deviation')
         plt.title(compound)
             
         plt.legend()
-        plt.savefig('figures/'+compound+'_AD_eps_scan.pdf')
+#        plt.savefig('figures/'+compound+'_AD_eps_scan.pdf')
         plt.show()
         
         plt.figure(figsize=(8,8))
         
         plt.plot(eps_range,MAPD_rhol_plot,'r-',label=r'$\rho_{\rm liq}$')
         plt.plot(eps_range,MAPD_rhov_plot,'b--',label=r'$\rho_{\rm vap}$')
-        plt.plot(1,MAPD_rhol(rhol_Potoff,rhol_RP),'rs',label=r'$\rho_{\rm liq}$, Potoff')
-        plt.plot(1,MAPD_rhol(rhov_Potoff,rhov_RP),'bo',label=r'$\rho_{\rm vap}$, Potoff')
+        plt.plot(eps_range,MAPD_Psat_plot,'g:',label=r'$P^{\rm sat}_{\rm vap}$')
+        plt.plot(1,compute_MAPD(rhol_Potoff,rhol_RP),'rs',label=r'$\rho_{\rm liq}$, Potoff')
+        plt.plot(1,compute_MAPD(rhov_Potoff,rhov_RP),'bo',label=r'$\rho_{\rm vap}$, Potoff')
+        plt.plot(1,compute_MAPD(Psat_Potoff,Psat_RP),'g^',label=r'$P^{\rm sat}_{\rm vap}$, Potoff')
         plt.xlabel(r'$\epsilon / \epsilon_{\rm Potoff}$')
         plt.ylabel(r'Mean absolute percent deviation')
         plt.title(compound)
                     
         plt.legend()
-        plt.savefig('figures/'+compound+'_MAPD_eps_scan.pdf')
+#        plt.savefig('figures/'+compound+'_MAPD_eps_scan.pdf')
         plt.show()
         
 def main():

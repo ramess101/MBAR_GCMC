@@ -442,7 +442,7 @@ def main():
     
     plt.figure(figsize=(8,8))
     
-    for root_path, eps_scale in zip(['hexane_Potoff_replicates/','hexane_eps_scaled/'],[1.05,1.0]):
+    for root_path, eps_scale in zip(['hexane_Potoff_replicates_2/','hexane_eps_scaled_wrong/'],[1.05,1.0]):
         
         filepaths = []
                 
@@ -466,10 +466,12 @@ def main():
         Temp_VLE_plot = Tsat_Potoff
         
         MBAR_GCMC_trial = MBAR_GCMC(root_path,filepaths,Mw_hexane,eps_scale,compare_literature=True)
-#        MBAR_GCMC_trial.plot_histograms()
+        MBAR_GCMC_trial.plot_histograms()
 #        MBAR_GCMC_trial.plot_2dhistograms()
         MBAR_GCMC_trial.solve_VLE(Temp_VLE_plot)
         MBAR_GCMC_trial.plot_VLE()
+        
+        assert 1==2
         
 if __name__ == '__main__':
     '''

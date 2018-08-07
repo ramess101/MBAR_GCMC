@@ -715,9 +715,9 @@ def main():
 #    root_path = 'hexane_Potoff/'
 #    hist_num=['1','2','3','4','5','6','7','8','9']
     
-    root_path = 'hexane_Potoff_replicates/'
+#    root_path = 'hexane_Potoff_replicates/'
 #    root_path = 'hexane_Potoff_replicates_2/'
-#    root_path = 'hexane_eps_scaled/'
+    root_path = 'hexane_eps_scaled/'
 #    Temp_range = ['510','470','430','480','450','420','390','360','330']
     Temp_range = ['430','470','510','480','450','420','390','360','330']
     hist_num=['2','2','2','2','2','2','2','2','2']

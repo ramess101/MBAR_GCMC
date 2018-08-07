@@ -13,8 +13,8 @@ from extract_Potoff import extract_Potoff
 nhists_max = 15
 
 group_list = ['C-CH-group','C-group','CH-group']
-compound_list = {'C-CH-group':['223TMButane','223TMPentane','224TMPentane','233TMPentane'],'C-group':['3M3EPentane','22DMButane','22DMHexane','22DMPentane','22DMPropane','33DMHexane','33DMPentane','2233TetraMButane'],'CH-group':['2M3EPentane','2MButane','2MHeptane','2MHexane','2MPentane','2MPropane','3EHexane','3EPentane','3MHeptane','3MHexane','3MPentane','4MHeptane','23DMBUtane','23DMHexane','23DMPentane','24DMHexane','24DMPentane','25DMHexane','34DMHexane','234TMPentane']}
-REFPROP_list = {'224TMPentane':'Isooctane','2MPropane':'Isobutane','22DMPropane':'Neopentane','2MButane':'IPENTANE','2MPentane':'IHEXANE','3MPentane':'3METHYLPENTANE','22DMButane':'22DIMETHYLBUTANE','23DMButane':'23DIMETHYLBUTANE'}
+compound_list = {'C-CH-group':['223TMButane','223TMPentane','224TMPentane','233TMPentane'],'C-group':['3M3EPentane','22DMButane','22DMHexane','22DMPentane','22DMPropane','33DMHexane','33DMPentane','2233TetraMButane'],'CH-group':['2M3EPentane','2MButane','2MHeptane','2MHexane','2MPentane','2MPropane','3EHexane','3EPentane','3MHeptane','3MHexane','3MPentane','4MHeptane','23DMBUtane','23DMHexane','23DMPentane','24DMHexane','24DMPentane','25DMHexane','34DMHexane','234TMPentane']}  #{'C-group':['22DMPropane'],'C-CH-group':['224TMPentane']}
+REFPROP_list = {'224TMPentane':'Isooctane','2MPropane':'Isobutane','22DMPropane':'Neopentane','2MButane':'IPENTANE','2MPentane':'IHEXANE'}#,'3MPentane':'3METHYLPENTANE','22DMButane':'22DIMETHYLBUTANE','23DMButane':'23DIMETHYLBUTANE'}
 
 for group in group_list:
        
@@ -94,7 +94,7 @@ for group in group_list:
 #        MBAR_GCMC_trial.solve_VLE(Tsat_Potoff)
 #        MBAR_GCMC_trial.plot_VLE(Tsat_RP,rhol_RP,rhov_RP,Tsat_Potoff,rhol_Potoff,rhov_Potoff)
         
-        if compound in REFPROP_list and not os.path.exists('H:/MBAR_GCMC/figures/'+compound+'_AD_eps_scan.pdf'):
+        if compound in REFPROP_list:# and not os.path.exists('H:/MBAR_GCMC/figures/'+compound+'_AD_eps_scan.pdf'):
             
             print('Performing MBAR-GCMC analysis for '+compound)
             
@@ -104,7 +104,7 @@ for group in group_list:
             MBAR_GCMC_trial.solve_VLE(Tsat_Potoff)
             MBAR_GCMC_trial.plot_VLE(Tsat_RP,rhol_RP,rhov_RP,Tsat_Potoff,rhol_Potoff,rhov_Potoff)
         
-            MBAR_GCMC_trial.eps_scan(Tsat_RP,rhol_RP,rhov_RP,rhol_Potoff,rhov_Potoff,0.98,1.02,50,compound,remove_low_high_Tsat=True)
+            MBAR_GCMC_trial.eps_scan(Tsat_RP,rhol_RP,rhov_RP,Psat_RP,rhol_Potoff,rhov_Potoff,Psat_Potoff,0.98,1.02,5,compound,remove_low_high_Tsat=True)
             
 #        else: #Compare with Potoff, not RP
 #        
