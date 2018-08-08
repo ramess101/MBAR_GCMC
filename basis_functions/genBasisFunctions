@@ -1,0 +1,55 @@
+clean() {   # Make it so everything is killed on an interrupt
+local pids=$(jobs -pr)
+echo "On exit sending kill signal to: $pids"
+[ -n "$pids" ] && kill $pids
+exit 1
+}
+trap "clean" SIGINT SIGTERM EXIT SIGQUIT  # Call cleanup when asked to
+
+#cur_pid=$!
+#taskset -cp "$pinoffset" $cur_pid > /dev/null 2>&1
+#min_3_pids[${iMCMC}]=$cur_pid  # This is the third such step (others are in the subscript) hence 3
+
+#echo "Waiting for em_steep.tpr: Energy Minimization Part1"
+
+#for pid in ${min_3_pids[*]}  # Loop over array
+#do 
+#wait $pid
+#done
+
+NSTAGES=100
+NBASIS=6
+
+for nStage in $(seq 0 $NSTAGES)
+
+do
+
+if [ "$nStage" -eq 0 ]
+then
+
+GOMC_CPU_GCMC +p8 in_start.conf > output.log
+
+else
+
+GOMC_CPU_GCMC +p8 in_restart.conf > output.log
+
+for nRerun in $(seq 0 $NBASIS)
+do
+
+cp Par_Mie_Alkane_Exotic_basis_function_"$nRerun".inp Par_Mie_Alkane_Exotic_basis_function.inp
+
+GOMC_CPU_GCMC +p8 in_rerun.conf > rerun.log
+
+cp his?rr.dat his_rr"$nStage"_basis_function_"$nRerun"
+
+done #nRerun
+
+fi
+
+done #nStage
+
+exit 0
+
+
+
+
