@@ -189,14 +189,14 @@ plt.xlim([None,-50000])
 plt.ylim([None,-50000])
 plt.show()
 
-plt.plot(U_basis[0],U_basis_estimate,'k+',mfc='None',markersize=5)
+plt.plot(U_basis[0][N_frames<20],U_basis_estimate[N_frames<20],'k+',mfc='None',markersize=5)
 plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[np.min(U_basis_estimate),np.max(U_basis_estimate)],'r-')
 plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[1.05*np.min(U_basis_estimate),1.05*np.max(U_basis_estimate)],'r--')
 plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[0.95*np.min(U_basis_estimate),0.95*np.max(U_basis_estimate)],'r--')
 plt.xlabel('Direct simulation energy (K)')
 plt.ylabel('Basis function energy (K)')
-plt.xlim([-50000,0])
-plt.ylim([-50000,0])
+plt.xlim([-10000,-1000])
+plt.ylim([-10000,-1000])
 plt.show()
 
 plt.plot(U_basis[0]/N_frames,U_basis_estimate/N_frames,'k+',mfc='None',markersize=5)
@@ -208,6 +208,9 @@ plt.ylabel('Basis function energy (K/molecule)')
 #plt.xlim([None,-50000])
 #plt.ylim([None,-50000])
 plt.show()
+
+print(np.mean((U_basis_estimate-U_basis[0])/U_basis[0]*100.))
+print(np.mean((U_basis_estimate[N_frames<30]-U_basis[0][N_frames<30])/U_basis[0][N_frames<30]*100.))
                 
 #for frame in xrange(nSnaps):
 #    U_basis_vdw = LJsr[:,frame]
