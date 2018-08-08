@@ -17,6 +17,7 @@ iState_high=8
 nproc=(2 2 2 2 2 2 2 1 1)
 NSTAGES=100
 NBASIS=6
+pin0=0
 
 #Specify the path location for files
 scripts_path=~/GOMC_Scripts
@@ -79,6 +80,7 @@ exit 0
 fi
 
 cd "$output_path" || error_report "Error switching to $output_path" "0" "0" "preprocessing"
+pinoffset="$pin0"
 
 for iState in $(seq $iState_low $iState_high)
 
@@ -118,14 +120,18 @@ then
 echo "$iState" in background
 
 ./genBasisFunctions.sh "${nproc[iState]}" "$NSTAGES" "$NBASIS" "$scripts_path" &
+taskset -cp "$pinoffset"-"$((pinoffset+nproc[iState]-1))" $! > /dev/null 2>&1
 
 else
 
 echo "$iState" not in background
 
 ./genBasisFunctions.sh "${nproc[iState]}" "$NSTAGES" "$NBASIS" "$scripts_path" &
+taskset -cp "$pinoffset"-"$((pinoffset+nproc[iState]-1))" $! > /dev/null 2>&1
 
 fi
+
+pinoffset=$((pinoffset+nproc[iState]))
 
 done
 
