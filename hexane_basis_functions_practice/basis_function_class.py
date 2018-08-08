@@ -90,6 +90,11 @@ class basis_function():
                             
     def build_eps_sig_lam_basis(self):
 
+        '''
+        This function needs to be more general
+        Also need a function for building eps_sig_lam for any set of epsilon, sigma (lambda should always be fixed)
+        '''
+        
         debug_mode = self.debug_mode
         lam_constant = [16]*(self.N_sims)
         
@@ -119,10 +124,12 @@ class basis_function():
         
         '''
         Compiles the number of molecules (N) and energies (U) from N_frames
+        Output:
+            U_basis: N_frames x N_basis (rows x columns) matrix of energy rerun values
+            Nmol: N_frames array of number of molecules in each frame
         '''
-        
-        debug_mode = self.debug_mode 
-        N_basis, N_frames = self.N_basis, self.N_frames
+         
+        N_basis, N_frames, debug_mode = self.N_basis, self.N_frames, self.debug_mode
         
         U_basis = {}
         Nmol = np.array([])
@@ -187,6 +194,9 @@ class basis_function():
         self.Cmatrix, self.Cmatrix_basis = Cmatrix, Cmatrix_basis
 
     def build_Cmatrix_ref(self):
+        '''
+        Builds the Cmatrix for the reference(s) (not multiple yet)
+        '''
             
         site_types, Cmatrix, N_basis, iRef = self.site_types, self.Cmatrix, self.N_basis, self.iRef
         
@@ -207,7 +217,7 @@ class basis_function():
             sumr6lam_all: printed to 'basis functions' file
         '''
         
-        U_basis, Cmatrix_basis,N_basis = self.U_basis, self.Cmatrix_basis, self.N_basis
+        U_basis, Cmatrix_basis,N_basis, Cmatrix_ref = self.U_basis, self.Cmatrix_basis, self.N_basis, self.Cmatrix_ref
         
         f = open('basis_functions','w')
         f.write('r6_CH3'+'\t'+'rlam_CH3'+'\t'+'r6_CH2'+'\t'+'rlam_CH2'+'\t'+'r6_CH3CH2'+'\t'+'rlam_CH3CH2'+'\n')
@@ -224,21 +234,24 @@ class basis_function():
             
             sumr6lam = np.linalg.solve(Cmatrix_basis,U_basis_frame)
             
-            U_basis_estimate_frame = np.linalg.multi_dot([Cmatrix_real,sumr6lam])
+            U_basis_ref_frame = np.linalg.multi_dot([Cmatrix_ref,sumr6lam])
             
             for isum in sumr6lam:
                 f.write(repr(isum)+'\t') #Using str(isum) which rounds the value leads to an error that is a few orders of magnitude greater, but still acceptable
             f.write('\n')       
         
-            if np.abs(U_basis_estimate_frame - U_basis[0][iframe]) > 1:
+            if np.abs(U_basis_ref_frame - U_basis[0][iframe]) > 1:
         
-                print('Basis function estimate: '+str(U_basis_estimate_frame))
+                print('Basis function estimate: '+str(U_basis_ref_frame))
                 print('Actual energy: '+str(U_basis[0][iframe]))
                 
         f.close()
         
     def load_basis_functions(self):
-               
+        '''
+        Load the sumr6lam_all basis functions from file
+        '''
+        
         debug_mode = self.debug_mode
         
         sumr6lam_all = np.loadtxt('basis_functions',skiprows=1)
@@ -248,6 +261,15 @@ class basis_function():
         self.sumr6lam_all = sumr6lam_all
         
     def compute_U_theta(self,Cmatrix_theta=[]):
+        '''
+        Computes the energy for a given parameter set. Still need to allow
+        for arbitrary Cmatrix_theta
+        
+        Input:
+            Cmatrix_theta: Cmatrix for an arbitrary theta parameter set
+        Output:
+            U_theta: Computed energies for parameter set theta
+        '''
         
         if Cmatrix_theta == []:
             print('No theta provided')
@@ -260,50 +282,54 @@ class basis_function():
         return U_theta
 
     def parity_plot(self):
+        '''
+        Plots the basis function values compared with the direct reference simulation values
+        '''
         
         U_basis, Nmol = self.U_basis, self.Nmol
-        U_basis_estimate = self.compute_U_theta(self.Cmatrix_ref)
         
-        plt.plot(U_basis[0],U_basis_estimate,'k+',mfc='None',markersize=5)
-        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[np.min(U_basis_estimate),np.max(U_basis_estimate)],'r-')
-        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[1.05*np.min(U_basis_estimate),1.05*np.max(U_basis_estimate)],'r--')
-        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[0.95*np.min(U_basis_estimate),0.95*np.max(U_basis_estimate)],'r--')
+        U_basis_ref = self.compute_U_theta(self.Cmatrix_ref)
+        
+        plt.plot(U_basis[0],U_basis_ref,'k+',mfc='None',markersize=5)
+        plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[np.min(U_basis_ref),np.max(U_basis_ref)],'r-')
+        plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[1.05*np.min(U_basis_ref),1.05*np.max(U_basis_ref)],'r--')
+        plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[0.95*np.min(U_basis_ref),0.95*np.max(U_basis_ref)],'r--')
         plt.xlabel('Direct simulation energy (K)')
         plt.ylabel('Basis function energy (K)')
         plt.show()
             
-        plt.plot(U_basis[0],U_basis_estimate,'k+',mfc='None',markersize=5)
-        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[np.min(U_basis_estimate),np.max(U_basis_estimate)],'r-')
-        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[1.05*np.min(U_basis_estimate),1.05*np.max(U_basis_estimate)],'r--')
-        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[0.95*np.min(U_basis_estimate),0.95*np.max(U_basis_estimate)],'r--')
+        plt.plot(U_basis[0],U_basis_ref,'k+',mfc='None',markersize=5)
+        plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[np.min(U_basis_ref),np.max(U_basis_ref)],'r-')
+        plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[1.05*np.min(U_basis_ref),1.05*np.max(U_basis_ref)],'r--')
+        plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[0.95*np.min(U_basis_ref),0.95*np.max(U_basis_ref)],'r--')
         plt.xlabel('Direct simulation energy (K)')
         plt.ylabel('Basis function energy (K)')
         plt.xlim([None,-50000])
         plt.ylim([None,-50000])
         plt.show()
         
-        plt.plot(U_basis[0][Nmol<20],U_basis_estimate[Nmol<20],'k+',mfc='None',markersize=5)
-        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[np.min(U_basis_estimate),np.max(U_basis_estimate)],'r-')
-        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[1.05*np.min(U_basis_estimate),1.05*np.max(U_basis_estimate)],'r--')
-        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[0.95*np.min(U_basis_estimate),0.95*np.max(U_basis_estimate)],'r--')
+        plt.plot(U_basis[0][Nmol<20],U_basis_ref[Nmol<20],'k+',mfc='None',markersize=5)
+        plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[np.min(U_basis_ref),np.max(U_basis_ref)],'r-')
+        plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[1.05*np.min(U_basis_ref),1.05*np.max(U_basis_ref)],'r--')
+        plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[0.95*np.min(U_basis_ref),0.95*np.max(U_basis_ref)],'r--')
         plt.xlabel('Direct simulation energy (K)')
         plt.ylabel('Basis function energy (K)')
         plt.xlim([-10000,-1000])
         plt.ylim([-10000,-1000])
         plt.show()
         
-        plt.plot(U_basis[0]/Nmol,U_basis_estimate/Nmol,'k+',mfc='None',markersize=5)
-        plt.plot([np.min(U_basis_estimate/Nmol),np.max(U_basis_estimate/Nmol)],[np.min(U_basis_estimate/Nmol),np.max(U_basis_estimate/Nmol)],'r-')
-        plt.plot([np.min(U_basis_estimate/Nmol),np.max(U_basis_estimate/Nmol)],[1.05*np.min(U_basis_estimate/Nmol),1.05*np.max(U_basis_estimate/Nmol)],'r--')
-        plt.plot([np.min(U_basis_estimate/Nmol),np.max(U_basis_estimate/Nmol)],[0.95*np.min(U_basis_estimate/Nmol),0.95*np.max(U_basis_estimate/Nmol)],'r--')
+        plt.plot(U_basis[0]/Nmol,U_basis_ref/Nmol,'k+',mfc='None',markersize=5)
+        plt.plot([np.min(U_basis_ref/Nmol),np.max(U_basis_ref/Nmol)],[np.min(U_basis_ref/Nmol),np.max(U_basis_ref/Nmol)],'r-')
+        plt.plot([np.min(U_basis_ref/Nmol),np.max(U_basis_ref/Nmol)],[1.05*np.min(U_basis_ref/Nmol),1.05*np.max(U_basis_ref/Nmol)],'r--')
+        plt.plot([np.min(U_basis_ref/Nmol),np.max(U_basis_ref/Nmol)],[0.95*np.min(U_basis_ref/Nmol),0.95*np.max(U_basis_ref/Nmol)],'r--')
         plt.xlabel('Direct simulation energy (K/molecule)')
         plt.ylabel('Basis function energy (K/molecule)')
         #plt.xlim([None,-50000])
         #plt.ylim([None,-50000])
         plt.show()
         
-        print(np.mean((U_basis_estimate-U_basis[0])/U_basis[0]*100.))
-        print(np.mean((U_basis_estimate[Nmol<30]-U_basis[0][Nmol<30])/U_basis[0][Nmol<30]*100.))
+        print(np.mean((U_basis_ref-U_basis[0])/U_basis[0]*100.))
+        print(np.mean((U_basis_ref[Nmol<30]-U_basis[0][Nmol<30])/U_basis[0][Nmol<30]*100.))
 
 
 
