@@ -17,17 +17,40 @@ bar_nm3_to_kJ_per_mole = 0.0602214086
 R_g = 8.3144598 / 1000. #[kJ/mol/K]
 kJm3tobar = 1./100.
 
-#class basis_function():
-#    def __init__(self,Temp_sim,rho_sim,iRef,iRefs,eps_low,eps_high,sig_low,sig_high,lam_low,lam_high,rerun_flag=True):
-#        self.Temp_sim = Temp_sim
+### Normally I will import this function. But I don't have it locally
+def convert_eps_sig_C6_Clam(eps,sig,lam,n=6.,print_Cit=True):
+    Ncoef = lam/(lam-n)*(lam/n)**(n/(lam-n))
+    C6 = Ncoef * eps * sig ** n
+    Clam = Ncoef * eps * sig ** lam
+    
+    if print_Cit:
+    
+        f = open('C6_it','w')
+        f.write(str(C6))
+        f.close()
+        
+        f = open('Clam_it','w')
+        f.write(str(Clam))
+        f.close()
+        
+    else:
+        
+        return C6, Clam
+
+
+class basis_function():
+    def __init__(self,iRef,iRefs,N_basis,N_frames,debug_mode=True):#Temp_sim,mu_sim,iRef,iRefs,eps_low,eps_high,sig_low,sig_high,lam_low,lam_high,rerun_flag=False,debug_mode=True):
+
+        self.debug_mode = debug_mode
+    #        self.Temp_sim = Temp_sim
 #        self.rho_sim = rho_sim
-#        self.iRef = iRef
-#        self.iRefs = iRefs
-#        try:
-#            self.nRefs = len(iRefs)
-#        except:
-#            self.iRefs = np.array([iRefs])
-#            self.nRefs = len(self.iRefs)
+        self.iRef = iRef
+        self.iRefs = iRefs
+        try:
+            self.N_Refs = len(iRefs)
+        except:
+            self.iRefs = np.array([iRefs])
+            self.N_Refs = len(self.iRefs)
 #        
 #        self.site_types = ['CH3','CH2','CH3CH2']
 #        
@@ -54,6 +77,236 @@ kJm3tobar = 1./100.
 #        self.validate_refs()
 #        print('Basis functions were validated for iRef= '+str(iRef))                 
 #        
+        self.N_basis = N_basis
+        self.N_sims = self.N_basis + self.N_Refs
+        self.N_frames = N_frames
+        self.site_types = ['CH3','CH2','CH3CH2']
+        self.build_eps_sig_lam_basis()
+        self.compile_UN_values()
+        self.build_Cmatrix_lam_index()
+        self.build_Cmatrix_ref()
+        self.generate_basis_functions()
+        self.load_basis_functions()
+                            
+    def build_eps_sig_lam_basis(self):
+
+        debug_mode = self.debug_mode
+        lam_constant = [16]*(self.N_sims)
+        
+### Need to automate this
+### Tried this previously
+
+#for site in site_types:
+#    
+#    try:
+#    
+#        Cmatrix_basis[site] = eps_basis[site]*sig_basis[site]
+
+                       
+        eps_basis = {'CH3':np.array([121.25,121.25,121.25,0.,0.,121.25,121.25]),'CH2':np.array([61,0.,0.,61.,61.,61.,61.]),'CH3CH2':[]}
+        eps_basis['CH3CH2']=np.sqrt(eps_basis['CH3']*eps_basis['CH2'])
+        sig_basis = {'CH3':np.array([0.3783,0.377,0.379,0.3783,0.3783,0.377,0.379]),'CH2':np.array([0.399,0.399,0.399,0.398,0.400,0.398,0.400]),'CH3CH2':[]}
+        sig_basis['CH3CH2'] = (sig_basis['CH3']+sig_basis['CH2'])/2.
+        lam_basis = {'CH3':np.array(lam_constant),'CH2':np.array(lam_constant),'CH3CH2':[]}
+        lam_basis['CH3CH2'] = (lam_basis['CH3']+lam_basis['CH2'])/2.
+
+        if debug_mode:
+            print(eps_basis,sig_basis,lam_basis)
+                 
+        self.eps_basis, self.sig_basis, self.lam_basis = eps_basis, sig_basis, lam_basis
+
+    def compile_UN_values(self):
+        
+        '''
+        Compiles the number of molecules (N) and energies (U) from N_frames
+        '''
+        
+        debug_mode = self.debug_mode 
+        N_basis, N_frames = self.N_basis, self.N_frames
+        
+        U_basis = {}
+        Nmol = np.array([])
+        
+        for istage in np.arange(1,N_frames):
+            
+            if debug_mode: print(istage)
+            
+            for ibasis in range(N_basis+1):
+                if debug_mode: print('ibasis='+str(ibasis))
+                
+                NU_ibasis = np.loadtxt('his_rr'+str(istage)+'_basis_function_'+str(ibasis),skiprows=1)
+                try:
+                    U_basis[ibasis] = np.append(U_basis[ibasis],NU_ibasis[:,1])
+                except:
+                    U_basis[ibasis] = NU_ibasis[:,1]
+            
+            Nmol = np.append(Nmol,NU_ibasis[:,0])
+         
+        if debug_mode: print(Nmol)
+        
+        self.U_basis, self.Nmol = U_basis, Nmol
+           
+    def build_Cmatrix_lam_index(self):
+            
+        '''
+        This function creates the matrix of C6, C12, C13... where C6 is always the
+        zeroth column and the rest is the range of lambda from lam_low to lam_high.
+        These values were predefined in rerun_basis_functions
+        '''
+        
+        site_types, lam_basis, eps_basis, sig_basis, site_types, N_basis, debug_mode = self.site_types, self.lam_basis, self.eps_basis, self.sig_basis, self.site_types, self.N_basis, self.debug_mode
+    
+        Cmatrix = {'CH3':[],'CH2':[],'CH3CH2':[]}
+        lam_index = {'CH3':[],'CH2':[],'CH3CH2':[]}
+        
+        for isite, site_type in enumerate(site_types):
+        
+            Cmatrix[site_type] = np.zeros([len(lam_basis[site_type]),len(lam_basis[site_type])])
+            
+            C6_basis, Clam_basis = convert_eps_sig_C6_Clam(eps_basis[site_type],sig_basis[site_type],lam_basis[site_type],print_Cit=False)
+            
+            lam_index[site_type] = lam_basis[site_type].copy()
+            lam_index[site_type][0] = 6
+        
+            Cmatrix[site_type][:,0] = C6_basis
+                  
+            for ilam, lam in enumerate(lam_index[site_type]):
+                for iBasis, lam_rerun in enumerate(lam_basis[site_type]):
+                    if lam == lam_rerun:
+                        Cmatrix[site_type][iBasis,ilam] = Clam_basis[iBasis]
+    
+        Cmatrix_basis = np.zeros([N_basis,N_basis])
+        
+        for isite, site_type in enumerate(site_types):
+            for ilam, lam in enumerate(np.array([6,16])):
+                for ibasis in range(N_basis):
+                    Cmatrix_basis[ibasis,2*isite+ilam] = Cmatrix[site_type][ibasis+1][ilam]
+
+        if debug_mode: print(Cmatrix_basis.shape)
+
+        self.Cmatrix, self.Cmatrix_basis = Cmatrix, Cmatrix_basis
+
+    def build_Cmatrix_ref(self):
+            
+        site_types, Cmatrix, N_basis, iRef = self.site_types, self.Cmatrix, self.N_basis, self.iRef
+        
+        Cmatrix_ref = np.zeros([N_basis])
+        
+        for isite, site_type in enumerate(site_types):
+            for ilam, lam in enumerate(np.array([6,16])):
+                Cmatrix_ref[2*isite+ilam] = Cmatrix[site_type][iRef][ilam]
+        
+        self.Cmatrix_ref = Cmatrix_ref
+        
+    def generate_basis_functions(self):
+
+        '''
+        Input:
+            U_basis: energies from rerun files
+        Output:
+            sumr6lam_all: printed to 'basis functions' file
+        '''
+        
+        U_basis, Cmatrix_basis,N_basis = self.U_basis, self.Cmatrix_basis, self.N_basis
+        
+        f = open('basis_functions','w')
+        f.write('r6_CH3'+'\t'+'rlam_CH3'+'\t'+'r6_CH2'+'\t'+'rlam_CH2'+'\t'+'r6_CH3CH2'+'\t'+'rlam_CH3CH2'+'\n')
+        
+        for iframe in range(len(U_basis[0])):
+            
+            U_basis_frame = []
+            
+            for ibasis in range(N_basis):
+                
+                U_basis_frame.append(U_basis[ibasis+1][iframe])
+                
+            U_basis_frame = np.array(U_basis_frame)
+            
+            sumr6lam = np.linalg.solve(Cmatrix_basis,U_basis_frame)
+            
+            U_basis_estimate_frame = np.linalg.multi_dot([Cmatrix_real,sumr6lam])
+            
+            for isum in sumr6lam:
+                f.write(repr(isum)+'\t') #Using str(isum) which rounds the value leads to an error that is a few orders of magnitude greater, but still acceptable
+            f.write('\n')       
+        
+            if np.abs(U_basis_estimate_frame - U_basis[0][iframe]) > 1:
+        
+                print('Basis function estimate: '+str(U_basis_estimate_frame))
+                print('Actual energy: '+str(U_basis[0][iframe]))
+                
+        f.close()
+        
+    def load_basis_functions(self):
+               
+        debug_mode = self.debug_mode
+        
+        sumr6lam_all = np.loadtxt('basis_functions',skiprows=1)
+        
+        if debug_mode: print(sumr6lam_all.shape)
+        
+        self.sumr6lam_all = sumr6lam_all
+        
+    def compute_U_theta(self,Cmatrix_theta=[]):
+        
+        if Cmatrix_theta == []:
+            print('No theta provided')
+            return
+        
+        sumr6lam_all = self.sumr6lam_all
+        
+        U_theta = np.linalg.multi_dot([Cmatrix_theta,sumr6lam_all.T])
+
+        return U_theta
+
+    def parity_plot(self):
+        
+        U_basis, Nmol = self.U_basis, self.Nmol
+        U_basis_estimate = self.compute_U_theta(self.Cmatrix_ref)
+        
+        plt.plot(U_basis[0],U_basis_estimate,'k+',mfc='None',markersize=5)
+        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[np.min(U_basis_estimate),np.max(U_basis_estimate)],'r-')
+        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[1.05*np.min(U_basis_estimate),1.05*np.max(U_basis_estimate)],'r--')
+        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[0.95*np.min(U_basis_estimate),0.95*np.max(U_basis_estimate)],'r--')
+        plt.xlabel('Direct simulation energy (K)')
+        plt.ylabel('Basis function energy (K)')
+        plt.show()
+            
+        plt.plot(U_basis[0],U_basis_estimate,'k+',mfc='None',markersize=5)
+        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[np.min(U_basis_estimate),np.max(U_basis_estimate)],'r-')
+        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[1.05*np.min(U_basis_estimate),1.05*np.max(U_basis_estimate)],'r--')
+        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[0.95*np.min(U_basis_estimate),0.95*np.max(U_basis_estimate)],'r--')
+        plt.xlabel('Direct simulation energy (K)')
+        plt.ylabel('Basis function energy (K)')
+        plt.xlim([None,-50000])
+        plt.ylim([None,-50000])
+        plt.show()
+        
+        plt.plot(U_basis[0][Nmol<20],U_basis_estimate[Nmol<20],'k+',mfc='None',markersize=5)
+        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[np.min(U_basis_estimate),np.max(U_basis_estimate)],'r-')
+        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[1.05*np.min(U_basis_estimate),1.05*np.max(U_basis_estimate)],'r--')
+        plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[0.95*np.min(U_basis_estimate),0.95*np.max(U_basis_estimate)],'r--')
+        plt.xlabel('Direct simulation energy (K)')
+        plt.ylabel('Basis function energy (K)')
+        plt.xlim([-10000,-1000])
+        plt.ylim([-10000,-1000])
+        plt.show()
+        
+        plt.plot(U_basis[0]/Nmol,U_basis_estimate/Nmol,'k+',mfc='None',markersize=5)
+        plt.plot([np.min(U_basis_estimate/Nmol),np.max(U_basis_estimate/Nmol)],[np.min(U_basis_estimate/Nmol),np.max(U_basis_estimate/Nmol)],'r-')
+        plt.plot([np.min(U_basis_estimate/Nmol),np.max(U_basis_estimate/Nmol)],[1.05*np.min(U_basis_estimate/Nmol),1.05*np.max(U_basis_estimate/Nmol)],'r--')
+        plt.plot([np.min(U_basis_estimate/Nmol),np.max(U_basis_estimate/Nmol)],[0.95*np.min(U_basis_estimate/Nmol),0.95*np.max(U_basis_estimate/Nmol)],'r--')
+        plt.xlabel('Direct simulation energy (K/molecule)')
+        plt.ylabel('Basis function energy (K/molecule)')
+        #plt.xlim([None,-50000])
+        #plt.ylim([None,-50000])
+        plt.show()
+        
+        print(np.mean((U_basis_estimate-U_basis[0])/U_basis[0]*100.))
+        print(np.mean((U_basis_estimate[Nmol<30]-U_basis[0][Nmol<30])/U_basis[0][Nmol<30]*100.))
+
+
+
 #    def compile_refs(self):
 #        
 #        iRef,nRefs,iRefs = self.iRef,self.nRefs,self.iRefs
@@ -802,214 +1055,6 @@ kJm3tobar = 1./100.
 ##    basis.append(basis_function(Temp_sim,rho_sim,args.iRef,88.,108.,0.365,0.385,12.,12.))
 ##    basis[2].validate_ref() 
 
-N_basis = 7
-lam_constant = [16]*N_basis
-
-eps_basis = {'CH3':np.array([121.25,121.25,121.25,0.,0.,121.25,121.25]),'CH2':np.array([61,0.,0.,61.,61.,61.,61.]),'CH3CH2':[]}
-eps_basis['CH3CH2']=np.sqrt(eps_basis['CH3']*eps_basis['CH2'])
-sig_basis = {'CH3':np.array([0.3783,0.377,0.379,0.3783,0.3783,0.377,0.379]),'CH2':np.array([0.399,0.399,0.399,0.398,0.400,0.398,0.400]),'CH3CH2':[]}
-sig_basis['CH3CH2'] = (sig_basis['CH3']+sig_basis['CH2'])/2.
-lam_basis = {'CH3':np.array(lam_constant),'CH2':np.array(lam_constant),'CH3CH2':[]}
-lam_basis['CH3CH2'] = (lam_basis['CH3']+lam_basis['CH2'])/2.
-
-#print(eps_basis,sig_basis,lam_basis)
-         
-U_basis = {}
-N_frames = np.array([])
-
-for istage in np.arange(1,101):
-    print(istage)
-    for ibasis in range(N_basis):
-        print('ibasis='+str(ibasis))
-        NU_ibasis = np.loadtxt('his_rr'+str(istage)+'_basis_function_'+str(ibasis),skiprows=1)
-        try:
-            U_basis[ibasis] = np.append(U_basis[ibasis],NU_ibasis[:,1])
-        except:
-            U_basis[ibasis] = NU_ibasis[:,1]
-    
-    N_frames = np.append(N_frames,NU_ibasis[:,0])
- 
-print(N_frames)
-    
-#N_frames = np.array(N_frames)
-            
-#U_basis_all = np.zeros([N_frames,N_basis])
-#
-#for ibasis in range(N_basis):
-#    print('ibasis='+str(ibasis))
-#    for istage in np.arange(1,101):
-#        print(istage)
-#        NU_ibasis = np.loadtxt('his_rr'+str(istage)+'_basis_function_'+str(ibasis),skiprows=1)
-#        try:
-#            U_basis = np.append(U_basis,NU_ibasis[:,1])
-#        except:
-#            U_basis = NU_ibasis[:,1]
-        
-            
-
-#for istage in np.arange(1,101):
-#    print(istage)
-#    for ibasis in range(N_basis):
-#        
-#        try:
-#            
-#        except:
-#            U_basis[ibasis] = 
-#            
-            
-#print(U_basis[0].shape)
-
-site_types = ['CH3','CH2','CH3CH2']
-
-#for site in site_types:
-#    
-#    try:
-#    
-#        Cmatrix_basis[site] = eps_basis[site]*sig_basis[site]
-
-
-def convert_eps_sig_C6_Clam(eps,sig,lam,n=6.,print_Cit=True):
-    Ncoef = lam/(lam-n)*(lam/n)**(n/(lam-n))
-    C6 = Ncoef * eps * sig ** n
-    Clam = Ncoef * eps * sig ** lam
-    
-    if print_Cit:
-    
-        f = open('C6_it','w')
-        f.write(str(C6))
-        f.close()
-        
-        f = open('Clam_it','w')
-        f.write(str(Clam))
-        f.close()
-        
-    else:
-        
-        return C6, Clam
-        
-#'''
-#This function creates the matrix of C6, C12, C13... where C6 is always the
-#zeroth column and the rest is the range of lambda from lam_low to lam_high.
-#These values were predefined in rerun_basis_functions
-#'''
-
-#site_types,iRef,eps_basis,sig_basis,lam_basis = self.site_types,self.iRef,self.eps_basis.copy(),self.sig_basis.copy(),self.lam_basis.copy()
-
-Cmatrix = {'CH3':[],'CH2':[],'CH3CH2':[]}
-lam_index = {'CH3':[],'CH2':[],'CH3CH2':[]}
-
-for isite, site_type in enumerate(site_types):
-
-    Cmatrix[site_type] = np.zeros([len(lam_basis[site_type]),len(lam_basis[site_type])])
-    
-    C6_basis, Clam_basis = convert_eps_sig_C6_Clam(eps_basis[site_type],sig_basis[site_type],lam_basis[site_type],print_Cit=False)
-    
-    lam_index[site_type] = lam_basis[site_type].copy()
-    lam_index[site_type][0] = 6
-
-    Cmatrix[site_type][:,0] = C6_basis
-          
-    for ilam, lam in enumerate(lam_index[site_type]):
-        for iBasis, lam_rerun in enumerate(lam_basis[site_type]):
-            if lam == lam_rerun:
-                Cmatrix[site_type][iBasis,ilam] = Clam_basis[iBasis]
-
-Cmatrix_basis = np.zeros([6,6])
-
-for isite, site_type in enumerate(site_types):
-    for ilam, lam in enumerate(np.array([6,16])):
-        for ibasis in range(N_basis-1):
-            Cmatrix_basis[ibasis,2*isite+ilam] = Cmatrix[site_type][ibasis+1][ilam]
-            
-Cmatrix_real = np.zeros([6])
-
-for isite, site_type in enumerate(site_types):
-    for ilam, lam in enumerate(np.array([6,16])):
-        for ibasis in range(1):
-            Cmatrix_real[2*isite+ilam] = Cmatrix[site_type][ibasis][ilam]
-            
-#print(Cmatrix_frame)
-
-#U_basis_estimate = np.zeros(len(U_basis[0]))
-
-f = open('basis_functions','w')
-f.write('r6_CH3'+'\t'+'rlam_CH3'+'\t'+'r6_CH2'+'\t'+'rlam_CH2'+'\t'+'r6_CH3CH2'+'\t'+'rlam_CH3CH2'+'\n')
-
-for iframe in range(len(U_basis[0])):
-    
-    U_basis_frame = []
-    
-    for ibasis in range(N_basis-1):
-        
-        U_basis_frame.append(U_basis[ibasis+1][iframe])
-        
-    U_basis_frame = np.array(U_basis_frame)
-    
-    sumr6lam = np.linalg.solve(Cmatrix_basis,U_basis_frame)
-    
-    U_basis_estimate_frame = np.linalg.multi_dot([Cmatrix_real,sumr6lam])
-    
-    for isum in sumr6lam:
-        f.write(repr(isum)+'\t') #Using str(isum) which rounds the value leads to an error that is a few orders of magnitude greater, but still acceptable
-    f.write('\n')       
-
-#    U_basis_frame = np.array([U_basis[1][iframe],U_basis[2][iframe],U_basis[3][iframe],U_basis[4][iframe],U_basis[5][iframe],U_basis[6][iframe]])
-
-            
-#print(Cmatrix_real)
-
-    if np.abs(U_basis_estimate_frame - U_basis[0][iframe]) > 1:
-
-        print('Basis function estimate: '+str(U_basis_estimate_frame))
-        print('Actual energy: '+str(U_basis[0][iframe]))
-        
-f.close()
-
-sumr6lam_all = np.loadtxt('basis_functions',skiprows=1)
-print(sumr6lam_all.shape)
-
-U_basis_estimate = np.linalg.multi_dot([Cmatrix_real,sumr6lam_all.T])
-        
-plt.plot(U_basis[0],U_basis_estimate,'k+',mfc='None',markersize=5)
-plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[np.min(U_basis_estimate),np.max(U_basis_estimate)],'r-')
-plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[1.05*np.min(U_basis_estimate),1.05*np.max(U_basis_estimate)],'r--')
-plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[0.95*np.min(U_basis_estimate),0.95*np.max(U_basis_estimate)],'r--')
-plt.xlabel('Direct simulation energy (K)')
-plt.ylabel('Basis function energy (K)')
-plt.show()
-    
-plt.plot(U_basis[0],U_basis_estimate,'k+',mfc='None',markersize=5)
-plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[np.min(U_basis_estimate),np.max(U_basis_estimate)],'r-')
-plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[1.05*np.min(U_basis_estimate),1.05*np.max(U_basis_estimate)],'r--')
-plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[0.95*np.min(U_basis_estimate),0.95*np.max(U_basis_estimate)],'r--')
-plt.xlabel('Direct simulation energy (K)')
-plt.ylabel('Basis function energy (K)')
-plt.xlim([None,-50000])
-plt.ylim([None,-50000])
-plt.show()
-
-plt.plot(U_basis[0][N_frames<20],U_basis_estimate[N_frames<20],'k+',mfc='None',markersize=5)
-plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[np.min(U_basis_estimate),np.max(U_basis_estimate)],'r-')
-plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[1.05*np.min(U_basis_estimate),1.05*np.max(U_basis_estimate)],'r--')
-plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[0.95*np.min(U_basis_estimate),0.95*np.max(U_basis_estimate)],'r--')
-plt.xlabel('Direct simulation energy (K)')
-plt.ylabel('Basis function energy (K)')
-plt.xlim([-10000,-1000])
-plt.ylim([-10000,-1000])
-plt.show()
-
-plt.plot(U_basis[0]/N_frames,U_basis_estimate/N_frames,'k+',mfc='None',markersize=5)
-plt.plot([np.min(U_basis_estimate/N_frames),np.max(U_basis_estimate/N_frames)],[np.min(U_basis_estimate/N_frames),np.max(U_basis_estimate/N_frames)],'r-')
-plt.plot([np.min(U_basis_estimate/N_frames),np.max(U_basis_estimate/N_frames)],[1.05*np.min(U_basis_estimate/N_frames),1.05*np.max(U_basis_estimate/N_frames)],'r--')
-plt.plot([np.min(U_basis_estimate/N_frames),np.max(U_basis_estimate/N_frames)],[0.95*np.min(U_basis_estimate/N_frames),0.95*np.max(U_basis_estimate/N_frames)],'r--')
-plt.xlabel('Direct simulation energy (K/molecule)')
-plt.ylabel('Basis function energy (K/molecule)')
-#plt.xlim([None,-50000])
-#plt.ylim([None,-50000])
-plt.show()
-
-print(np.mean((U_basis_estimate-U_basis[0])/U_basis[0]*100.))
-print(np.mean((U_basis_estimate[N_frames<30]-U_basis[0][N_frames<30])/U_basis[0][N_frames<30]*100.))
                 
 #for frame in xrange(nSnaps):
 #    U_basis_vdw = LJsr[:,frame]
@@ -1126,3 +1171,7 @@ print(np.mean((U_basis_estimate[N_frames<30]-U_basis[0][N_frames<30])/U_basis[0]
 #    '''
 #
 #    main()
+
+hexane_bf = basis_function(iRef=0,iRefs=0,N_basis=6,N_frames=101)
+hexane_bf.parity_plot()
+hexane_bf.compute_U_theta()
