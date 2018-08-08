@@ -145,7 +145,10 @@ for isite, site_type in enumerate(site_types):
             
 #print(Cmatrix_frame)
 
-U_basis_estimate = np.zeros(len(U_basis[0]))
+#U_basis_estimate = np.zeros(len(U_basis[0]))
+
+f = open('basis_functions','w')
+f.write('r6_CH3'+'\t'+'rlam_CH3'+'\t'+'r6_CH2'+'\t'+'rlam_CH2'+'\t'+'r6_CH3CH2'+'\t'+'rlam_CH3CH2'+'\n')
 
 for iframe in range(len(U_basis[0])):
     
@@ -159,17 +162,28 @@ for iframe in range(len(U_basis[0])):
     
     sumr6lam = np.linalg.solve(Cmatrix_basis,U_basis_frame)
     
-    U_basis_estimate[iframe] = np.linalg.multi_dot([Cmatrix_real,sumr6lam])
+    U_basis_estimate_frame = np.linalg.multi_dot([Cmatrix_real,sumr6lam])
+    
+    for isum in sumr6lam:
+        f.write(repr(isum)+'\t') #Using str(isum) which rounds the value leads to an error that is a few orders of magnitude greater, but still acceptable
+    f.write('\n')       
 
 #    U_basis_frame = np.array([U_basis[1][iframe],U_basis[2][iframe],U_basis[3][iframe],U_basis[4][iframe],U_basis[5][iframe],U_basis[6][iframe]])
 
             
 #print(Cmatrix_real)
 
-    if np.abs(U_basis_estimate[iframe] - U_basis[0][iframe]) > 1:
+    if np.abs(U_basis_estimate_frame - U_basis[0][iframe]) > 1:
 
-        print('Basis function estimate: '+str(U_basis_estimate[iframe]))
+        print('Basis function estimate: '+str(U_basis_estimate_frame))
         print('Actual energy: '+str(U_basis[0][iframe]))
+        
+f.close()
+
+sumr6lam_all = np.loadtxt('basis_functions',skiprows=1)
+print(sumr6lam_all.shape)
+
+U_basis_estimate = np.linalg.multi_dot([Cmatrix_real,sumr6lam_all.T])
         
 plt.plot(U_basis[0],U_basis_estimate,'k+',mfc='None',markersize=5)
 plt.plot([np.min(U_basis_estimate),np.max(U_basis_estimate)],[np.min(U_basis_estimate),np.max(U_basis_estimate)],'r-')
