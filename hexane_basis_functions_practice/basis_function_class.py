@@ -328,6 +328,11 @@ class basis_function():
         #plt.ylim([None,-50000])
         plt.show()
         
+        plt.plot(U_basis[0],(U_basis_ref-U_basis[0])/U_basis[0]*100.,'k+',mfc='None',markersize=5)
+        plt.xlabel('Direct simulation energy (K)')
+        plt.ylabel('Percent deviation')
+        plt.show()
+        
         print(np.mean((U_basis_ref-U_basis[0])/U_basis[0]*100.))
         print(np.mean((U_basis_ref[Nmol<30]-U_basis[0][Nmol<30])/U_basis[0][Nmol<30]*100.))
 
