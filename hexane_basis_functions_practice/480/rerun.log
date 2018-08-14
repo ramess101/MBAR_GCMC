@@ -1,0 +1,1994 @@
+Info: GOMC Version 2.31
+Info: Start Time: Wed Aug  8 22:00:23 2018
+Info: Host Name: 647trc-calc1
+CPU information:
+Info: Total number of CPUs: 16
+Info: Total number of CPUs available: 16
+Info: Model name: Intel(R) Xeon(R) CPU           X5667  @ 3.07GHz
+Info: System name: Linux
+Info: Release: 4.4.0-103-generic
+Info: Version: #126-Ubuntu SMP Mon Dec 4 16:23:28 UTC 2017
+Info: Kernel Architecture: x86_64
+Info: Total Ram: 72479.3MB
+Info: Used Ram: 60009.7MB
+Info: Working in the current directory: /home/ram9/C6H14/GOMC/GCMC/Potoff/480
+Info: GOMC COMPILED TO RUN GRAND CANONICAL ENSEMBLE.
+Info: Number of threads                  2 
+
+Reading Input File:                      in_rerun.conf
+Info: Random seed                        Active 
+Info: PARAMETER file: EXOTIC format!
+Info: Input Temperature                  480.0000 K
+Info: Non-truncated potential            Active 
+Info: Long Range Correction              Active 
+Info: Cutoff                             10.0000 A
+Info: Exclude                            ONE-FOUR 
+Warning: Modified 1-4 VDW parameters will be ignored!
+Info: Pressure calculation               Inactive 
+Info: Total number of steps              0 
+Info: Recalculate Trajectory             Active 
+Info: Number of equilibration steps      0 
+Info: Move adjustment frequency          1000 
+Info: Displacement move frequency        0.2000 
+Info: Rotation move frequency            0.1000 
+Info: Molecule swap move frequency       0.7000 
+Info: CBMC First atom trials             10   
+Info: CBMC Secondary atom trials         4    
+Info: CBMC Angle trials                  100  
+Info: CBMC Dihedral trials               30   
+Info: Chemical potential                 C6P    -3980.0000 K
+Info: Output name                        C6P_480_K_u_3980_rerun1a 
+Info: Coordinate frequency               1000000000 
+Info: Restart frequency                  1000000 
+Info: Console output frequency           10000 
+Info: Average output frequency           1 
+Info: Histogram output frequency         1 
+Info: Histogram sample frequency         1 
+Default: Intra-Swap move frequency       0.0000 
+Default: Regrowth move frequency         0.0000 
+Default: Short Range Cutoff              0.0000 
+Warning: Average output is activated but it will be ignored. 
+Warning: Printing restart coordinate is activated but it will be ignored. 
+Warning: Printing coordinate is activated but it will be ignored. 
+Warning: 1-4 Electrostatic scaling set, but will be ignored.
+Note: Average output Inactived. Energy average output will be ignored.
+Note: Average output Inactived. Molecule average output will be ignored.
+Finished Reading Input File:             in_rerun.conf
+
+Reading from EXOTIC-Style parameter file:  	Par_Mie_Alkane_Exotic_basis_function.inp
+Reading BONDS parameters.
+Reading ANGLES parameters.
+Reading DIHEDRALS parameters.
+Reading NONBONDED_MIE parameters.
+Finished reading EXOTIC-Style parameter file:  	Par_Mie_Alkane_Exotic_basis_function.inp
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Random number seed: 2784003078
+
+Molecules in PSF:
+Molecule Kind: C6P
+Idx	name	type	charge	mass
+0	C1	CH3	0.0000	15.0350
+1	C2	CH2	0.0000	14.0270
+2	C3	CH2	0.0000	14.0270
+3	C4	CH2	0.0000	14.0270
+4	C5	CH2	0.0000	14.0270
+5	C6	CH3	0.0000	15.0350
+
+Bonds:
+[0 1] [1 2] [2 3] [3 4] [4 5] 
+
+Angles:
+[0 1 2] [1 2 3] [2 3 4] [3 4 5] 
+
+Dihedrals:
+[0 1 2 3] [1 2 3 4] [2 3 4 5] 
+
+Bonds parameter:
+Atom Types                    Kb(K)                b0(A) 
+CH3  CH2                        FIX               1.5400 
+CH2  CH2                        FIX               1.5400 
+
+Angles parameter:
+Atom Types                Ktheta(K)       theta0(degree) 
+CH3  CH2  CH2          31250.000000             114.0000 
+CH2  CH2  CH2          31250.000000             114.0000 
+
+Dihedrals parameter:
+Atom Types                  Kchi(K)    n   delta(degree) 
+CH3  CH2  CH2  CH2         0.000000    0          0.0000 
+CH3  CH2  CH2  CH2       355.029964    1          0.0000 
+CH3  CH2  CH2  CH2       -68.189775    2        180.0000 
+CH3  CH2  CH2  CH2       791.317812    3          0.0000 
+
+CH2  CH2  CH2  CH2         0.000000    0          0.0000 
+CH2  CH2  CH2  CH2       355.029964    1          0.0000 
+CH2  CH2  CH2  CH2       -68.189775    2        180.0000 
+CH2  CH2  CH2  CH2       791.317812    3          0.0000 
+
+
+NonBonded 1-4 parameters:
+Type1  Type2             Epsilon(K)    Sigma(A)       N 
+CH3    CH3                 121.2500      3.7900   16.00 
+CH3    CH2                  86.0015      3.8950   16.00 
+CH2    CH2                  61.0000      4.0000   16.00 
+
+NonBonded parameters:
+Type1  Type2             Epsilon(K)    Sigma(A)       N 
+CH3    CH3                 121.2500      3.7900   16.00 
+CH3    CH2                  86.0015      3.8950   16.00 
+CH2    CH2                  61.0000      4.0000   16.00 
+
+Info: Box  0:  Periodic Cell Basis 1     35.000   0.000   0.000 
+Info: Box  0:  Periodic Cell Basis 2      0.000  35.000   0.000 
+Info: Box  0:  Periodic Cell Basis 3      0.000   0.000  35.000 
+
+Info: Box  1:  Periodic Cell Basis 1     35.000   0.000   0.000 
+Info: Box  1:  Periodic Cell Basis 2      0.000  35.000   0.000 
+Info: Box  1:  Periodic Cell Basis 3      0.000   0.000  35.000 
+
+Minimum coordinates in box 0: x =   -1.557, y =   -1.441, z =   -1.260
+Maximum coordinates in box 0: x =   36.432, y =   36.386, z =   37.078
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.330, z =   37.365
+Wrapping molecules inside the simulation box 1:
+
+################################################################################
+########################## INITIAL SIMULATION ENERGY ###########################
+
+ETITLE:     STEP           TOTAL        INTRA(B)       INTRA(NB)       INTER(LJ)             LRC     TOTAL_ELECT            REAL           RECIP            SELF            CORR
+
+ENER_0:        0       7265.3202     353851.8548     -20179.2488    -296514.5845     -29892.7013          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+ENER_1:        0     978782.0173    1043233.1227     -64451.1054          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STITLE:     STEP        TOTALMOL
+
+STAT_0:        0             144
+
+STAT_1:        0             458
+
+################################################################################
+############################# STARTING SIMULATION ##############################
+
+ETITLE:     STEP           TOTAL        INTRA(B)       INTRA(NB)       INTER(LJ)             LRC     TOTAL_ELECT            REAL           RECIP            SELF            CORR
+
+STITLE:     STEP        TOTALMOL
+
+Printed combined psf to file C6P_480_K_u_3980_rerun1a_merged.psf
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+
+################################################################################
+########################## INITIAL SIMULATION ENERGY ###########################
+
+ETITLE:     STEP           TOTAL        INTRA(B)       INTRA(NB)       INTER(LJ)             LRC     TOTAL_ELECT            REAL           RECIP            SELF            CORR
+
+ENER_0:        0       7265.3202     353851.8548     -20179.2488    -296514.5845     -29892.7013          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+ENER_1:        0     978782.0173    1043233.1227     -64451.1054          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STITLE:     STEP        TOTALMOL
+
+STAT_0:        0             144
+
+STAT_1:        0             458
+
+################################################################################
+############################# STARTING SIMULATION ##############################
+
+ETITLE:     STEP           TOTAL        INTRA(B)       INTRA(NB)       INTER(LJ)             LRC     TOTAL_ELECT            REAL           RECIP            SELF            CORR
+
+STITLE:     STEP        TOTALMOL
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.557, y =   -1.441, z =   -1.260
+Maximum coordinates in box 0: x =   36.432, y =   36.386, z =   37.078
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.330, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:      200      14807.4409     345011.3597     -19579.7138    -281964.0585     -28660.1463          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:      200             141
+
+ENER_1:      200     989284.0036    1054471.1686     -65187.1650          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:      200             461
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.678, y =   -1.441, z =   -1.260
+Maximum coordinates in box 0: x =   36.432, y =   36.386, z =   37.078
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.330, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:      400      10214.0787     346495.9927     -19015.7053    -288198.0938     -29068.1148          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:      400             142
+
+ENER_1:      400     988294.9045    1050639.2981     -62344.3936          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:      400             460
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.678, y =   -1.570, z =   -1.260
+Maximum coordinates in box 0: x =   36.432, y =   36.628, z =   37.078
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   36.770, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:      600       -879.5187     342573.3993     -20296.2265    -293677.7251     -29478.9665          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:      600             143
+
+ENER_1:      600     993165.8949    1055129.2714     -61963.3765          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:      600             459
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.764, y =   -1.570, z =   -1.260
+Maximum coordinates in box 0: x =   36.432, y =   36.638, z =   37.189
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   36.770, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:      800       3006.6081     338885.5370     -19981.8925    -287236.8900     -28660.1463          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:      800             141
+
+ENER_1:      800     995027.2832    1057538.3989     -62511.1157          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:      800             461
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.370, y =   -1.570, z =   -1.161
+Maximum coordinates in box 0: x =   36.432, y =   36.638, z =   37.189
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   36.770, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     1000      -2056.4236     333980.0834     -19777.8790    -287598.4817     -28660.1463          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     1000             141
+
+ENER_1:     1000    1000463.7812    1062340.2062     -61876.4250          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     1000             461
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.764, y =   -1.570, z =   -0.997
+Maximum coordinates in box 0: x =   36.432, y =   36.348, z =   37.189
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   36.770, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     1200      -3602.9559     322892.4566     -19391.1114    -279650.7612     -27453.5399          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     1200             138
+
+ENER_1:     1200    1004470.5376    1066944.0895     -62473.5520          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     1200             464
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.764, y =   -1.570, z =   -0.997
+Maximum coordinates in box 0: x =   36.432, y =   36.348, z =   37.190
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   36.770, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     1400       1409.8910     324513.2092     -19164.5401    -276881.6741     -27057.1041          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     1400             137
+
+ENER_1:     1400    1008630.1127    1071345.4398     -62715.3271          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     1400             465
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.678, y =   -1.570, z =   -0.997
+Maximum coordinates in box 0: x =   36.837, y =   36.348, z =   36.607
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   36.770, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     1600       -375.8746     328704.9984     -19498.2274    -282129.1057     -27453.5399          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     1600             138
+
+ENER_1:     1600    1005053.8474    1067505.3429     -62451.4955          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     1600             464
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.678, y =   -1.570, z =   -0.997
+Maximum coordinates in box 0: x =   36.837, y =   36.348, z =   36.607
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   36.770, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     1800       6734.9340     324861.4487     -19153.8946    -272309.0686     -26663.5515          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     1800             136
+
+ENER_1:     1800    1011331.5747    1074123.2281     -62791.6534          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     1800             466
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.678, y =   -2.291, z =   -0.997
+Maximum coordinates in box 0: x =   36.837, y =   36.462, z =   37.626
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   36.770, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     2000      13230.5753     320521.0107     -19307.9041    -262097.4355     -25885.0957          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     2000             134
+
+ENER_1:     2000    1012228.5146    1078904.1994     -66675.6848          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     2000             468
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.928, y =   -2.592, z =   -1.313
+Maximum coordinates in box 0: x =   36.837, y =   36.462, z =   37.626
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   36.770, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     2200       8740.9569     317370.3806     -19054.6543    -263689.6736     -25885.0957          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     2200             134
+
+ENER_1:     2200    1005359.8929    1071680.6843     -66320.7914          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     2200             468
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.928, y =   -2.952, z =   -1.357
+Maximum coordinates in box 0: x =   37.031, y =   36.537, z =   37.626
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   36.770, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     2400      16683.8396     295793.6439     -18081.3839    -237777.1000     -23251.3204          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     2400             127
+
+ENER_1:     2400    1025762.6925    1093211.8128     -67449.1203          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     2400             475
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.928, y =   -2.952, z =   -0.884
+Maximum coordinates in box 0: x =   37.031, y =   36.537, z =   37.626
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   36.770, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     2600      18819.3457     306336.0338     -18338.9897    -245188.2866     -23989.4118          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     2600             129
+
+ENER_1:     2600    1022208.5114    1089349.2437     -67140.7323          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     2600             473
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.071, y =   -2.952, z =   -0.884
+Maximum coordinates in box 0: x =   37.031, y =   36.488, z =   37.626
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     2800      14087.0806     313133.7083     -18894.0979    -255034.3572     -25118.1726          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     2800             132
+
+ENER_1:     2800    1018537.5839    1084931.2650     -66393.6811          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     2800             470
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.071, y =   -1.166, z =   -0.884
+Maximum coordinates in box 0: x =   37.031, y =   36.302, z =   37.626
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     3000      21509.7536     304985.5160     -18284.5564    -241572.2816     -23618.9245          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     3000             128
+
+ENER_1:     3000    1025260.8414    1092382.3674     -67121.5260          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     3000             474
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.071, y =   -1.166, z =   -0.318
+Maximum coordinates in box 0: x =   37.018, y =   36.248, z =   36.730
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     3200       2716.8757     314145.0303     -19567.5829    -266360.3791     -25500.1926          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     3200             133
+
+ENER_1:     3200    1020494.4354    1086988.6442     -66494.2089          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     3200             469
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.206, y =   -1.166, z =   -2.705
+Maximum coordinates in box 0: x =   36.958, y =   36.248, z =   36.650
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     3400      10700.7433     319028.7237     -19556.4090    -263271.3788     -25500.1926          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     3400             133
+
+ENER_1:     3400    1021419.8655    1088200.7559     -66780.8904          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     3400             469
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.206, y =   -1.434, z =   -0.530
+Maximum coordinates in box 0: x =   36.958, y =   36.248, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     3600       2666.2968     327712.0438     -20345.2801    -277643.3629     -27057.1041          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     3600             137
+
+ENER_1:     3600    1011929.9523    1078024.2912     -66094.3389          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     3600             465
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.555, y =   -1.516, z =   -2.019
+Maximum coordinates in box 0: x =   36.707, y =   36.270, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     3800      10185.3055     314025.2106     -19906.9380    -258432.7746     -25500.1926          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     3800             133
+
+ENER_1:     3800    1018791.3704    1085797.7500     -67006.3796          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     3800             469
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.555, y =   -1.516, z =   -1.960
+Maximum coordinates in box 0: x =   36.707, y =   36.270, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.365
+Wrapping molecules inside the simulation box 1:
+ENER_0:     4000      17218.3856     300375.6324     -19798.8260    -239739.4963     -23618.9245          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     4000             128
+
+ENER_1:     4000    1025244.0819    1093042.8787     -67798.7969          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     4000             474
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.443, y =   -1.740, z =   -1.960
+Maximum coordinates in box 0: x =   36.418, y =   36.270, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     4200      16156.4742     304671.0624     -19059.5833    -245092.2227     -24362.7822          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     4200             130
+
+ENER_1:     4200    1023247.3393    1090501.5657     -67254.2264          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     4200             472
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.443, y =   -1.740, z =   -1.960
+Maximum coordinates in box 0: x =   36.418, y =   36.270, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     4400       8632.6784     302784.3111     -19377.7993    -250784.4217     -23989.4118          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     4400             129
+
+ENER_1:     4400    1021515.5508    1089045.5073     -67529.9564          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     4400             473
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.443, y =   -1.740, z =   -1.960
+Maximum coordinates in box 0: x =   36.418, y =   36.516, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     4600       8285.9913     302813.2301     -19082.7559    -251455.0712     -23989.4118          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     4600             129
+
+ENER_1:     4600    1027457.1317    1095235.9809     -67778.8491          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     4600             473
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.443, y =   -1.740, z =   -1.960
+Maximum coordinates in box 0: x =   36.418, y =   36.516, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     4800      19897.8053     301906.0645     -18646.5311    -240110.4078     -23251.3204          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     4800             127
+
+ENER_1:     4800    1030029.6842    1097500.4524     -67470.7682          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     4800             475
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.163, y =   -1.784, z =   -1.960
+Maximum coordinates in box 0: x =   37.297, y =   36.216, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     5000      16319.2224     300135.2612     -18593.5541    -242335.8853     -22886.5994          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     5000             126
+
+ENER_1:     5000    1030731.1106    1098462.2935     -67731.1829          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     5000             476
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.324, y =   -1.386, z =   -1.960
+Maximum coordinates in box 0: x =   37.315, y =   36.216, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.547, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     5200      21734.4811     296808.7744     -18559.4577    -234349.0286     -22165.8070          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     5200             124
+
+ENER_1:     5200    1046761.6576    1114808.5047     -68046.8471          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     5200             478
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.324, y =   -1.299, z =   -1.960
+Maximum coordinates in box 0: x =   37.315, y =   36.145, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     5400      27813.3574     290836.7921     -18380.4105    -223186.4768     -21456.5474          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     5400             122
+
+ENER_1:     5400    1041711.9666    1110161.6177     -68449.6512          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     5400             480
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.324, y =   -1.299, z =   -2.190
+Maximum coordinates in box 0: x =   37.315, y =   36.145, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     5600      28272.1759     290287.2079     -17857.7193    -223051.0704     -21106.2423          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     5600             121
+
+ENER_1:     5600    1049332.0224    1117394.7083     -68062.6859          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     5600             481
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.393, y =   -1.299, z =   -2.190
+Maximum coordinates in box 0: x =   38.127, y =   36.145, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     5800      20246.4436     304950.3143     -19141.9953    -241572.4636     -23989.4118          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     5800             129
+
+ENER_1:     5800    1036749.2122    1104694.4321     -67945.2199          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     5800             473
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.657, y =   -1.299, z =   -2.642
+Maximum coordinates in box 0: x =   38.127, y =   36.384, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     6000      12977.7324     306536.2075     -18704.5819    -250491.1110     -24362.7822          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     6000             130
+
+ENER_1:     6000    1034662.0938    1102303.3978     -67641.3040          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     6000             472
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.657, y =   -1.299, z =   -2.642
+Maximum coordinates in box 0: x =   38.127, y =   36.210, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     6200      11948.9401     316452.9642     -19375.9529    -259627.8786     -25500.1926          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     6200             133
+
+ENER_1:     6200    1025776.6674    1093523.0197     -67746.3523          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     6200             469
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.657, y =   -0.977, z =   -2.642
+Maximum coordinates in box 0: x =   38.127, y =   36.210, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     6400      21097.8602     304841.6091     -18420.7123    -242071.7162     -23251.3204          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     6400             127
+
+ENER_1:     6400    1046673.4609    1115380.0424     -68706.5815          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     6400             475
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.393, y =   -1.185, z =   -2.642
+Maximum coordinates in box 0: x =   38.127, y =   36.210, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     6600      24404.9772     299735.1058     -18152.9351    -234290.5941     -22886.5994          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     6600             126
+
+ENER_1:     6600    1046669.4165    1116080.5945     -69411.1780          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     6600             476
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.412, y =   -1.213, z =   -2.163
+Maximum coordinates in box 0: x =   38.127, y =   36.210, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     6800      15112.0099     304486.5670     -19013.2563    -246742.3764     -23618.9245          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     6800             128
+
+ENER_1:     6800    1037479.1893    1106934.3032     -69455.1139          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     6800             474
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.336, y =   -1.213, z =   -2.382
+Maximum coordinates in box 0: x =   38.127, y =   36.190, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     7000      20082.8300     308898.6453     -19148.7391    -245304.2940     -24362.7822          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     7000             130
+
+ENER_1:     7000    1032239.0394    1100573.6426     -68334.6032          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     7000             472
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.336, y =   -2.281, z =   -2.382
+Maximum coordinates in box 0: x =   38.127, y =   36.190, z =   36.679
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     7200      18383.1024     314460.1212     -19649.8608    -251308.9854     -25118.1726          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     7200             132
+
+ENER_1:     7200    1030789.9675    1099626.0872     -68836.1197          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     7200             470
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.925, y =   -2.281, z =   -2.382
+Maximum coordinates in box 0: x =   36.931, y =   36.190, z =   36.594
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.053, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     7400      18167.6947     302088.5034     -19884.9811    -240046.4158     -23989.4118          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     7400             129
+
+ENER_1:     7400    1030619.8769    1099717.1562     -69097.2793          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     7400             473
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.642, y =   -1.770, z =   -2.382
+Maximum coordinates in box 0: x =   36.931, y =   36.190, z =   36.596
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.040, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     7600      24812.4661     305093.7047     -19624.2459    -236667.5809     -23989.4118          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     7600             129
+
+ENER_1:     7600    1023001.8598    1093261.9808     -70260.1210          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     7600             473
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.102, y =   -1.770, z =   -2.382
+Maximum coordinates in box 0: x =   37.066, y =   36.190, z =   36.596
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.040, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     7800      20228.2655     320327.1742     -20563.5681    -253650.2449     -25885.0957          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     7800             134
+
+ENER_1:     7800    1011289.1872    1081429.2767     -70140.0895          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     7800             468
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.102, y =   -1.770, z =   -2.382
+Maximum coordinates in box 0: x =   37.066, y =   36.190, z =   36.422
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.040, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.500, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     8000      14923.6285     314084.0765     -20724.6260    -252935.6295     -25500.1926          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     8000             133
+
+ENER_1:     8000    1015982.0284    1086376.2007     -70394.1723          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     8000             469
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.825, y =   -2.186, z =   -2.382
+Maximum coordinates in box 0: x =   37.066, y =   36.190, z =   36.422
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.040, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.660, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     8200       9787.7506     307914.8802     -20359.6463    -252649.3106     -25118.1726          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     8200             132
+
+ENER_1:     8200    1022011.6308    1092555.1275     -70543.4967          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     8200             470
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.393, y =   -2.111, z =   -2.382
+Maximum coordinates in box 0: x =   37.066, y =   36.190, z =   36.422
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.040, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.660, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     8400       3373.4866     311846.5120     -20874.7812    -261713.1485     -25885.0957          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     8400             134
+
+ENER_1:     8400    1015652.6572    1085594.0049     -69941.3477          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     8400             468
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.393, y =   -2.111, z =   -2.382
+Maximum coordinates in box 0: x =   37.066, y =   36.190, z =   37.188
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.040, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.660, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     8600       2337.3340     303388.2080     -19747.2914    -256185.4100     -25118.1726          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     8600             132
+
+ENER_1:     8600    1019662.9704    1089759.2489     -70096.2785          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     8600             470
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.393, y =   -2.111, z =   -2.382
+Maximum coordinates in box 0: x =   37.099, y =   36.190, z =   37.188
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.040, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.660, z =   37.155
+Wrapping molecules inside the simulation box 1:
+ENER_0:     8800       5830.2777     303977.8333     -19709.9520    -253319.4309     -25118.1726          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     8800             132
+
+ENER_1:     8800    1020249.3793    1089873.3918     -69624.0125          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     8800             470
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.795, y =   -0.421, z =   -2.382
+Maximum coordinates in box 0: x =   37.099, y =   36.190, z =   37.188
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.040, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:     9000       4599.4656     283961.0818     -18754.5369    -237720.4799     -22886.5994          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     9000             126
+
+ENER_1:     9000    1034647.5525    1105128.7270     -70481.1745          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     9000             476
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.786, y =   -0.772, z =   -2.382
+Maximum coordinates in box 0: x =   37.099, y =   37.894, z =   37.188
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.040, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:     9200       6528.4224     276057.9321     -18617.6114    -229102.1626     -21809.7356          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     9200             123
+
+ENER_1:     9200    1040105.0783    1110385.2307     -70280.1524          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     9200             479
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.203, y =   -0.772, z =   -0.440
+Maximum coordinates in box 0: x =   36.786, y =   37.894, z =   36.575
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.040, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:     9400       5878.9202     282691.6012     -19136.3266    -234789.7551     -22886.5994          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     9400             126
+
+ENER_1:     9400    1030624.1293    1100126.2817     -69502.1524          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     9400             476
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.203, y =   -0.772, z =   -0.440
+Maximum coordinates in box 0: x =   36.904, y =   37.894, z =   36.575
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.040, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.332, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:     9600       5389.4679     281657.2444     -19128.7229    -233887.7332     -23251.3204          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     9600             127
+
+ENER_1:     9600    1024620.0107    1093953.0430     -69333.0323          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     9600             475
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.447, y =   -0.820, z =   -0.440
+Maximum coordinates in box 0: x =   36.723, y =   37.894, z =   37.338
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.040, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:     9800      16742.3014     276631.1296     -18675.8045    -219756.4763     -21456.5474          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:     9800             122
+
+ENER_1:     9800    1033798.5239    1103577.8025     -69779.2786          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:     9800             480
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.021, y =   -0.820, z =   -1.260
+Maximum coordinates in box 0: x =   36.596, y =   37.894, z =   37.338
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:    10000      28899.9722     261277.7785     -17687.6854    -195292.1566     -19397.9643          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    10000             116
+
+ENER_1:    10000    1034705.3756    1105357.2480     -70651.8724          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    10000             486
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.021, y =   -0.796, z =   -1.260
+Maximum coordinates in box 0: x =   36.596, y =   37.894, z =   37.338
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:    10200      31216.2622     270758.9899     -18307.4521    -201162.6496     -20072.6260          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    10200             118
+
+ENER_1:    10200    1035992.7652    1106729.3047     -70736.5395          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    10200             484
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.860, y =   -0.796, z =   -1.260
+Maximum coordinates in box 0: x =   36.560, y =   36.438, z =   36.575
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:    10400      29220.4136     290102.7792     -17929.9325    -221846.1908     -21106.2423          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    10400             121
+
+ENER_1:    10400    1034348.6888    1103910.2595     -69561.5708          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    10400             481
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.155, y =   -0.754, z =   -1.260
+Maximum coordinates in box 0: x =   36.560, y =   36.438, z =   36.616
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:    10600      28894.2210     306964.9928     -18887.7042    -236296.4681     -22886.5994          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    10600             126
+
+ENER_1:    10600    1019987.9956    1089144.9246     -69156.9290          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    10600             476
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.173, y =   -2.196, z =   -1.260
+Maximum coordinates in box 0: x =   36.560, y =   36.666, z =   36.852
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:    10800      29219.5040     295448.1890     -18047.6716    -226371.2777     -21809.7356          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    10800             123
+
+ENER_1:    10800    1021219.3757    1090853.6711     -69634.2955          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    10800             479
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.140, y =   -2.196, z =   -1.260
+Maximum coordinates in box 0: x =   36.560, y =   36.666, z =   36.852
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:    11000      21710.5301     300821.1386     -19236.0537    -236987.9553     -22886.5994          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    11000             126
+
+ENER_1:    11000    1017441.9196    1086838.6925     -69396.7728          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    11000             476
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.140, y =   -2.196, z =   -1.260
+Maximum coordinates in box 0: x =   36.560, y =   36.871, z =   36.873
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:    11200      19618.2391     322185.5999     -17336.7268    -259345.5383     -25885.0957          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    11200             134
+
+ENER_1:    11200     999957.1429    1068130.6424     -68173.4994          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    11200             468
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.496, y =   -2.196, z =   -1.305
+Maximum coordinates in box 0: x =   36.560, y =   37.141, z =   37.229
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:    11400      12963.5017     322529.5260     -17170.7801    -266122.3622     -26272.8820          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    11400             135
+
+ENER_1:    11400     991844.6806    1059580.0074     -67735.3268          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    11400             467
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.627, y =   -2.196, z =   -1.985
+Maximum coordinates in box 0: x =   36.560, y =   37.141, z =   37.229
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.913, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:    11600       6619.6669     321301.7408     -17352.2932    -271056.8988     -26272.8820          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    11600             135
+
+ENER_1:    11600     993275.4753    1061101.6193     -67826.1440          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    11600             467
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.445, y =   -2.196, z =   -1.985
+Maximum coordinates in box 0: x =   36.560, y =   37.141, z =   37.229
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.855, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:    11800       9227.5521     329084.7900     -17118.5236    -275681.6102     -27057.1041          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    11800             137
+
+ENER_1:    11800     985919.5282    1053784.3325     -67864.8043          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    11800             465
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.445, y =   -1.088, z =   -1.985
+Maximum coordinates in box 0: x =   36.560, y =   37.338, z =   37.229
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.855, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:    12000      18831.4006     316543.2700     -16340.3660    -256253.3308     -25118.1726          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    12000             132
+
+ENER_1:    12000    1000050.0299    1069112.6656     -69062.6357          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    12000             470
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.858, y =   -1.913, z =   -1.985
+Maximum coordinates in box 0: x =   36.560, y =   36.489, z =   36.207
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.855, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   36.770
+Wrapping molecules inside the simulation box 1:
+ENER_0:    12200      12633.0744     321664.6998     -17645.2977    -265501.2320     -25885.0957          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    12200             134
+
+ENER_1:    12200     999871.6155    1068813.6668     -68942.0513          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    12200             468
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.858, y =   -1.799, z =   -1.985
+Maximum coordinates in box 0: x =   36.907, y =   36.489, z =   36.472
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.855, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    12400       2843.4969     322686.8617     -18167.3799    -274618.8809     -27057.1041          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    12400             137
+
+ENER_1:    12400     990697.9726    1059177.0948     -68479.1222          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    12400             465
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.658, y =   -1.697, z =   -1.985
+Maximum coordinates in box 0: x =   36.907, y =   36.490, z =   36.472
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.855, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    12600        552.1905     304386.1695     -20793.8447    -257539.9417     -25500.1926          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    12600             133
+
+ENER_1:    12600     998009.0690    1066692.5389     -68683.4699          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    12600             469
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.858, y =   -1.697, z =   -1.985
+Maximum coordinates in box 0: x =   36.902, y =   36.490, z =   36.183
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.855, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    12800      11172.6060     304148.6970     -20022.9444    -248214.1108     -24739.0358          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    12800             131
+
+ENER_1:    12800     994418.9994    1063427.9930     -69008.9936          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    12800             471
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.858, y =   -1.697, z =   -1.835
+Maximum coordinates in box 0: x =   36.902, y =   36.452, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.855, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    13000       8718.2067     285598.0180     -19478.6795    -234514.5324     -22886.5994          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    13000             126
+
+ENER_1:    13000    1002794.3739    1072010.7904     -69216.4165          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    13000             476
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.183, y =   -1.345, z =   -1.835
+Maximum coordinates in box 0: x =   36.902, y =   36.452, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.855, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    13200      -4302.5429     297409.6194     -19559.0814    -257034.9083     -25118.1726          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    13200             132
+
+ENER_1:    13200     986388.9049    1054485.1232     -68096.2183          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    13200             470
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.183, y =   -1.345, z =   -1.835
+Maximum coordinates in box 0: x =   36.902, y =   36.452, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.855, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    13400     -14093.2000     299801.3850     -19637.6179    -268371.8714     -25885.0957          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    13400             134
+
+ENER_1:    13400     971188.8830    1038982.1605     -67793.2775          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    13400             468
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.525, y =   -1.539, z =   -1.835
+Maximum coordinates in box 0: x =   37.150, y =   36.452, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.855, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    13600      -1125.7879     305874.4144     -20248.6664    -261251.3433     -25500.1926          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    13600             133
+
+ENER_1:    13600     978133.3762    1045922.6782     -67789.3020          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    13600             469
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.525, y =   -1.539, z =   -2.058
+Maximum coordinates in box 0: x =   37.150, y =   36.452, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.855, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    13800      -9379.1085     299725.9632     -20282.1063    -263322.7729     -25500.1926          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    13800             133
+
+ENER_1:    13800     978821.7621    1046552.2869     -67730.5248          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    13800             469
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.525, y =   -1.539, z =   -2.058
+Maximum coordinates in box 0: x =   36.845, y =   36.312, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.855, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    14000     -12513.6314     308136.9021     -20681.4143    -273305.5677     -26663.5515          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    14000             136
+
+ENER_1:    14000     970663.5859    1038336.7922     -67673.2063          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    14000             466
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.525, y =   -1.971, z =   -2.058
+Maximum coordinates in box 0: x =   36.903, y =   36.282, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.396, y =   -2.855, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    14200     -17921.4862     309204.7940     -20891.8764    -279177.2998     -27057.1041          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    14200             137
+
+ENER_1:    14200     966776.4503    1034081.9033     -67305.4530          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    14200             465
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.287, y =   -1.971, z =   -2.058
+Maximum coordinates in box 0: x =   36.903, y =   36.282, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    14400     -23232.3864     321856.4973     -21623.5094    -294397.2595     -29068.1148          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    14400             142
+
+ENER_1:    14400     957723.7109    1024237.5075     -66513.7966          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    14400             460
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.287, y =   -1.971, z =   -2.058
+Maximum coordinates in box 0: x =   37.023, y =   37.193, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    14600     -20521.2572     320066.0381     -21419.6711    -290507.4779     -28660.1463          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    14600             141
+
+ENER_1:    14600     957334.9273    1023792.9815     -66458.0542          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    14600             461
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.287, y =   -1.971, z =   -2.058
+Maximum coordinates in box 0: x =   37.023, y =   37.193, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    14800     -14821.4067     327097.6686     -21807.7596    -291451.1694     -28660.1463          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    14800             141
+
+ENER_1:    14800     958805.7382    1024976.2368     -66170.4986          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    14800             461
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.287, y =   -1.971, z =   -2.058
+Maximum coordinates in box 0: x =   37.181, y =   37.077, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    15000     -21525.0646     322336.1081     -21850.9392    -293350.0871     -28660.1463          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    15000             141
+
+ENER_1:    15000     960482.1221    1026650.4890     -66168.3669          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    15000             461
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.287, y =   -1.971, z =   -2.058
+Maximum coordinates in box 0: x =   36.661, y =   37.077, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    15200     -10195.8488     309095.3770     -20278.7403    -272739.6035     -26272.8820          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    15200             135
+
+ENER_1:    15200     973352.1957    1040414.8676     -67062.6719          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    15200             467
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.494, y =   -1.971, z =   -2.058
+Maximum coordinates in box 0: x =   36.661, y =   37.077, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.231
+Wrapping molecules inside the simulation box 1:
+ENER_0:    15400      -1923.7187     297028.8963     -19460.3872    -254753.1919     -24739.0358          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    15400             131
+
+ENER_1:    15400     984521.0107    1052215.3499     -67694.3392          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    15400             471
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.540, y =   -1.971, z =   -2.058
+Maximum coordinates in box 0: x =   36.661, y =   37.077, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.508
+Wrapping molecules inside the simulation box 1:
+ENER_0:    15600       8102.2528     286471.6605     -18486.5437    -237358.1023     -22524.7616          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    15600             125
+
+ENER_1:    15600     998707.5245    1067575.1821     -68867.6576          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    15600             477
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.540, y =   -1.971, z =   -2.058
+Maximum coordinates in box 0: x =   36.661, y =   35.652, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    15800      13424.1497     290306.3624     -18383.4345    -235612.1788     -22886.5994          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    15800             126
+
+ENER_1:    15800    1006809.6825    1075699.2425     -68889.5600          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    15800             476
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.540, y =   -1.971, z =   -2.058
+Maximum coordinates in box 0: x =   36.661, y =   35.726, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.868, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    16000      14424.8834     273586.9528     -16130.4562    -221575.0660     -21456.5474          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    16000             122
+
+ENER_1:    16000    1008386.3335    1077958.7047     -69572.3712          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    16000             480
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -0.781, y =   -1.918, z =   -2.058
+Maximum coordinates in box 0: x =   36.661, y =   36.087, z =   36.244
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    16200      15962.5803     262244.7397     -16377.2552    -209146.0838     -20758.8203          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    16200             120
+
+ENER_1:    16200    1006458.1980    1076895.6762     -70437.4781          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    16200             482
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.935, y =   -1.918, z =   -2.058
+Maximum coordinates in box 0: x =   36.661, y =   36.087, z =   36.337
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    16400      -2925.7540     268983.2346     -18718.5495    -230665.6774     -22524.7616          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    16400             125
+
+ENER_1:    16400     999433.6654    1069960.7625     -70527.0971          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    16400             477
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -1.935, y =   -1.180, z =   -1.530
+Maximum coordinates in box 0: x =   36.661, y =   36.199, z =   37.354
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    16600     -10129.7797     288339.1357     -19240.4103    -254489.4693     -24739.0358          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    16600             131
+
+ENER_1:    16600     991278.0619    1060237.4207     -68959.3589          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    16600             471
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.599, y =   -1.016, z =   -2.309
+Maximum coordinates in box 0: x =   36.129, y =   36.199, z =   37.354
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    16800      -1974.6426     282979.3196     -18799.8011    -242164.7493     -23989.4118          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    16800             129
+
+ENER_1:    16800     996589.9399    1065850.0074     -69260.0675          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    16800             473
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.599, y =   -2.480, z =   -2.309
+Maximum coordinates in box 0: x =   36.129, y =   36.199, z =   37.354
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    17000       2787.3095     276107.7119     -18230.6214    -232565.0194     -22524.7616          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    17000             125
+
+ENER_1:    17000    1008484.2353    1078384.4485     -69900.2132          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    17000             477
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.691, y =   -2.480, z =   -2.309
+Maximum coordinates in box 0: x =   36.129, y =   36.199, z =   36.994
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.908, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    17200       4915.4402     299449.0925     -19077.0580    -250717.5585     -24739.0358          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    17200             131
+
+ENER_1:    17200     988010.9805    1057237.0007     -69226.0202          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    17200             471
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.691, y =   -0.874, z =   -2.309
+Maximum coordinates in box 0: x =   36.129, y =   36.199, z =   36.994
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.908, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    17400      -9508.4855     296001.2961     -18754.0301    -261637.5790     -25118.1726          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    17400             132
+
+ENER_1:    17400     991326.1646    1057883.8825     -66557.7180          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    17400             470
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.691, y =   -0.874, z =   -2.309
+Maximum coordinates in box 0: x =   36.129, y =   37.409, z =   36.994
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.908, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    17600        492.5105     306046.6125     -18961.6032    -261092.3062     -25500.1926          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    17600             133
+
+ENER_1:    17600     988729.2730    1055048.5133     -66319.2403          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    17600             469
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.691, y =   -0.874, z =   -2.309
+Maximum coordinates in box 0: x =   36.129, y =   37.409, z =   36.994
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.098
+Maximum coordinates in box 1: x =   37.908, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    17800      16655.2586     295211.9398     -18113.9868    -237556.0949     -22886.5994          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    17800             126
+
+ENER_1:    17800    1008101.4847    1075824.3930     -67722.9083          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    17800             476
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.691, y =   -0.874, z =   -2.327
+Maximum coordinates in box 0: x =   36.129, y =   36.909, z =   36.994
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.137
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    18000       7454.3244     303725.0327     -18156.9017    -254124.3948     -23989.4118          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    18000             129
+
+ENER_1:    18000     998911.1200    1066060.3910     -67149.2710          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    18000             473
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.691, y =   -1.512, z =   -2.327
+Maximum coordinates in box 0: x =   36.097, y =   36.909, z =   36.586
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.137
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    18200      -2241.6188     308865.4149     -18654.7296    -266952.1116     -25500.1926          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    18200             133
+
+ENER_1:    18200     989155.0934    1055215.3488     -66060.2554          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    18200             469
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.691, y =   -1.324, z =   -1.567
+Maximum coordinates in box 0: x =   36.097, y =   36.909, z =   37.089
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.137
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    18400      -2234.5537     308666.5680     -18343.2212    -267057.7079     -25500.1926          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    18400             133
+
+ENER_1:    18400     983321.5105    1049958.2220     -66636.7115          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    18400             469
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.814, y =   -1.324, z =   -1.567
+Maximum coordinates in box 0: x =   36.353, y =   36.909, z =   37.389
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.137
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    18600       -513.0775     305092.3496     -18118.0585    -262369.1960     -25118.1726          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    18600             132
+
+ENER_1:    18600     995233.0989    1062022.1328     -66789.0338          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    18600             470
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.814, y =   -1.324, z =   -1.567
+Maximum coordinates in box 0: x =   36.939, y =   36.909, z =   37.389
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.137
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    18800      -3738.9420     313011.7830     -18884.3160    -271593.5270     -26272.8820          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    18800             135
+
+ENER_1:    18800    1001284.8252    1067195.0849     -65910.2597          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    18800             467
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.814, y =   -0.833, z =   -1.579
+Maximum coordinates in box 0: x =   36.939, y =   36.909, z =   37.389
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.137
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    19000     -11440.3722     316456.5546     -19253.8803    -281585.9424     -27057.1041          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    19000             137
+
+ENER_1:    19000     989208.5929    1054650.0122     -65441.4192          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    19000             465
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.814, y =   -1.152, z =   -2.312
+Maximum coordinates in box 0: x =   36.939, y =   36.909, z =   37.106
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.137
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    19200     -18371.3181     314056.4033     -19562.9374    -285411.2440     -27453.5399          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    19200             138
+
+ENER_1:    19200     987477.0997    1052605.8190     -65128.7193          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    19200             464
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.814, y =   -2.719, z =   -2.647
+Maximum coordinates in box 0: x =   36.939, y =   36.909, z =   37.106
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.137
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    19400      -9815.4375     302471.9063     -19322.3403    -267464.8109     -25500.1926          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    19400             133
+
+ENER_1:    19400     995928.0540    1062133.7966     -66205.7425          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    19400             469
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.814, y =   -2.719, z =   -2.647
+Maximum coordinates in box 0: x =   36.939, y =   36.909, z =   37.106
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.137
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    19600     -14974.8880     304930.9349     -19580.6375    -274052.3034     -26272.8820          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    19600             135
+
+ENER_1:    19600    1001708.7408    1068309.3309     -66600.5901          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    19600             467
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.814, y =   -2.719, z =   -2.647
+Maximum coordinates in box 0: x =   37.065, y =   36.909, z =   37.106
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.137
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    19800     -16877.5223     310441.8948     -19803.8387    -280852.0269     -26663.5515          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    19800             136
+
+ENER_1:    19800    1002692.3106    1069125.5537     -66433.2431          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    19800             466
+
+Reading from box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_0.pdb
+Reading from box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_480_K_u_3980_r1a_BOX_1.pdb
+Minimum coordinates in box 0: x =   -2.814, y =   -2.719, z =   -2.647
+Maximum coordinates in box 0: x =   37.065, y =   36.919, z =   37.106
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.790, y =   -2.411, z =   -2.137
+Maximum coordinates in box 1: x =   37.027, y =   37.660, z =   37.984
+Wrapping molecules inside the simulation box 1:
+ENER_0:    20000     -20293.1653     308236.3415     -19761.2963    -281711.1064     -27057.1041          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_0:    20000             137
+
+ENER_1:    20000     999226.8845    1065416.2838     -66189.3994          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STAT_1:    20000             465
+
+Displacement:                      0.0000 sec.
+Rotation:                          0.0000 sec.
+Intra-Swap:                        0.0000 sec.
+Regrowth:                          0.0000 sec.
+Molecule-Transfer:                 0.0000 sec.
+Info: GOMC Version 2.31
+Info: Completed at: Wed Aug  8 22:00:53 2018
+Info: On hostname: 647trc-calc1

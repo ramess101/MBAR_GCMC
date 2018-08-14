@@ -8,6 +8,7 @@ Class for basis function generation
 from __future__ import division
 import numpy as np 
 import matplotlib.pyplot as plt
+import os, sys, argparse, shutil
 
 # Physical constants
 N_A = 6.02214086e23 #[/mol]
@@ -37,21 +38,56 @@ def convert_eps_sig_C6_Clam(eps,sig,lam,n=6.,print_Cit=True):
         
         return C6, Clam
 
-
-class basis_function():
-    def __init__(self,iRef,iRefs,N_basis,N_frames,debug_mode=True):#Temp_sim,mu_sim,iRef,iRefs,eps_low,eps_high,sig_low,sig_high,lam_low,lam_high,rerun_flag=False,debug_mode=True):
-
+class basis_function_NRefs():
+    def __init__(self,root_path,iRefs,N_basis,N_frames,debug_mode=True):
+        
         self.debug_mode = debug_mode
-    #        self.Temp_sim = Temp_sim
-#        self.rho_sim = rho_sim
-        self.iRef = iRef
+        self.root_path = root_path
         self.iRefs = iRefs
+        
         try:
-            self.N_Refs = len(iRefs)
+            self.NRefs = len(iRefs)
         except:
             self.iRefs = np.array([iRefs])
-            self.N_Refs = len(self.iRefs)
-#        
+            self.NRefs = len(self.iRefs)
+        print(self.NRefs,N_basis)    
+        self.N_basis = N_basis
+        self.N_sims = self.N_basis + self.NRefs
+        self.N_frames = N_frames
+        
+        self.site_types = ['CH3','CH2','CH3CH2']
+
+        self.build_NRefs_basis_functions()
+        
+    def build_NRefs_basis_functions(self):
+        
+        root_path, iRefs, NRefs, N_basis, N_frames, N_sims, site_types, debug_mode = self.root_path, self.iRefs, self.NRefs, self.N_basis, self.N_frames, self.N_sims, self.site_types, self.debug_mode
+        
+        NRef_basis_functions = []
+        
+        for iRef in iRefs:
+            
+            NRef_basis_functions.append(basis_function_iRef(root_path,iRef,NRefs,N_basis,N_frames,N_sims,site_types,debug_mode))
+            
+        self.NRef_basis_functions = NRef_basis_functions
+            
+
+class basis_function_iRef():
+    def __init__(self,root_path,iRef,NRefs,N_basis,N_frames,N_sims,site_types,debug_mode=True):#Temp_sim,mu_sim,iRef,iRefs,eps_low,eps_high,sig_low,sig_high,lam_low,lam_high,rerun_flag=False,debug_mode=True):
+
+        self.debug_mode = debug_mode
+        self.root_path = root_path
+    #        self.Temp_sim = Temp_sim
+#        self.rho_sim = rho_sim
+
+        self.iRef = iRef
+        self.NRefs = NRefs
+        self.N_basis = N_basis
+        self.N_frames = N_frames
+        self.N_sims = N_sims
+        self.site_types = site_types
+        
+
 #        self.site_types = ['CH3','CH2','CH3CH2']
 #        
 #        # The number of elements must be equal to the number of site types
@@ -77,10 +113,11 @@ class basis_function():
 #        self.validate_refs()
 #        print('Basis functions were validated for iRef= '+str(iRef))                 
 #        
-        self.N_basis = N_basis
-        self.N_sims = self.N_basis + self.N_Refs
-        self.N_frames = N_frames
-        self.site_types = ['CH3','CH2','CH3CH2']
+#        self.N_basis = N_basis
+#        self.N_sims = self.N_basis + self.NRefs
+#        self.N_frames = N_frames
+#
+#        self.site_types = ['CH3','CH2','CH3CH2']
         self.build_eps_sig_lam_basis()
         self.compile_UN_values()
         self.build_Cmatrix_lam_index()
@@ -95,8 +132,8 @@ class basis_function():
         Also need a function for building eps_sig_lam for any set of epsilon, sigma (lambda should always be fixed)
         '''
         
-        debug_mode = self.debug_mode
-        lam_constant = [16]*(self.N_sims)
+        N_basis, site_types, debug_mode = self.N_basis, self.site_types, self.debug_mode
+        
         
 ### Need to automate this
 ### Tried this previously
@@ -107,13 +144,86 @@ class basis_function():
 #    
 #        Cmatrix_basis[site] = eps_basis[site]*sig_basis[site]
 
-                       
+        eps_sim = {'CH3' : np.array([121.25]), 'CH2': np.array([61.]),'CH3CH2':[]}
+        eps_sim['CH3CH2'] = np.sqrt(eps_sim['CH3']*eps_sim['CH2'])
+        
+        sig_sim = {'CH3' : np.array([0.3783]), 'CH2': np.array([0.399]),'CH3CH2':[]}
+        sig_sim['CH3CH2'] = (sig_sim['CH3']+sig_sim['CH2'])/2.
+
+        sig_low = {'CH3': np.array([0.377]), 'CH2': np.array([0.398]),'CH3CH2':[]}
+        sig_low['CH3CH2'] = (sig_low['CH3']+sig_low['CH2'])/2.
+        
+        sig_high = {'CH3': np.array([0.379]), 'CH2': np.array([0.400]),'CH3CH2':[]}
+        sig_high['CH3CH2'] = (sig_high['CH3']+sig_high['CH2'])/2. 
+                
+        lam_sim = 16
+        
+        lam_constant = [lam_sim]*(self.N_sims)
+        
+        eps_basis = {}
+        sig_basis = {}
+        lam_basis = {}
+        
+        lam_basis = {'CH3':np.array(lam_constant),'CH2':np.array(lam_constant),'CH3CH2':[]}
+        lam_basis['CH3CH2'] = (lam_basis['CH3']+lam_basis['CH2'])/2.
+                   
+#        basis_mask = {'CH3':[True, True, True, False, False, True, True], 'CH2':[True, False, False, True, True, True, True],'CH3CH2':[True, False, False, False, False, True, True]}
+        
+        eps_mask = {'CH3':[True, True, True, False, False, True, True], 'CH2':[True, False, False, True, True, True, True],'CH3CH2':[True, False, False, False, False, True, True]}
+        sig_low_mask = {'CH3':[False, True, False, False, False, True, False], 'CH2':[False, False, False, True, False, True, False],'CH3CH2':[False, False, False, False, False, True, False]}
+        sig_high_mask = {'CH3':[False, False, True, False, False, False, True], 'CH2':[False, False, False, False, True, False, True],'CH3CH2':[False, False, False, False, False, False, True]}
+        
+#        for site in site_types:
+#            
+#            eps_basis[site] = np.zeros(N_basis+1) #N_basis plus the reference simulation
+#            sig_basis[site] = np.zeros(N_basis+1)
+#            lam_basis[site] = np.zeros(N_basis+1)
+#
+#            for i_Basis in range(N_basis+1):
+#
+#                if eps_mask[site][i_Basis]:
+#                
+#                    eps_basis[site][i_Basis] = eps_sim[site]
+#                
+#                if sig_low_mask[site][i_Basis]:
+#                    
+#                    sig_basis[site][i_Basis] = sig_low[site]
+#                    
+#                elif sig_high_mask[site][i_Basis]:
+#                    
+#                    sig_basis[site][i_Basis] = sig_high[site]
+#                
+#                else:
+#                    
+#                    sig_basis[site][i_Basis] = sig_sim[site]
+                    
+                #                if basis_mask[site][i_Basis]:
+#                
+#                    eps_basis[site][i_Basis] = eps_sim[site]
+#                    sig_basis[site][i_Basis] = sig
+#                
+#                else:
+#                    
+#                    sig_basis[site][i_Basis] = sig_sim[site]
+                    
+  
+#        eps_basis = {}
+#        sig_basis = {}
+#        lam_basis = {}
+#
+#        for site in site_types:
+#            
+#            eps_basis[site] = np.zeros(N_basis+1) #N_basis plus the reference simulation
+#            sig_basis[site] = np.zeros(N_basis+1)
+#            lam_basis[site] = np.zeros(N_basis+1)          
+        
         eps_basis = {'CH3':np.array([121.25,121.25,121.25,0.,0.,121.25,121.25]),'CH2':np.array([61,0.,0.,61.,61.,61.,61.]),'CH3CH2':[]}
         eps_basis['CH3CH2']=np.sqrt(eps_basis['CH3']*eps_basis['CH2'])
         sig_basis = {'CH3':np.array([0.3783,0.377,0.379,0.3783,0.3783,0.377,0.379]),'CH2':np.array([0.399,0.399,0.399,0.398,0.400,0.398,0.400]),'CH3CH2':[]}
         sig_basis['CH3CH2'] = (sig_basis['CH3']+sig_basis['CH2'])/2.
         lam_basis = {'CH3':np.array(lam_constant),'CH2':np.array(lam_constant),'CH3CH2':[]}
         lam_basis['CH3CH2'] = (lam_basis['CH3']+lam_basis['CH2'])/2.
+        
 
         if debug_mode:
             print(eps_basis,sig_basis,lam_basis)
@@ -129,7 +239,7 @@ class basis_function():
             Nmol: N_frames array of number of molecules in each frame
         '''
          
-        N_basis, N_frames, debug_mode = self.N_basis, self.N_frames, self.debug_mode
+        N_basis, N_frames, debug_mode, root_path = self.N_basis, self.N_frames, self.debug_mode, self.root_path
         
         U_basis = {}
         Nmol = np.array([])
@@ -141,7 +251,7 @@ class basis_function():
             for ibasis in range(N_basis+1):
                 if debug_mode: print('ibasis='+str(ibasis))
                 
-                NU_ibasis = np.loadtxt('his_rr'+str(istage)+'_basis_function_'+str(ibasis),skiprows=1)
+                NU_ibasis = np.loadtxt(root_path+'his_rr'+str(istage)+'_basis_function_'+str(ibasis),skiprows=1)
                 try:
                     U_basis[ibasis] = np.append(U_basis[ibasis],NU_ibasis[:,1])
                 except:
@@ -217,9 +327,9 @@ class basis_function():
             sumr6lam_all: printed to 'basis functions' file
         '''
         
-        U_basis, Cmatrix_basis,N_basis, Cmatrix_ref = self.U_basis, self.Cmatrix_basis, self.N_basis, self.Cmatrix_ref
+        U_basis, Cmatrix_basis,N_basis, Cmatrix_ref, root_path = self.U_basis, self.Cmatrix_basis, self.N_basis, self.Cmatrix_ref, self.root_path
         
-        f = open('basis_functions','w')
+        f = open(root_path+'basis_functions','w')
         f.write('r6_CH3'+'\t'+'rlam_CH3'+'\t'+'r6_CH2'+'\t'+'rlam_CH2'+'\t'+'r6_CH3CH2'+'\t'+'rlam_CH3CH2'+'\n')
         
         for iframe in range(len(U_basis[0])):
@@ -252,9 +362,9 @@ class basis_function():
         Load the sumr6lam_all basis functions from file
         '''
         
-        debug_mode = self.debug_mode
+        root_path, debug_mode = self.root_path, self.debug_mode
         
-        sumr6lam_all = np.loadtxt('basis_functions',skiprows=1)
+        sumr6lam_all = np.loadtxt(root_path+'basis_functions',skiprows=1)
         
         if debug_mode: print(sumr6lam_all.shape)
         
@@ -290,7 +400,12 @@ class basis_function():
         
         U_basis_ref = self.compute_U_theta(self.Cmatrix_ref)
         
-        plt.plot(U_basis[0],U_basis_ref,'k+',mfc='None',markersize=5)
+        U_basis_ref = U_basis_ref[Nmol>0]
+        U_sim_ref = U_basis[0][Nmol>0]
+        
+        Nmol = Nmol[Nmol>0]
+        
+        plt.plot(U_sim_ref,U_basis_ref,'k+',mfc='None',markersize=5)
         plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[np.min(U_basis_ref),np.max(U_basis_ref)],'r-')
         plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[1.05*np.min(U_basis_ref),1.05*np.max(U_basis_ref)],'r--')
         plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[0.95*np.min(U_basis_ref),0.95*np.max(U_basis_ref)],'r--')
@@ -298,7 +413,7 @@ class basis_function():
         plt.ylabel('Basis function energy (K)')
         plt.show()
             
-        plt.plot(U_basis[0],U_basis_ref,'k+',mfc='None',markersize=5)
+        plt.plot(U_sim_ref,U_basis_ref,'k+',mfc='None',markersize=5)
         plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[np.min(U_basis_ref),np.max(U_basis_ref)],'r-')
         plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[1.05*np.min(U_basis_ref),1.05*np.max(U_basis_ref)],'r--')
         plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[0.95*np.min(U_basis_ref),0.95*np.max(U_basis_ref)],'r--')
@@ -308,7 +423,7 @@ class basis_function():
         plt.ylim([None,-50000])
         plt.show()
         
-        plt.plot(U_basis[0][Nmol<20],U_basis_ref[Nmol<20],'k+',mfc='None',markersize=5)
+        plt.plot(U_sim_ref[Nmol<20],U_basis_ref[Nmol<20],'k+',mfc='None',markersize=5)
         plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[np.min(U_basis_ref),np.max(U_basis_ref)],'r-')
         plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[1.05*np.min(U_basis_ref),1.05*np.max(U_basis_ref)],'r--')
         plt.plot([np.min(U_basis_ref),np.max(U_basis_ref)],[0.95*np.min(U_basis_ref),0.95*np.max(U_basis_ref)],'r--')
@@ -318,7 +433,7 @@ class basis_function():
         plt.ylim([-10000,-1000])
         plt.show()
         
-        plt.plot(U_basis[0]/Nmol,U_basis_ref/Nmol,'k+',mfc='None',markersize=5)
+        plt.plot(U_sim_ref/Nmol,U_basis_ref/Nmol,'k+',mfc='None',markersize=5)
         plt.plot([np.min(U_basis_ref/Nmol),np.max(U_basis_ref/Nmol)],[np.min(U_basis_ref/Nmol),np.max(U_basis_ref/Nmol)],'r-')
         plt.plot([np.min(U_basis_ref/Nmol),np.max(U_basis_ref/Nmol)],[1.05*np.min(U_basis_ref/Nmol),1.05*np.max(U_basis_ref/Nmol)],'r--')
         plt.plot([np.min(U_basis_ref/Nmol),np.max(U_basis_ref/Nmol)],[0.95*np.min(U_basis_ref/Nmol),0.95*np.max(U_basis_ref/Nmol)],'r--')
@@ -328,13 +443,13 @@ class basis_function():
         #plt.ylim([None,-50000])
         plt.show()
         
-        plt.plot(U_basis[0],(U_basis_ref-U_basis[0])/U_basis[0]*100.,'k+',mfc='None',markersize=5)
+        plt.plot(U_sim_ref,(U_basis_ref-U_sim_ref)/U_sim_ref*100.,'k+',mfc='None',markersize=5)
         plt.xlabel('Direct simulation energy (K)')
         plt.ylabel('Percent deviation')
         plt.show()
         
-        print(np.mean((U_basis_ref-U_basis[0])/U_basis[0]*100.))
-        print(np.mean((U_basis_ref[Nmol<30]-U_basis[0][Nmol<30])/U_basis[0][Nmol<30]*100.))
+        print(np.mean((U_basis_ref-U_sim_ref)/U_sim_ref*100.))
+        print(np.mean((U_basis_ref[Nmol<30]-U_sim_ref[Nmol<30])/U_sim_ref[Nmol<30]*100.))
 
 
 
@@ -1194,15 +1309,61 @@ class basis_function():
 #assert nStates == len(fpath_all), 'Number of states does not match number of file paths'
 #
 #
-#if __name__ == '__main__':
-#    '''
-#    python basis_function_class.py --nRefs XX --iRef XX
-#  
-#    "--nRefs XX" or "--iRef XX" flag is required, sets the integer value for nRefs or iRef
-#    '''
-#
-#    main()
 
-hexane_bf = basis_function(iRef=0,iRefs=0,N_basis=6,N_frames=101)
-hexane_bf.parity_plot()
-hexane_bf.compute_U_theta()
+class basis_function_state_points():
+    
+    def __init__(self,root_path,iRefs,Temps,N_basis,N_frames,debug_mode=True):
+
+        self.root_path = root_path
+        self.iRefs = iRefs
+        self.Temps = Temps
+        self.N_basis = N_basis
+        self.N_frames = N_frames
+        self.debug_mode = debug_mode
+        
+        self.build_basis_function_states()
+        
+    def build_basis_function_states(self):
+        
+        Temps, root_path, iRefs,N_basis,N_frames, debug_mode = self.Temps, self.root_path, self.iRefs, self.N_basis, self.N_frames, self.debug_mode
+        
+        for Temp_i in Temps:
+            
+            state_path = root_path+Temp_i+'/'
+            self.hexane_bf = basis_function_NRefs(state_path,iRefs,N_basis,N_frames)
+        
+            if debug_mode:
+                
+                self.hexane_bf.NRef_basis_functions[0].parity_plot()
+                self.hexane_bf.NRef_basis_functions[0].compute_U_theta()
+
+def main():
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-iRef","--iRef",type=int,nargs='+',help="set the integer value for the reference(s)")
+    parser.add_argument("-T","--Temps",type=str,nargs='+',help="provide the Temperatures")
+    parser.add_argument("-root","--root",type=str,help="provide the root path")
+    args = parser.parse_args()
+    
+    root_path = 'H:/MBAR_GCMC/hexane_basis_functions_practice/'
+    iRefs = [0]
+    Temps = ['330','360','390','420','430','450','470','480','510']
+#    Temps = ['330']
+    N_basis = 6
+    N_frames = 101
+    
+    bf_GCMC = basis_function_state_points(root_path,iRefs,Temps,N_basis,N_frames)
+    
+
+
+if __name__ == '__main__':
+    '''
+    python basis_function_class.py --iRefs XX --Temps XX --root XX
+  
+    "--iRefs XX" flag is required, sets the integer value for iRefs
+    "--Temps XX" flag is required, sets the Temperatures
+    ""--root XX" flag is required, sets the root path
+    '''
+
+    main()
+

@@ -1,0 +1,195 @@
+Info: GOMC Version 2.31
+Info: Start Time: Wed Aug  8 22:31:35 2018
+Info: Host Name: 647trc-calc1
+CPU information:
+Info: Total number of CPUs: 16
+Info: Total number of CPUs available: 16
+Info: Model name: Intel(R) Xeon(R) CPU           X5667  @ 3.07GHz
+Info: System name: Linux
+Info: Release: 4.4.0-103-generic
+Info: Version: #126-Ubuntu SMP Mon Dec 4 16:23:28 UTC 2017
+Info: Kernel Architecture: x86_64
+Info: Total Ram: 72479.3MB
+Info: Used Ram: 60053.5MB
+Info: Working in the current directory: /home/ram9/C6H14/GOMC/GCMC/Potoff/510
+Info: GOMC COMPILED TO RUN GRAND CANONICAL ENSEMBLE.
+Info: Number of threads                  2 
+
+Reading Input File:                      in_restart.conf
+Info: Restart simulation                 Active 
+Info: Random seed                        Active 
+Info: PARAMETER file: EXOTIC format!
+Info: Input Temperature                  510.0000 K
+Info: Non-truncated potential            Active 
+Info: Long Range Correction              Active 
+Info: Cutoff                             10.0000 A
+Info: Exclude                            ONE-FOUR 
+Warning: Modified 1-4 VDW parameters will be ignored!
+Info: Pressure calculation               Inactive 
+Info: Total number of steps              20000 
+Info: Number of equilibration steps      0 
+Info: Move adjustment frequency          1000 
+Info: Displacement move frequency        0.2000 
+Info: Rotation move frequency            0.1000 
+Info: Molecule swap move frequency       0.7000 
+Info: CBMC First atom trials             10   
+Info: CBMC Secondary atom trials         4    
+Info: CBMC Angle trials                  100  
+Info: CBMC Dihedral trials               30   
+Info: Chemical potential                 C6P    -4127.0000 K
+Info: Output name                        C6P_510_K_u_4127_r1a 
+Info: Coordinate frequency               200 
+Info: Restart frequency                  20000 
+Info: Console output frequency           10000 
+Info: Average output frequency           100000 
+Info: Histogram output frequency         2000 
+Info: Histogram sample frequency         200 
+Default: Intra-Swap move frequency       0.0000 
+Default: Regrowth move frequency         0.0000 
+Default: Short Range Cutoff              0.0000 
+Warning: 1-4 Electrostatic scaling set, but will be ignored.
+Warning: Cell dimension set, but will be ignored in restart mode.
+Finished Reading Input File:             in_restart.conf
+
+Reading from EXOTIC-Style parameter file:  	/home/ram9/GOMC_Scripts/Par_Mie_Alkane_Exotic.inp
+Reading BONDS parameters.
+Reading ANGLES parameters.
+Reading DIHEDRALS parameters.
+Reading NONBONDED_MIE parameters.
+Finished reading EXOTIC-Style parameter file:  	/home/ram9/GOMC_Scripts/Par_Mie_Alkane_Exotic.inp
+Reading from box 0 PDB coordinate file:  	C6P_510_K_u_4127_r1a_BOX_0_restart.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_510_K_u_4127_r1a_BOX_0_restart.pdb
+Reading from box 1 PDB coordinate file:  	C6P_510_K_u_4127_r1a_BOX_1_restart.pdb
+Finished reading box 1 PDB coordinate file:  	C6P_510_K_u_4127_r1a_BOX_1_restart.pdb
+Random number seed: 3630554128
+
+Molecules in PSF:
+Molecule Kind: C6P
+Idx	name	type	charge	mass
+0	C1	CH3	0.0000	15.0350
+1	C2	CH2	0.0000	14.0270
+2	C3	CH2	0.0000	14.0270
+3	C4	CH2	0.0000	14.0270
+4	C5	CH2	0.0000	14.0270
+5	C6	CH3	0.0000	15.0350
+
+Bonds:
+[0 1] [1 2] [2 3] [3 4] [4 5] 
+
+Angles:
+[0 1 2] [1 2 3] [2 3 4] [3 4 5] 
+
+Dihedrals:
+[0 1 2 3] [1 2 3 4] [2 3 4 5] 
+
+Bonds parameter:
+Atom Types                    Kb(K)                b0(A) 
+CH3  CH2                        FIX               1.5400 
+CH2  CH2                        FIX               1.5400 
+
+Angles parameter:
+Atom Types                Ktheta(K)       theta0(degree) 
+CH3  CH2  CH2          31250.000000             114.0000 
+CH2  CH2  CH2          31250.000000             114.0000 
+
+Dihedrals parameter:
+Atom Types                  Kchi(K)    n   delta(degree) 
+CH3  CH2  CH2  CH2         0.000000    0          0.0000 
+CH3  CH2  CH2  CH2       355.029964    1          0.0000 
+CH3  CH2  CH2  CH2       -68.189775    2        180.0000 
+CH3  CH2  CH2  CH2       791.317812    3          0.0000 
+
+CH2  CH2  CH2  CH2         0.000000    0          0.0000 
+CH2  CH2  CH2  CH2       355.029964    1          0.0000 
+CH2  CH2  CH2  CH2       -68.189775    2        180.0000 
+CH2  CH2  CH2  CH2       791.317812    3          0.0000 
+
+
+NonBonded 1-4 parameters:
+Type1  Type2             Epsilon(K)    Sigma(A)       N 
+CH3    CH3                 121.2500      3.7830   16.00 
+CH3    CH2                  86.0015      3.8865   16.00 
+CH2    CH2                  61.0000      3.9900   16.00 
+
+NonBonded parameters:
+Type1  Type2             Epsilon(K)    Sigma(A)       N 
+CH3    CH3                 121.2500      3.7830   16.00 
+CH3    CH2                  86.0015      3.8865   16.00 
+CH2    CH2                  61.0000      3.9900   16.00 
+
+Info: Box  0:  Periodic Cell Basis 1     35.000   0.000   0.000 
+Info: Box  0:  Periodic Cell Basis 2      0.000  35.000   0.000 
+Info: Box  0:  Periodic Cell Basis 3      0.000   0.000  35.000 
+
+Info: Box  1:  Periodic Cell Basis 1     35.000   0.000   0.000 
+Info: Box  1:  Periodic Cell Basis 2      0.000  35.000   0.000 
+Info: Box  1:  Periodic Cell Basis 3      0.000   0.000  35.000 
+
+Minimum coordinates in box 0: x =   -1.509, y =   -1.361, z =   -1.517
+Maximum coordinates in box 0: x =   36.824, y =   36.030, z =   36.881
+Wrapping molecules inside the simulation box 0:
+Minimum coordinates in box 1: x =   -2.647, y =   -2.027, z =   -2.624
+Maximum coordinates in box 1: x =   37.535, y =   37.447, z =   37.668
+Wrapping molecules inside the simulation box 1:
+
+################################################################################
+########################## INITIAL SIMULATION ENERGY ###########################
+
+ETITLE:     STEP           TOTAL        INTRA(B)       INTRA(NB)       INTER(LJ)             LRC     TOTAL_ELECT            REAL           RECIP            SELF            CORR
+
+ENER_0:        0      59992.3911     105357.3945      -7732.0389     -34356.3192      -3276.6453          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+ENER_1:        0    1258342.6849    1339640.9019     -81298.2170          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000         -0.0000
+
+STITLE:     STEP        TOTALMOL
+
+STAT_0:        0              48
+
+STAT_1:        0             554
+
+################################################################################
+############################# STARTING SIMULATION ##############################
+
+MTITLE:     STEP          DISTRY       DISACCEPT      DISACCEPT%          DISMAX          ROTATE       ROTACCEPT      ROTACCEPT%          ROTMAX       INTRASWAP       INTACCEPT      INTACCEPT%        REGROWTH    REGROWACCEPT   REGROWACCEPT%        TRANSFER      TRANACCEPT     TRANACCEPT%
+
+ETITLE:     STEP           TOTAL        INTRA(B)       INTRA(NB)       INTER(LJ)             LRC     TOTAL_ELECT            REAL           RECIP            SELF            CORR
+
+STITLE:     STEP        TOTALMOL
+
+Printed combined psf to file C6P_510_K_u_4127_r1a_merged.psf
+Reading from box 0 PDB coordinate file:  	C6P_510_K_u_4127_r1a_BOX_0_restart.pdb
+Finished reading box 0 PDB coordinate file:  	C6P_510_K_u_4127_r1a_BOX_0_restart.pdb
+MOVE_0:    10000            1984             999         50.3528          1.0135            1040             543         52.2115          1.8006               0               0          0.0000               0               0          0.0000            3477            1447         41.6163
+
+ENER_0:    10000      81328.5771     134571.6856      -7145.5415     -42252.0597      -3845.5073          0.0000          0.0000          0.0000          0.0000          0.0000
+
+STAT_0:    10000              52
+
+MOVE_1:    10000            3499            1451         41.4690
+
+ENER_1:    10000    1251272.2831    1332612.1313     -81339.8483          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000
+
+STAT_1:    10000             550
+
+Steps/sec. : 1196.8623
+MOVE_0:    20000            3915            1957         49.9872          0.8809            2085            1062         50.9353          1.4513               0               0          0.0000               0               0          0.0000            6903            2676         38.7658
+
+ENER_0:    20000      77828.8747     182354.9007     -11188.6828     -85758.6788      -7578.6644          0.0000          0.0000          0.0000          0.0000          0.0000
+
+STAT_0:    20000              73
+
+MOVE_1:    20000            7097            2701         38.0583
+
+ENER_1:    20000    1222784.0511    1295783.8061     -72999.7551          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000          0.0000
+
+STAT_1:    20000             529
+
+Simulation Time (total): 17.7906 sec.
+Displacement:                      0.6774 sec.
+Rotation:                          0.3673 sec.
+Intra-Swap:                        0.0000 sec.
+Regrowth:                          0.0000 sec.
+Molecule-Transfer:                 9.8843 sec.
+Info: GOMC Version 2.31
+Info: Completed at: Wed Aug  8 22:31:53 2018
+Info: On hostname: 647trc-calc1
