@@ -22,6 +22,7 @@ def extract_Potoff(input_path,output_path,with_uncertainties=False):
             index_open0=0
             index_close=0
             index_close0=0
+            index_shift=-2
             
             while index_open < len(element): #While index is a number smaller than the number of letters in str.
                 index_open = element.find('(', index_open0) #set index to location of first remaining occurrence of "("
@@ -31,7 +32,23 @@ def extract_Potoff(input_path,output_path,with_uncertainties=False):
 #                print(element[index_close0:index_open])
                 out_file.write(element[index_close0:index_open]+'\t')
                 
-                if with_uncertainties:        
+                if with_uncertainties:
+                    for index in range(index_open - index_close0): 
+                        if element[index+index_close0] == '.':
+                            out_file.write('0.')
+                            index_decimal = index + index_close0 #index_open - index# + index_close0
+#                            print(index_decimal)
+                            break
+#                    if index_open0 == 0:
+#                        index_shift = -1
+#                    else:
+#                        index_shift = 1
+                    for index in range(index_open - index_decimal + index_shift):
+                        out_file.write('0')
+#                    index_shift += 3
+#                        
+#                        else:
+#                            out_file.write('0')
                     out_file.write(element[index_open+1:index_close]+'\t')
                 index_open0 = index_open + len('(')      # increment the index by the number of characters in substr, and repeat.
                 index_close0 = index_close + len(')')
@@ -45,7 +62,7 @@ def main():
     input_path='H:/MBAR_GCMC/Potoff_literature/practice.txt'
     output_path='H:/MBAR_GCMC/Potoff_literature/practice_out.txt' 
 
-    extract_Potoff(input_path,output_path)
+    extract_Potoff(input_path,output_path,with_uncertainties=True)
 
 if __name__ == '__main__':
     '''

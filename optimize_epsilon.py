@@ -527,7 +527,7 @@ class MBAR_GCMC():
         
         return mu_opt, mu_lower, mu_upper
     
-    def calc_abs_press_int(self,eps_scaled,show_plot=True):
+    def calc_abs_press_int(self,eps_scaled,show_plot=False):
         '''
         Fits ln(Xi) with respect to N for low-density vapor
         '''
