@@ -17,13 +17,13 @@ compound_list = {'C-CH-group':['223TMButane','223TMPentane','224TMPentane','233T
 REFPROP_list = {'224TMPentane':'Isooctane','2MPropane':'Isobutane','22DMPropane':'Neopentane','2MButane':'IPENTANE','2MPentane':'IHEXANE','1butyne':'1-Butyne','ethyne':'Acetylene','propyne':'Propyne'}#,'3MPentane':'3METHYLPENTANE','22DMButane':'22DIMETHYLBUTANE','23DMButane':'23DIMETHYLBUTANE'}
 
 directory_dic = {'C-CH-group':'branched-Alkanes/C-CH-group/','C-group':'branched-Alkanes/C-group/','CH-group':'branched-Alkanes/CH-group/','alkynes':'alkynes/'}
-eps_opt = {}
-Score_opt = {}
-Score_Potoff = {}
+#eps_opt = {}
+#Score_opt = {}
+#Score_Potoff = {}
 
-for group in group_list:
+for group in ['alkynes']: # group_list:
        
-    for compound in compound_list[group]:
+    for compound in ['ethyne']: # compound_list[group]:
         
         filepaths = []
         
@@ -103,18 +103,18 @@ for group in group_list:
             
             print('Performing MBAR-GCMC analysis for '+compound)
             
-            MBAR_GCMC_trial = MBAR_GCMC(root_path,filepaths,Mw,trim_data=False,compare_literature=True)
+            MBAR_GCMC_trial = MBAR_GCMC(root_path,filepaths,Mw,trim_data=True,compare_literature=True)
             MBAR_GCMC_trial.plot_histograms()
             MBAR_GCMC_trial.plot_2dhistograms()
             MBAR_GCMC_trial.solve_VLE(Tsat_Potoff)
             MBAR_GCMC_trial.plot_VLE(Tsat_RP,rhol_RP,rhov_RP,Tsat_Potoff,rhol_Potoff,rhov_Potoff)
         
-            MBAR_GCMC_trial.eps_optimize(Tsat_RP,rhol_RP,rhov_RP,Psat_RP,0.99,1.01,compound,remove_low_high_Tsat=True)
+#            MBAR_GCMC_trial.eps_optimize(Tsat_RP,rhol_RP,rhov_RP,Psat_RP,0.99,1.01,compound,remove_low_high_Tsat=True)
         
 #            MBAR_GCMC_trial.eps_scan(Tsat_RP,rhol_RP,rhov_RP,Psat_RP,rhol_Potoff,rhov_Potoff,Psat_Potoff,0.99,1.01,51,compound,remove_low_high_Tsat=True)
             
-            eps_opt[compound] = MBAR_GCMC_trial.eps_opt
-            Score_opt[compound] = MBAR_GCMC_trial.Score_opt
+#            eps_opt[compound] = MBAR_GCMC_trial.eps_opt
+#            Score_opt[compound] = MBAR_GCMC_trial.Score_opt
 #            Score_Potoff[compound] = MBAR_GCMC_trial.Score_Potoff
             
 #        else: #Compare with Potoff, not RP

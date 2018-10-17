@@ -21,6 +21,7 @@ gmtokg = 1e-3
 kb = 1.3806485e-23 #[J/K]
 Jm3tobar = 1e-5
 Rg = kb*N_A #[J/mol/K]
+JtokJ = 1e-3
 
 compute_RMS = lambda yhat,yset: np.sqrt(np.mean((yhat - yset)**2.))
 compute_MAPD = lambda yhat,yset: np.mean(np.abs((yhat - yset)/yset*100.))
@@ -397,6 +398,7 @@ class MBAR_GCMC():
         
         self.calc_rhosat()
         self.calc_Psat(eps_scaled)
+        self.calc_Usat(eps_scaled)
         self.calc_deltaHvap(eps_scaled)
         
 #        self.print_VLE()
@@ -464,6 +466,27 @@ class MBAR_GCMC():
         rhovap = Nvap/Vbox * Mw / N_A * gmtokg / Ang3tom3 #[kg/m3]
         
         self.rholiq, self.rhovap = rholiq, rhovap
+        
+    def calc_Usat(self,eps_scaled=1.):
+        '''
+        Computes the saturated liquid and vapor internal energies
+        '''
+        U_flat, Nmol_flat, Ncut, mbar, sumWliq, sumWvap, nTsim = self.U_flat, self.Nmol_flat, self.Ncut, self.mbar, self.sumWliq, self.sumWvap, self.nTsim
+        
+        #Convert energy to per molecule basis
+        Umol_flat = U_flat.copy()
+        Umol_flat[Nmol_flat > 0] /= Nmol_flat[Nmol_flat > 0] #Avoid dividing by zero
+      
+        Uliq = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat>Ncut].T*Umol_flat[Nmol_flat>Ncut],axis=1)/sumWliq #Must renormalize by the liquid or vapor phase
+        Uvap = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat<=Ncut].T*Umol_flat[Nmol_flat<=Ncut],axis=1)/sumWvap
+        
+        Uliq *= eps_scaled
+        Uvap *= eps_scaled             
+                     
+        Uliq *= Rg #[J/mol]
+        Uvap *= Rg #[J/mol]
+        
+        self.Uliq, self.Uvap = Uliq, Uvap
     
     def plot_VLE(self,Tsat_RP,rhol_RP,rhov_RP,Tsat_Potoff,rhol_Potoff,rhov_Potoff):
         '''
@@ -609,17 +632,29 @@ class MBAR_GCMC():
         '''
         Fits Psat to line to compute deltaHvap
         '''
-        Psat, Temp_VLE = self.Psat, self.Temp_VLE
-        
-        logPsat = np.log(Psat)
-        invTemp = 1./Temp_VLE
-        
-        slope = np.polyfit(invTemp,logPsat,1)[1]
-        
-        deltaHvap = -slope * Rg #[J/mol]
-        
-        self.deltaHvap = deltaHvap
-        
+        Psat, Temp_VLE, rholiq, rhovap, Uliq, Uvap, Mw = self.Psat, self.Temp_VLE, self.rholiq, self.rhovap, self.Uliq, self.Uvap, self.Mw
+
+        Vliq = Mw / rholiq * gmtokg #[m3/mol]
+        Vvap = Mw / rhovap * gmtokg #[m3/mol]
+
+        deltaUvap = Uvap - Uliq #[J/mol]
+
+        PV = Psat * (Vvap - Vliq) #[bar m3/mol]
+        PV /= Jm3tobar #[J/mol]
+
+        deltaHvap = deltaUvap + PV #[J/mol]
+
+        deltaHvap *= JtokJ #[kJ/mol]
+
+### Wrong method
+#        logPsat = np.log(Psat)
+#        invTemp = 1./Temp_VLE
+#        
+#        slope = np.polyfit(invTemp,logPsat,1)[1]
+#        
+#        deltaHvap = -slope * Rg #[J/mol]
+#        
+        self.deltaHvap = deltaHvap      
     
     def eps_optimize(self,Temp_VLE,rhol_RP,rhov_RP,Psat_RP,eps_low,eps_high,compound,remove_low_high_Tsat=False):
         
