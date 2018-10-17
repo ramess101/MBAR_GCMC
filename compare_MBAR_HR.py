@@ -171,8 +171,8 @@ for group in group_list:
                 break
             
 prop_list = [r'$\rho_{\rm liq}^{\rm sat}$',r'$\rho_{\rm vap}^{\rm sat}$',r'$P_{\rm vap}^{\rm sat}$']
-ylim_low = [-1,-5,-10]
-ylim_high = [1,5,10]
+ylim_low = [-1,-4.5,-10]
+ylim_high = [1,4.5,10]
         
 for iax, prop in enumerate(prop_list):
     axarr[iax].set_xlabel(r'$T_{\rm r}$')
@@ -190,5 +190,58 @@ fig.savefig('Comparison_MBAR_HR.pdf')
         
 #        MBAR_GCMC_trial.eps_scan(Tsat_Potoff,rhol_Potoff,rhov_Potoff,rhol_Potoff,rhov_Potoff,1.0,1.0,1,compound,remove_low_high_Tsat=True)
 
+ylim_low = [-1.5,-6,-11]
+ylim_high = [1.5,6,11]
+
+fig, axarr = plt.subplots(nrows=1,ncols=3,figsize=[18,6])
+
+boxplot_rhol = []
+boxplot_rhov = []
+boxplot_Psat = []
+
+for Tr in Tr_bins:
+    
+    boxplot_rhol.append(dev_rhol_bins[Tr])
+    boxplot_rhov.append(dev_rhov_bins[Tr])
+    boxplot_Psat.append(dev_Psat_bins[Tr])
+
+axarr[0].boxplot(boxplot_rhol,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False)
+axarr[1].boxplot(boxplot_rhov,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False)
+axarr[2].boxplot(boxplot_Psat,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False)
+
+for iax, prop in enumerate(prop_list):
+    axarr[iax].set_xlabel(r'$T_{\rm r}$')
+#    axarr[iax].set_ylabel()
+    axarr[iax].set_title(r'X = '+prop)
+    axarr[iax].set_xlim([0.6,1.])
+    axarr[iax].set_xticks([0.65,0.75,0.85,0.95])
+    axarr[iax].set_ylim([ylim_low[iax],ylim_high[iax]])
         
-           
+axarr[0].set_ylabel(r'$\frac{X_{\rm MBAR} - X_{\rm HR}}{X_{\rm HR}} \times 100 \%$')
+
+plt.tight_layout(pad=0)
+
+fig.savefig('Comparison_MBAR_HR_boxplot.pdf')    
+
+ylim_low = [-0.8,-2.2,-7]
+ylim_high = [0.8,2.2,7]
+
+fig, axarr = plt.subplots(nrows=1,ncols=3,figsize=[18,6])
+
+axarr[0].boxplot(boxplot_rhol,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False,whis=[5,95],sym='')
+axarr[1].boxplot(boxplot_rhov,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False,whis=[5,95],sym='')
+axarr[2].boxplot(boxplot_Psat,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False,whis=[5,95],sym='')
+
+for iax, prop in enumerate(prop_list):
+    axarr[iax].set_xlabel(r'$T_{\rm r}$')
+#    axarr[iax].set_ylabel()
+    axarr[iax].set_title(r'X = '+prop)
+    axarr[iax].set_xlim([0.6,1.])
+    axarr[iax].set_xticks([0.65,0.75,0.85,0.95])
+    axarr[iax].set_ylim([ylim_low[iax],ylim_high[iax]])
+        
+axarr[0].set_ylabel(r'$\frac{X_{\rm MBAR} - X_{\rm HR}}{X_{\rm HR}} \times 100 \%$')
+
+plt.tight_layout(pad=0)
+
+fig.savefig('Comparison_MBAR_HR_boxplot_CI.pdf')        

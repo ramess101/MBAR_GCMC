@@ -5,7 +5,7 @@ MBAR GCMC
 import numpy as np
 import matplotlib.pyplot as plt
 from pymbar import MBAR
-from Golden_search_multi import GOLDEN_multi
+from Golden_search_multi import GOLDEN_multi, GOLDEN
 from scipy import stats
 
 ### Figure font size
@@ -22,10 +22,16 @@ kb = 1.3806485e-23 #[J/K]
 Jm3tobar = 1e-5
 Rg = kb*N_A #[J/mol/K]
 
-compute_RMS = lambda yhat,yset: np.sqrt(np.mean((yhat - yset)**2))
+compute_RMS = lambda yhat,yset: np.sqrt(np.mean((yhat - yset)**2.))
 compute_MAPD = lambda yhat,yset: np.mean(np.abs((yhat - yset)/yset*100.))
 compute_AD = lambda yhat,yset: np.mean((yhat - yset)/yset*100.)
+compute_APD = lambda yhat,ydata: np.abs((yhat - ydata)/ydata*100.)
 
+Score_w8 = np.array([0.6135,0.0123,0.2455,0.0245,0.0613,0.0061,0.0245,0.0123])
+
+convert_AD2Score = lambda AD_rhol, AD_rhov, AD_Psat: Score_w8[0]*np.abs(AD_rhol) + Score_w8[1]*np.abs(AD_rhov) + Score_w8[2]*np.abs(AD_Psat)
+convert_MAPD2Score = lambda MAPD_rhol, MAPD_rhov, MAPD_Psat: Score_w8[0]*MAPD_rhol + Score_w8[1]*MAPD_rhov + Score_w8[2]*MAPD_Psat
+                                                                 
 #RMS_rhol = lambda rhol,rhol_RP: np.sqrt(np.mean((rhol - rhol_RP)**2))
 #MAPD_rhol = lambda rhol,rhol_RP: np.mean(np.abs((rhol - rhol_RP)/rhol_RP*100.))
 #AD_rhol = lambda rhol,rhol_RP: np.mean((rhol - rhol_RP)/rhol_RP*100.)
@@ -391,6 +397,7 @@ class MBAR_GCMC():
         
         self.calc_rhosat()
         self.calc_Psat(eps_scaled)
+        self.calc_deltaHvap(eps_scaled)
         
 #        self.print_VLE()
         
@@ -597,6 +604,90 @@ class MBAR_GCMC():
         
         Psat = kb * Temp_VLE * (f_k_opt[nTsim:]-np.log(2.) - abs_press_int) / Vbox / Ang3tom3 * Jm3tobar #-log(2) accounts for two phases
         self.Psat = Psat
+        
+    def calc_deltaHvap(self,eps_scaled=1.):
+        '''
+        Fits Psat to line to compute deltaHvap
+        '''
+        Psat, Temp_VLE = self.Psat, self.Temp_VLE
+        
+        logPsat = np.log(Psat)
+        invTemp = 1./Temp_VLE
+        
+        slope = np.polyfit(invTemp,logPsat,1)[1]
+        
+        deltaHvap = -slope * Rg #[J/mol]
+        
+        self.deltaHvap = deltaHvap
+        
+    
+    def eps_optimize(self,Temp_VLE,rhol_RP,rhov_RP,Psat_RP,eps_low,eps_high,compound,remove_low_high_Tsat=False):
+        
+        self.Temp_VLE, self.rhol_RP, self.rhov_RP, self.Psat_RP = Temp_VLE, rhol_RP, rhov_RP, Psat_RP
+        
+        if remove_low_high_Tsat:  #Remove the low T and high T ends for more stable results
+            self.Temp_VLE = self.Temp_VLE[2:-2]
+            self.rhol_RP = rhol_RP[2:-2]
+            self.rhov_RP = rhov_RP[2:-2]
+            self.Psat_RP = Psat_RP[2:-2]
+            
+        self.eps_computed = []
+        self.Score_computed = []
+            
+        eps_opt = GOLDEN(self.Scoring_function,eps_low,1.,eps_high,TOL=0.0001)
+            
+        Score_opt = self.Scoring_function(eps_opt)
+        
+        eps_computed = np.array(self.eps_computed)
+        Score_computed = np.array(self.Score_computed)
+        
+        plt.figure(figsize=(8,8))  
+        plt.plot(np.sort(eps_computed),Score_computed[np.argsort(eps_computed)],'ko-',mfc='None')
+#        plt.plot(eps_computed,Score_computed,'b--',mfc='None')
+        plt.plot(eps_opt,Score_opt,'r*',markersize=10,label='Optimal')
+        plt.xlabel(r'$\epsilon / \epsilon_{\rm Potoff}$')
+        plt.ylabel(r'Score')
+        plt.title(compound)        
+#        plt.legend()
+#        plt.savefig('figures/'+compound+'_Score_eps_scan.pdf')
+        plt.show()
+        
+        self.eps_opt, self.Score_opt = eps_opt, Score_opt
+        
+    def Scoring_function(self,eps_scaled):
+            
+        self.solve_VLE(self.Temp_VLE, eps_scaled)
+        MAPD_rhol = compute_MAPD(self.rholiq,self.rhol_RP)
+        MAPD_rhov = compute_MAPD(self.rhovap,self.rhov_RP)
+        MAPD_Psat = compute_MAPD(self.Psat,self.Psat_RP)
+        
+        APD_rhol = compute_APD(self.rholiq,self.rhol_RP)
+        APD_rhov = compute_APD(self.rhovap,self.rhov_RP)
+        APD_Psat = compute_APD(self.Psat,self.Psat_RP)
+
+        nTemp_VLE = len(self.Temp_VLE)
+
+        dAPD_rhol = np.zeros(nTemp_VLE-1)
+        dAPD_rhov = np.zeros(nTemp_VLE-1)
+        dAPD_Psat = np.zeros(nTemp_VLE-1)
+        
+        for iT in range(nTemp_VLE-1):
+            
+            dAPD_rhol[iT] = (APD_rhol[iT+1]-APD_rhol[iT])/(self.Temp_VLE[iT+1]-self.Temp_VLE[iT])
+            dAPD_rhov[iT] = (APD_rhov[iT+1]-APD_rhov[iT])/(self.Temp_VLE[iT+1]-self.Temp_VLE[iT])
+            dAPD_Psat[iT] = (APD_Psat[iT+1]-APD_Psat[iT])/(self.Temp_VLE[iT+1]-self.Temp_VLE[iT])
+
+        MdAPD_rhol = np.mean(dAPD_rhol) 
+        MdAPD_rhov = np.mean(dAPD_rhov)   
+        MdAPD_Psat = np.mean(dAPD_Psat)               
+                
+        Score = Score_w8[0]*MAPD_rhol + Score_w8[1]*MAPD_rhov + Score_w8[2]*MAPD_Psat
+        Score += Score_w8[4]*MdAPD_rhol + Score_w8[5]*MdAPD_rhov + Score_w8[6]*MdAPD_Psat
+        
+        self.eps_computed.append(eps_scaled)
+        self.Score_computed.append(Score)
+        
+        return Score
     
     def eps_scan(self,Temp_VLE,rhol_RP,rhov_RP,Psat_RP,rhol_Potoff,rhov_Potoff,Psat_Potoff,eps_low,eps_high,neps,compound,remove_low_high_Tsat=False):
         
@@ -624,7 +715,7 @@ class MBAR_GCMC():
         RMS_logPsat_plot = np.zeros(len(eps_range))
         AD_Psat_plot = np.zeros(len(eps_range))
         MAPD_Psat_plot = np.zeros(len(eps_range))
-        
+                
         for ieps, eps_scaled in enumerate(eps_range):
             
             self.solve_VLE(self.Temp_VLE, eps_scaled)
@@ -639,7 +730,104 @@ class MBAR_GCMC():
             RMS_logPsat_plot[ieps] = compute_RMS(np.log10(self.Psat),np.log10(Psat_RP))        
             AD_Psat_plot[ieps] = compute_AD(self.Psat,Psat_RP)
             MAPD_Psat_plot[ieps] = compute_MAPD(self.Psat,Psat_RP)
-            
+    
+### Wrong, used AD instead of MAPD        
+#        Score_plot = convert_AD2Score(AD_rhol_plot,AD_rhov_plot,AD_Psat_plot)
+#        
+#        AD_rhol_Potoff = compute_AD(rhol_Potoff,rhol_RP)
+#        AD_rhov_Potoff = compute_AD(rhov_Potoff,rhov_RP)
+#        AD_Psat_Potoff = compute_AD(Psat_Potoff,Psat_RP)
+#        
+#        Score_Potoff = convert_AD2Score(AD_rhol_Potoff,AD_rhov_Potoff,AD_Psat_Potoff)
+#        
+#        AD_rhol_shifted = AD_rhol_plot+AD_rhol_Potoff-AD_rhol_plot[eps_range==1]
+#        AD_rhov_shifted = AD_rhov_plot+AD_rhov_Potoff-AD_rhov_plot[eps_range==1]
+#        AD_Psat_shifted = AD_Psat_plot+AD_Psat_Potoff-AD_Psat_plot[eps_range==1]
+#        
+#        Score_shifted = Score_plot+Score_Potoff-Score_plot[eps_range==1]
+#        
+#        linfit_AD_rhol = np.polyfit(eps_range,AD_rhol_shifted,1)
+#        linfit_AD_rhov = np.polyfit(eps_range,AD_rhov_shifted,1)
+#        linfit_AD_Psat = np.polyfit(eps_range,AD_Psat_shifted,1)
+#        
+#        AD_rhol_hat = lambda epsilon: np.polyval(linfit_AD_rhol,epsilon)
+#        AD_rhov_hat = lambda epsilon: np.polyval(linfit_AD_rhov,epsilon)
+#        AD_Psat_hat = lambda epsilon: np.polyval(linfit_AD_Psat,epsilon)
+#        
+#        Score_hat = lambda epsilon: convert_AD2Score(AD_rhol_hat(epsilon),AD_rhov_hat(epsilon),AD_Psat_hat(epsilon))
+#        
+#        eps_refined = np.linspace(0.98,1.02,num=4000)
+#        
+#        Score_refined = Score_hat(eps_refined)
+#        AD_rhol_refined = AD_rhol_hat(eps_refined)
+#        AD_rhov_refined = AD_rhov_hat(eps_refined)
+#        AD_Psat_refined = AD_Psat_hat(eps_refined)
+        
+        Score_plot = convert_MAPD2Score(MAPD_rhol_plot,MAPD_rhov_plot,MAPD_Psat_plot)
+        
+        MAPD_rhol_Potoff = compute_MAPD(rhol_Potoff,rhol_RP)
+        MAPD_rhov_Potoff = compute_MAPD(rhov_Potoff,rhov_RP)
+        MAPD_Psat_Potoff = compute_MAPD(Psat_Potoff,Psat_RP)
+        
+        Score_Potoff = convert_MAPD2Score(MAPD_rhol_Potoff,MAPD_rhov_Potoff,MAPD_Psat_Potoff)
+        
+        MAPD_rhol_shifted = MAPD_rhol_plot+MAPD_rhol_Potoff-MAPD_rhol_plot[eps_range==1]
+        MAPD_rhov_shifted = MAPD_rhov_plot+MAPD_rhov_Potoff-MAPD_rhov_plot[eps_range==1]
+        MAPD_Psat_shifted = MAPD_Psat_plot+MAPD_Psat_Potoff-MAPD_Psat_plot[eps_range==1]
+        
+        Score_shifted = Score_plot+Score_Potoff-Score_plot[eps_range==1]
+        
+        ### This approach can result in negative MAPD, which is problematic
+#        linfit_MAPD_rhol = np.polyfit(eps_range,MAPD_rhol_shifted,2)
+#        linfit_MAPD_rhov = np.polyfit(eps_range,MAPD_rhov_shifted,2)
+#        linfit_MAPD_Psat = np.polyfit(eps_range,MAPD_Psat_shifted,2)
+#
+#        MAPD_rhol_hat = lambda epsilon: np.polyval(linfit_MAPD_rhol,epsilon)
+#        MAPD_rhov_hat = lambda epsilon: np.polyval(linfit_MAPD_rhov,epsilon)
+#        MAPD_Psat_hat = lambda epsilon: np.polyval(linfit_MAPD_Psat,epsilon)
+
+        ### This approach does not provide a great fit
+#        linfit_MAPD_rhol = np.polyfit(eps_range,MAPD_rhol_plot,2)
+#        linfit_MAPD_rhov = np.polyfit(eps_range,MAPD_rhov_plot,2)
+#        linfit_MAPD_Psat = np.polyfit(eps_range,MAPD_Psat_plot,2)
+#        
+#        MAPD_rhol_hat = lambda epsilon: np.polyval(linfit_MAPD_rhol,epsilon)
+#        MAPD_rhov_hat = lambda epsilon: np.polyval(linfit_MAPD_rhov,epsilon)
+#        MAPD_Psat_hat = lambda epsilon: np.polyval(linfit_MAPD_Psat,epsilon)
+
+        ### By squaring MAPD, we get a better fit. By shifting by 10 we ensure that the fit is always positive
+        linfit_MAPD_rhol = np.polyfit(eps_range,MAPD_rhol_plot**2.+10.,2)
+        linfit_MAPD_rhov = np.polyfit(eps_range,MAPD_rhov_plot**2.+10.,2)
+        linfit_MAPD_Psat = np.polyfit(eps_range,MAPD_Psat_plot**2.+10.,2)
+        
+        MAPD_rhol_unshifted = lambda epsilon: np.sqrt(np.polyval(linfit_MAPD_rhol,epsilon))
+        MAPD_rhov_unshifted = lambda epsilon: np.sqrt(np.polyval(linfit_MAPD_rhov,epsilon))
+        MAPD_Psat_unshifted = lambda epsilon: np.sqrt(np.polyval(linfit_MAPD_Psat,epsilon))
+        
+        MAPD_rhol_hat = lambda epsilon: MAPD_rhol_unshifted(epsilon)+MAPD_rhol_Potoff-MAPD_rhol_unshifted(1.)
+        MAPD_rhov_hat = lambda epsilon: MAPD_rhov_unshifted(epsilon)+MAPD_rhov_Potoff-MAPD_rhov_unshifted(1.)
+        MAPD_Psat_hat = lambda epsilon: MAPD_Psat_unshifted(epsilon)+MAPD_Psat_Potoff-MAPD_Psat_unshifted(1.)
+        
+        Score_hat_unshifted = lambda epsilon: convert_MAPD2Score(MAPD_rhol_unshifted(epsilon),MAPD_rhov_unshifted(epsilon),MAPD_Psat_unshifted(epsilon))
+        
+        Score_hat = lambda epsilon: Score_hat_unshifted(epsilon) + Score_Potoff - Score_hat_unshifted(1.)
+        
+        eps_refined = np.linspace(eps_range[0],eps_range[-1],num=4000)
+        
+        Score_refined = Score_hat(eps_refined)
+        MAPD_rhol_refined = MAPD_rhol_hat(eps_refined)+MAPD_rhol_Potoff-MAPD_rhol_hat(1.)
+        MAPD_rhov_refined = MAPD_rhov_hat(eps_refined)+MAPD_rhov_Potoff-MAPD_rhov_hat(1.)
+        MAPD_Psat_refined = MAPD_Psat_hat(eps_refined)+MAPD_Psat_Potoff-MAPD_Psat_hat(1.)
+        
+        eps_opt = eps_refined[np.argmin(Score_refined)]
+        Score_opt = np.min(Score_refined)
+        
+        self.Score_Potoff,self.Score_plot, self.AD_rhol_plot, self.AD_rhov_plot, self.AD_Psat_plot = Score_Potoff,Score_plot, AD_rhol_plot, AD_rhov_plot, AD_Psat_plot
+        self.eps_opt, self.Score_opt = eps_opt,Score_opt
+#        self.Score_refined, self.eps_refined, self.AD_rhol_refined, self.AD_rhov_refined, self.AD_Psat_refined = Score_refined,eps_refined, AD_rhol_refined, AD_rhov_refined, AD_Psat_refined
+        self.Score_refined, self.eps_refined, self.MAPD_rhol_refined, self.MAPD_rhov_refined, self.MAPD_Psat_refined = Score_refined,eps_refined, MAPD_rhol_refined, MAPD_rhov_refined, MAPD_Psat_refined
+
+                    
 #            print(AD_rhol_plot[ieps],AD_rhov_plot[ieps])
             
         plt.figure(figsize=(8,8))
@@ -658,39 +846,66 @@ class MBAR_GCMC():
 #        plt.savefig('figures/'+compound+'_RMS_eps_scan.pdf')
         plt.show()
 
+#        plt.figure(figsize=(8,8))
+##        
+##        plt.plot(eps_range,AD_rhol_plot,'r-',label=r'$\rho_{\rm liq}$')
+##        plt.plot(eps_range,AD_rhov_plot,'b--',label=r'$\rho_{\rm vap}$')
+##        plt.plot(eps_range,AD_Psat_plot,'g:',label=r'$P^{\rm sat}_{\rm vap}$')
+##        plt.plot(eps_range,AD_rhol_shifted,'ro',label=r'$\rho_{\rm liq}$')
+##        plt.plot(eps_range,AD_rhov_shifted,'bs',label=r'$\rho_{\rm vap}$')
+##        plt.plot(eps_range,AD_Psat_shifted,'gd',label=r'$P^{\rm sat}_{\rm vap}$')
+#        plt.plot(eps_refined,AD_rhol_refined,'r-',label=r'$\rho^{\rm sat}_{\rm liq}$')
+#        plt.plot(eps_refined,AD_rhov_refined,'b--',label=r'$\rho^{\rm sat}_{\rm vap}$')
+#        plt.plot(eps_refined,AD_Psat_refined,'g:',label=r'$P^{\rm sat}_{\rm vap}$')
+##        plt.plot(1,AD_rhol_Potoff,'rs',label=r'$\rho_{\rm liq}$, Potoff')
+##        plt.plot(1,AD_rhov_Potoff,'bo',label=r'$\rho_{\rm vap}$, Potoff')
+##        plt.plot(1,AD_Psat_Potoff,'g^',label=r'$P^{\rm sat}_{\rm vap}$, Potoff')
+#        plt.plot([eps_opt,eps_opt],[np.min([np.min(AD_rhov_shifted),np.min(AD_Psat_shifted),np.min(AD_rhol_shifted)]),np.max([np.max(AD_rhov_shifted),np.max(AD_Psat_shifted),np.max(AD_rhol_shifted)])],'k-.',label=r'$\min(S)$')
+#        plt.plot([eps_range[0],eps_range[-1]],[0,0],'k-')
+#        plt.xlabel(r'$\epsilon / \epsilon_{\rm Potoff}$')
+#        plt.ylabel(r'Average percent deviation')
+#        plt.title(compound)
+#            
+#        plt.legend()
+##        plt.savefig('figures/'+compound+'_AD_eps_scan.pdf')
+#        plt.show()
+                
         plt.figure(figsize=(8,8))
-#        
-#        plt.plot(eps_range,AD_rhol_plot,'r-',label=r'$\rho_{\rm liq}$')
-#        plt.plot(eps_range,AD_rhov_plot,'b--',label=r'$\rho_{\rm vap}$')
-#        plt.plot(eps_range,AD_Psat_plot,'g:',label=r'$P^{\rm sat}_{\rm vap}$')
-        plt.plot(eps_range,AD_rhol_plot+compute_AD(rhol_Potoff,rhol_RP)-AD_rhol_plot[eps_range==1],'r-',label=r'$\rho_{\rm liq}$')
-        plt.plot(eps_range,AD_rhov_plot+compute_AD(rhov_Potoff,rhov_RP)-AD_rhov_plot[eps_range==1],'b--',label=r'$\rho_{\rm vap}$')
-        plt.plot(eps_range,AD_Psat_plot+compute_AD(Psat_Potoff,Psat_RP)-AD_Psat_plot[eps_range==1],'g:',label=r'$P^{\rm sat}_{\rm vap}$')
-        plt.plot(1,compute_AD(rhol_Potoff,rhol_RP),'rs',label=r'$\rho_{\rm liq}$, Potoff')
-        plt.plot(1,compute_AD(rhov_Potoff,rhov_RP),'bo',label=r'$\rho_{\rm vap}$, Potoff')
-        plt.plot(1,compute_AD(Psat_Potoff,Psat_RP),'g^',label=r'$P^{\rm sat}_{\rm vap}$, Potoff')
-        plt.xlabel(r'$\epsilon / \epsilon_{\rm Potoff}$')
-        plt.ylabel(r'Average percent deviation')
-        plt.title(compound)
-            
-        plt.legend()
-#        plt.savefig('figures/'+compound+'_AD_eps_scan.pdf')
-        plt.show()
-        
-        plt.figure(figsize=(8,8))
-        
-        plt.plot(eps_range,MAPD_rhol_plot,'r-',label=r'$\rho_{\rm liq}$')
-        plt.plot(eps_range,MAPD_rhov_plot,'b--',label=r'$\rho_{\rm vap}$')
-        plt.plot(eps_range,MAPD_Psat_plot,'g:',label=r'$P^{\rm sat}_{\rm vap}$')
-        plt.plot(1,compute_MAPD(rhol_Potoff,rhol_RP),'rs',label=r'$\rho_{\rm liq}$, Potoff')
-        plt.plot(1,compute_MAPD(rhov_Potoff,rhov_RP),'bo',label=r'$\rho_{\rm vap}$, Potoff')
-        plt.plot(1,compute_MAPD(Psat_Potoff,Psat_RP),'g^',label=r'$P^{\rm sat}_{\rm vap}$, Potoff')
+       
+#        plt.plot(eps_range,MAPD_rhol_plot,'r-',label=r'$\rho_{\rm liq}$')
+#        plt.plot(eps_range,MAPD_rhov_plot,'b--',label=r'$\rho_{\rm vap}$')
+#        plt.plot(eps_range,MAPD_Psat_plot,'g:',label=r'$P^{\rm sat}_{\rm vap}$')
+        plt.plot(eps_range,MAPD_rhol_shifted,'ro',label=r'$\rho_{\rm liq}$')
+        plt.plot(eps_range,MAPD_rhov_shifted,'bs',label=r'$\rho_{\rm vap}$')
+        plt.plot(eps_range,MAPD_Psat_shifted,'gd',label=r'$P^{\rm sat}_{\rm vap}$')
+        plt.plot(eps_refined,MAPD_rhol_refined,'r-',label=r'$\rho^{\rm sat}_{\rm liq}$')
+        plt.plot(eps_refined,MAPD_rhov_refined,'b--',label=r'$\rho^{\rm sat}_{\rm vap}$')
+        plt.plot(eps_refined,MAPD_Psat_refined,'g:',label=r'$P^{\rm sat}_{\rm vap}$')
+        plt.plot(1,MAPD_rhol_Potoff,'rs',label=r'$\rho_{\rm liq}$, Potoff')
+        plt.plot(1,MAPD_rhov_Potoff,'bo',label=r'$\rho_{\rm vap}$, Potoff')
+        plt.plot(1,MAPD_Psat_Potoff,'g^',label=r'$P^{\rm sat}_{\rm vap}$, Potoff')
+        plt.plot([eps_opt,eps_opt],[np.min([np.min(MAPD_rhov_shifted),np.min(MAPD_Psat_shifted),np.min(MAPD_rhol_shifted)]),np.max([np.max(MAPD_rhov_shifted),np.max(MAPD_Psat_shifted),np.max(MAPD_rhol_shifted)])],'k-.',label=r'$\min(S)$')
+        plt.plot([eps_range[0],eps_range[-1]],[0,0],'k-')
         plt.xlabel(r'$\epsilon / \epsilon_{\rm Potoff}$')
         plt.ylabel(r'Mean absolute percent deviation')
         plt.title(compound)
-                    
+            
         plt.legend()
 #        plt.savefig('figures/'+compound+'_MAPD_eps_scan.pdf')
+        plt.show()
+        
+        plt.figure(figsize=(8,8))  
+        plt.plot(eps_range,Score_plot,'k-',label='Unshifted') 
+        plt.plot(eps_range,Score_shifted,'r-',label='Shifted')
+        plt.plot(eps_refined,Score_refined,'b-',label='Smoothed')
+#        plt.plot(1,Score_Potoff,'rs',label=r'Potoff')
+        plt.plot(eps_opt,Score_opt,'b*',markersize=10,label='Optimal')
+        plt.xlabel(r'$\epsilon / \epsilon_{\rm Potoff}$')
+        plt.ylabel(r'Score')
+        plt.title(compound)
+            
+#        plt.legend()
+#        plt.savefig('figures/'+compound+'_Score_eps_scan.pdf')
         plt.show()
         
 def main():
