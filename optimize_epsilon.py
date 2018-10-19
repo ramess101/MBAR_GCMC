@@ -28,7 +28,10 @@ compute_MAPD = lambda yhat,yset: np.mean(np.abs((yhat - yset)/yset*100.))
 compute_AD = lambda yhat,yset: np.mean((yhat - yset)/yset*100.)
 compute_APD = lambda yhat,ydata: np.abs((yhat - ydata)/ydata*100.)
 
-Score_w8 = np.array([0.6135,0.0123,0.2455,0.0245,0.0613,0.0061,0.0245,0.0123])
+### Branched alkanes
+#Score_w8 = np.array([0.6135,0.0123,0.2455,0.0245,0.0613,0.0061,0.0245,0.0123])
+### Alkynes
+Score_w8 = np.array([0.757,0.0,0.152,0.0,0.076,0.0,0.015,0.0])
 
 convert_AD2Score = lambda AD_rhol, AD_rhov, AD_Psat: Score_w8[0]*np.abs(AD_rhol) + Score_w8[1]*np.abs(AD_rhov) + Score_w8[2]*np.abs(AD_Psat)
 convert_MAPD2Score = lambda MAPD_rhol, MAPD_rhov, MAPD_Psat: Score_w8[0]*MAPD_rhol + Score_w8[1]*MAPD_rhov + Score_w8[2]*MAPD_Psat
@@ -42,16 +45,17 @@ convert_MAPD2Score = lambda MAPD_rhol, MAPD_rhov, MAPD_Psat: Score_w8[0]*MAPD_rh
 #AD_rhov = lambda rhov,rhov_RP: np.mean((rhov - rhov_RP)/rhov_RP*100.)
 
 class MBAR_GCMC():
-    def __init__(self,root_path,filepaths,Mw,trim_data=False,compare_literature=False):
+    def __init__(self,root_path,filepaths,Mw,trim_data=False,compare_literature=False,trim_size=5000):
         self.root_path = root_path
         self.filepaths = filepaths
         self.trim_data = trim_data 
+        self.trim_size = trim_size
+        self.Mw = Mw
+        self.compare_literature = compare_literature
         self.extract_all_sim_data()
         self.min_max_sim_data()
         self.build_MBAR_sim()
         self.Ncut = self.solve_Ncut()
-        self.Mw = Mw
-        self.compare_literature = compare_literature
                 
     def min_max_sim_data(self):
         '''
@@ -139,7 +143,7 @@ class MBAR_GCMC():
         '''
         NU_data = np.loadtxt(filepath,skiprows=1)
         if self.trim_data:
-            subset_size = 5000
+            subset_size = self.trim_size
         else:
             subset_size = len(NU_data)
         subset_data = np.random.choice(np.arange(0,len(NU_data)),size=subset_size,replace=False)
@@ -151,6 +155,51 @@ class MBAR_GCMC():
         Lbox = mu_V_T[3] #[Angstrom]
         Vbox = Lbox**3 #[Angstrom^3]
         return N_data, U_data, Temp, mu, Vbox
+    
+    def bootstrap_data(self):
+        '''
+        Bootstrapping re-sampling of data
+        '''
+        Nmol_flat, U_flat, nSnapshots = self.Nmol_flat, self.U_flat, self.K_sim
+        
+        irand = np.random.randint(0,len(Nmol_flat),len(Nmol_flat))
+        
+        Nmol_flat = Nmol_flat[irand] #np.random.choice(np.arange(0,len(Nmol_flat)),size=len(Nmol_flat),replace=True)
+        U_flat = U_flat[irand]
+        
+        self.Nmol_flat, self.U_flat = Nmol_flat, U_flat
+        
+    def VLE_uncertainty(self,Temp_VLE,eps_scaled=1.):
+        '''
+        '''
+        nBoots = 3
+        
+        rholiqBoots = np.zeros([len(Temp_VLE),nBoots])
+        rhovapBoots = np.zeros([len(Temp_VLE),nBoots])
+        PsatBoots = np.zeros([len(Temp_VLE),nBoots])
+        DeltaHvBoots = np.zeros([len(Temp_VLE),nBoots])
+        
+        for iBoot in range(nBoots):
+            
+            self.bootstrap_data()
+            self.min_max_sim_data()
+            self.build_MBAR_sim()
+            self.Ncut = self.solve_Ncut()
+            self.solve_VLE(Temp_VLE,eps_scaled)
+            
+            rholiqBoots[:,iBoot] = self.rholiq
+            rhovapBoots[:,iBoot] = self.rhovap
+            PsatBoots[:,iBoot] = self.Psat
+            DeltaHvBoots[:,iBoot] = self.DeltaHv
+                       
+        urholiq = 1.96 * np.std(rholiqBoots,axis=1)
+        urhovap = 1.96 * np.std(rhovapBoots,axis=1)
+        uPsat = 1.96 * np.std(PsatBoots,axis=1)
+        uDeltaHv = 1.96 * np.std(DeltaHvBoots,axis=1)
+        
+        self.urholiq, self.urhovap, self.uPsat, self.uDeltaHv = urholiq, urhovap, uPsat, uDeltaHv
+
+        return urholiq, urhovap, uPsat, uDeltaHv
     
     def plot_histograms(self):
         '''
@@ -242,7 +291,7 @@ class MBAR_GCMC():
         for iT, (Temp, mu) in enumerate(zip(Temp_sim, mu_sim)):
     
             u_kn_sim[iT] = self.U_to_u(U_flat,Temp,mu,Nmol_flat)
-        
+
         mbar_sim = MBAR(u_kn_sim,N_k_sim)
         
         Deltaf_ij = mbar_sim.getFreeEnergyDifferences(return_theta=False)[0]
@@ -382,7 +431,6 @@ class MBAR_GCMC():
         
         self.build_MBAR_VLE_matrices()
         mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_guess_bounds()
-        
         sqdeltaW_scaled = lambda mu: self.sqdeltaW(mu,eps_scaled)
         
         ### Optimization of mu
@@ -390,16 +438,16 @@ class MBAR_GCMC():
 #            mu_VLE_guess = self.mu_opt
 #        except:
 #            mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE,eps_scaled)
-        mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE,eps_scaled)    
+        mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE,eps_scaled) 
         mu_opt = GOLDEN_multi(sqdeltaW_scaled,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.0001,maxit=30)
-        
+
         self.f_k_opt = self.f_k_guess.copy()
         self.mu_opt = mu_opt
         
         self.calc_rhosat()
         self.calc_Psat(eps_scaled)
         self.calc_Usat(eps_scaled)
-        self.calc_deltaHvap(eps_scaled)
+        self.calc_DeltaHv(eps_scaled)
         
 #        self.print_VLE()
         
@@ -465,27 +513,33 @@ class MBAR_GCMC():
         rholiq = Nliq/Vbox * Mw / N_A * gmtokg / Ang3tom3 #[kg/m3]
         rhovap = Nvap/Vbox * Mw / N_A * gmtokg / Ang3tom3 #[kg/m3]
         
-        self.rholiq, self.rhovap = rholiq, rhovap
+        self.rholiq, self.rhovap, self.Nliq, self.Nvap = rholiq, rhovap, Nliq, Nvap
         
     def calc_Usat(self,eps_scaled=1.):
         '''
         Computes the saturated liquid and vapor internal energies
         '''
-        U_flat, Nmol_flat, Ncut, mbar, sumWliq, sumWvap, nTsim = self.U_flat, self.Nmol_flat, self.Ncut, self.mbar, self.sumWliq, self.sumWvap, self.nTsim
+        U_flat, Nmol_flat, Ncut, mbar, sumWliq, sumWvap, nTsim, Nliq, Nvap = self.U_flat, self.Nmol_flat, self.Ncut, self.mbar, self.sumWliq, self.sumWvap, self.nTsim, self.Nliq, self.Nvap
         
         #Convert energy to per molecule basis
-        Umol_flat = U_flat.copy()
-        Umol_flat[Nmol_flat > 0] /= Nmol_flat[Nmol_flat > 0] #Avoid dividing by zero
-      
-        Uliq = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat>Ncut].T*Umol_flat[Nmol_flat>Ncut],axis=1)/sumWliq #Must renormalize by the liquid or vapor phase
-        Uvap = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat<=Ncut].T*Umol_flat[Nmol_flat<=Ncut],axis=1)/sumWvap
-        
+#        Umol_flat = U_flat.copy()
+#        Umol_flat[Nmol_flat > 0] /= Nmol_flat[Nmol_flat > 0] #Avoid dividing by zero
+#      
+#        Uliq = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat>Ncut].T*Umol_flat[Nmol_flat>Ncut],axis=1)/sumWliq #Must renormalize by the liquid or vapor phase
+#        Uvap = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat<=Ncut].T*Umol_flat[Nmol_flat<=Ncut],axis=1)/sumWvap
+
+        Uliq = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat>Ncut].T*U_flat[Nmol_flat>Ncut],axis=1)/sumWliq #Must renormalize by the liquid or vapor phase
+        Uvap = np.sum(mbar.W_nk[:,nTsim:][Nmol_flat<=Ncut].T*U_flat[Nmol_flat<=Ncut],axis=1)/sumWvap           
+                           
+        Uliq /= Nliq
+        Uvap /= Nvap
+                     
         Uliq *= eps_scaled
         Uvap *= eps_scaled             
                      
         Uliq *= Rg #[J/mol]
-        Uvap *= Rg #[J/mol]
-        
+        Uvap *= Rg #[J/mol]       
+          
         self.Uliq, self.Uvap = Uliq, Uvap
     
     def plot_VLE(self,Tsat_RP,rhol_RP,rhov_RP,Tsat_Potoff,rhol_Potoff,rhov_Potoff):
@@ -628,7 +682,7 @@ class MBAR_GCMC():
         Psat = kb * Temp_VLE * (f_k_opt[nTsim:]-np.log(2.) - abs_press_int) / Vbox / Ang3tom3 * Jm3tobar #-log(2) accounts for two phases
         self.Psat = Psat
         
-    def calc_deltaHvap(self,eps_scaled=1.):
+    def calc_DeltaHv(self,eps_scaled=1.):
         '''
         Fits Psat to line to compute deltaHvap
         '''
@@ -637,14 +691,14 @@ class MBAR_GCMC():
         Vliq = Mw / rholiq * gmtokg #[m3/mol]
         Vvap = Mw / rhovap * gmtokg #[m3/mol]
 
-        deltaUvap = Uvap - Uliq #[J/mol]
+        DeltaUv = Uvap - Uliq #[J/mol]
 
         PV = Psat * (Vvap - Vliq) #[bar m3/mol]
         PV /= Jm3tobar #[J/mol]
 
-        deltaHvap = deltaUvap + PV #[J/mol]
+        DeltaHv = DeltaUv + PV #[J/mol]
 
-        deltaHvap *= JtokJ #[kJ/mol]
+        DeltaHv *= JtokJ #[kJ/mol]
 
 ### Wrong method
 #        logPsat = np.log(Psat)
@@ -652,19 +706,20 @@ class MBAR_GCMC():
 #        
 #        slope = np.polyfit(invTemp,logPsat,1)[1]
 #        
-#        deltaHvap = -slope * Rg #[J/mol]
+#        DeltaHv = -slope * Rg #[J/mol]
 #        
-        self.deltaHvap = deltaHvap      
+        self.DeltaHv = DeltaHv      
     
-    def eps_optimize(self,Temp_VLE,rhol_RP,rhov_RP,Psat_RP,eps_low,eps_high,compound,remove_low_high_Tsat=False):
+    def eps_optimize(self,Temp_VLE,rhol_RP,rhov_RP,Psat_RP,DeltaHv_RP,eps_low,eps_high,compound,remove_low_high_Tsat=False):
         
-        self.Temp_VLE, self.rhol_RP, self.rhov_RP, self.Psat_RP = Temp_VLE, rhol_RP, rhov_RP, Psat_RP
+        self.Temp_VLE, self.rhol_RP, self.rhov_RP, self.Psat_RP, self.DeltaHv_RP = Temp_VLE, rhol_RP, rhov_RP, Psat_RP, DeltaHv_RP
         
         if remove_low_high_Tsat:  #Remove the low T and high T ends for more stable results
             self.Temp_VLE = self.Temp_VLE[2:-2]
             self.rhol_RP = rhol_RP[2:-2]
             self.rhov_RP = rhov_RP[2:-2]
             self.Psat_RP = Psat_RP[2:-2]
+            self.DeltaHv_RP = DeltaHv_RP[2:-2]
             
         self.eps_computed = []
         self.Score_computed = []
@@ -695,30 +750,35 @@ class MBAR_GCMC():
         MAPD_rhol = compute_MAPD(self.rholiq,self.rhol_RP)
         MAPD_rhov = compute_MAPD(self.rhovap,self.rhov_RP)
         MAPD_Psat = compute_MAPD(self.Psat,self.Psat_RP)
+        MAPD_DeltaHv = compute_MAPD(self.DeltaHv,self.DeltaHv_RP)
         
         APD_rhol = compute_APD(self.rholiq,self.rhol_RP)
         APD_rhov = compute_APD(self.rhovap,self.rhov_RP)
         APD_Psat = compute_APD(self.Psat,self.Psat_RP)
-
+        APD_DeltaHv = compute_APD(self.DeltaHv,self.DeltaHv_RP)
+                
         nTemp_VLE = len(self.Temp_VLE)
 
         dAPD_rhol = np.zeros(nTemp_VLE-1)
         dAPD_rhov = np.zeros(nTemp_VLE-1)
         dAPD_Psat = np.zeros(nTemp_VLE-1)
+        dAPD_DeltaHv = np.zeros(nTemp_VLE-1)
         
         for iT in range(nTemp_VLE-1):
             
             dAPD_rhol[iT] = (APD_rhol[iT+1]-APD_rhol[iT])/(self.Temp_VLE[iT+1]-self.Temp_VLE[iT])
             dAPD_rhov[iT] = (APD_rhov[iT+1]-APD_rhov[iT])/(self.Temp_VLE[iT+1]-self.Temp_VLE[iT])
             dAPD_Psat[iT] = (APD_Psat[iT+1]-APD_Psat[iT])/(self.Temp_VLE[iT+1]-self.Temp_VLE[iT])
-
+            dAPD_DeltaHv[iT] = (APD_DeltaHv[iT+1]-APD_DeltaHv[iT])/(self.Temp_VLE[iT+1]-self.Temp_VLE[iT])
+        
         MdAPD_rhol = np.mean(dAPD_rhol) 
         MdAPD_rhov = np.mean(dAPD_rhov)   
         MdAPD_Psat = np.mean(dAPD_Psat)               
-                
-        Score = Score_w8[0]*MAPD_rhol + Score_w8[1]*MAPD_rhov + Score_w8[2]*MAPD_Psat
-        Score += Score_w8[4]*MdAPD_rhol + Score_w8[5]*MdAPD_rhov + Score_w8[6]*MdAPD_Psat
-        
+        MdAPD_DeltaHv = np.mean(dAPD_DeltaHv)
+    
+        Score = Score_w8[0]*MAPD_rhol + Score_w8[1]*MAPD_rhov + Score_w8[2]*MAPD_Psat + Score_w8[3]*MAPD_DeltaHv
+        Score += Score_w8[4]*MdAPD_rhol + Score_w8[5]*MdAPD_rhov + Score_w8[6]*MdAPD_Psat + Score_w8[7]*MdAPD_DeltaHv
+
         self.eps_computed.append(eps_scaled)
         self.Score_computed.append(Score)
         

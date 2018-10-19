@@ -15,10 +15,14 @@ font = {'size' : '24'}
 plt.rc('font',**font)
 
 nhists_max = 15
-ncompounds_max = 44
+ncompounds_max = 16
 icompound = 0
 
 reprocess = False
+trim_data = False
+scaled_dev = True
+
+Rg = 8.3144598e-5 #[bar m3 / mol / K]
 
 group_list = ['C-CH-group','C-group','CH-group','alkynes']
 
@@ -31,18 +35,25 @@ symbol_list = {'C-CH-group':'o','C-group':'s','CH-group':'^','alkynes':'d'}
 line_list = ['-','--',':','-.','-','--',':','-.','-','--',':','-.','-','--',':','-.','-','--',':','-.','-','--',':','-.','-','--',':','-.','-','--',':','-.','-','--',':','-.','-','--',':','-.','-','--',':','-.','-','--',':','-.','-','--',':','-.','-','--',':','-.','-','--',':','-.','-','--',':','-.','-','--',':','-.','-','--',':','-.']
 
 directory_dic = {'C-CH-group':'branched-Alkanes/C-CH-group/','C-group':'branched-Alkanes/C-group/','CH-group':'branched-Alkanes/CH-group/','alkynes':'alkynes/'}
+axarr_dic = {0:(0,0),1:(0,1),2:(1,0),3:(1,1),4:(2,0),5:(2,1)}
 
 dev_rhol_bins = {0.65:[],0.7:[],0.75:[],0.8:[],0.85:[],0.9:[],0.95:[]}
 dev_rhov_bins = {0.65:[],0.7:[],0.75:[],0.8:[],0.85:[],0.9:[],0.95:[]}
 dev_Psat_bins = {0.65:[],0.7:[],0.75:[],0.8:[],0.85:[],0.9:[],0.95:[]}
+dev_DeltaHv_bins = {0.65:[],0.7:[],0.75:[],0.8:[],0.85:[],0.9:[],0.95:[]}
+dev_DeltaUv_bins = {0.65:[],0.7:[],0.75:[],0.8:[],0.85:[],0.9:[],0.95:[]}
+dev_PV_bins = {0.65:[],0.7:[],0.75:[],0.8:[],0.85:[],0.9:[],0.95:[]}
+dev_Z_bins = {0.65:[],0.7:[],0.75:[],0.8:[],0.85:[],0.9:[],0.95:[]}
 Tr_bins = np.array([0.65,0.7,0.75,0.8,0.85,0.9,0.95])
 
-fig, axarr = plt.subplots(nrows=1,ncols=3,figsize=[18,6])
+fig, axarr = plt.subplots(nrows=3,ncols=2,figsize=[12,18])
 
 for group in group_list:
        
     for compound in compound_list[group]: # ['224-trimethylpentane','neopentane','isobutane']:
-                
+             
+            Mw = Mw_list[compound]
+        
             filepaths = []
             
             root_path = 'H:/Mie-swf/histFiles/'+directory_dic[group]+compound
@@ -71,7 +82,20 @@ for group in group_list:
             urhov_Potoff = VLE_Potoff[:,4]*1000. #[kg/m3]
             Psat_Potoff = VLE_Potoff[:,5] #[bar]
             uPsat_Potoff = VLE_Potoff[:,6] #[bar]
-    
+            DeltaHv_Potoff = VLE_Potoff[:,7] #[kJ/mol]
+            uDeltaHv_Potoff = VLE_Potoff[:,8] #[kJ/mol]
+            Z_Potoff = VLE_Potoff[:,9]
+            uZ_Potoff = VLE_Potoff[:,10]
+            
+            Vl_Potoff = Mw / rhol_Potoff / 1000. #[m3/mol]
+            Vv_Potoff = Mw / rhov_Potoff / 1000. #[m3/mol]
+            
+            PV_Potoff = Psat_Potoff * (Vv_Potoff - Vl_Potoff) / 1000. / 1000. #[kJ/mol]
+            uPV_Potoff = PV_Potoff * np.sqrt((urhol_Potoff/rhol_Potoff)**2.+(urhov_Potoff/rhov_Potoff)**2.+(uPsat_Potoff/Psat_Potoff)**2.)
+            
+            DeltaUv_Potoff = DeltaHv_Potoff - PV_Potoff #[kJ/mol]
+            uDeltaUv_Potoff = np.sqrt(uDeltaHv_Potoff**2. + uPV_Potoff**2.)    
+            
             if not os.path.exists('H:/MBAR_GCMC/Potoff_literature/'+compound+'_Tc.txt'):
     
                 if Tsat_Potoff[0] < Tsat_Potoff[-1]:
@@ -80,6 +104,8 @@ for group in group_list:
                     rhol_Potoff = rhol_Potoff[::-1]
                     rhov_Potoff = rhov_Potoff[::-1]
                     Psat_Potoff = Psat_Potoff[::-1]
+                    DeltaHv_Potoff = DeltaHv_Potoff[::-1]
+                    Z_Potoff = Z_Potoff[::-1]
             
                 Potoff_fit = ITIC_VLE(Tsat_Potoff,rhol_Potoff,rhov_Potoff,Psat_Potoff)
                 Tc_Potoff = Potoff_fit.Tc
@@ -89,68 +115,110 @@ for group in group_list:
                 out_file.close()
                 
             Tc_Potoff = np.loadtxt('H:/MBAR_GCMC/Potoff_literature/'+compound+'_Tc.txt')       
-                                                              
-            Mw = Mw_list[compound]
             
             if os.path.exists('H:/MBAR_GCMC/MBAR_values/'+compound+'.txt') and not reprocess:
                 print('Loading MBAR-GCMC analysis for '+compound)
                 MBAR_GCMC_load = np.loadtxt('H:/MBAR_GCMC/MBAR_values/'+compound+'.txt',skiprows=1)
                 
+                Tsat_MBAR = MBAR_GCMC_load[:,0]
                 rhol_MBAR = MBAR_GCMC_load[:,1]
                 rhov_MBAR = MBAR_GCMC_load[:,2]
                 Psat_MBAR = MBAR_GCMC_load[:,3]
+                DeltaHv_MBAR = MBAR_GCMC_load[:,4]
   
             else:
                 print('Performing MBAR-GCMC analysis for '+compound)
                 try:
-                    MBAR_GCMC_analyze = MBAR_GCMC(root_path,filepaths,Mw,trim_data=False,compare_literature=True)
+                    MBAR_GCMC_analyze = MBAR_GCMC(root_path,filepaths,Mw,trim_data=trim_data,compare_literature=True)
             #        MBAR_GCMC_analyze.plot_histograms()
             #        MBAR_GCMC_analyze.plot_2dhistograms()
                     MBAR_GCMC_analyze.solve_VLE(Tsat_Potoff)
         #            MBAR_GCMC_analyze.plot_VLE([],[],[],Tsat_Potoff,rhol_Potoff,rhov_Potoff)
                     
+                    Tsat_MBAR = MBAR_GCMC_analyze.Temp_VLE
                     rhol_MBAR = MBAR_GCMC_analyze.rholiq
                     rhov_MBAR = MBAR_GCMC_analyze.rhovap
                     Psat_MBAR = MBAR_GCMC_analyze.Psat
+                    DeltaHv_MBAR = MBAR_GCMC_analyze.DeltaHv
                     
                     out_file =open('H:/MBAR_GCMC/MBAR_values/'+compound+'.txt','w')
-                    out_file.write('T (K) rhol (kg/m3) rhov (kg/m3) P (bar)'+'\n')
-                    for Tsat, rhol, rhov, Psat in zip(Tsat_Potoff,rhol_MBAR,rhov_MBAR,Psat_MBAR):
-                        out_file.write(str(Tsat)+'\t'+str(rhol)+'\t'+str(rhov)+'\t'+str(Psat)+'\n')
+                    out_file.write('T (K) rhol (kg/m3) rhov (kg/m3) P (bar) DeltaHv (kJ/mol)'+'\n')
+                    for Tsat, rhol, rhov, Psat, DeltaHv in zip(Tsat_Potoff,rhol_MBAR,rhov_MBAR,Psat_MBAR,DeltaHv_MBAR):
+                        out_file.write(str(Tsat)+'\t'+str(rhol)+'\t'+str(rhov)+'\t'+str(Psat)+'\t'+str(DeltaHv)+'\n')
                     out_file.close()  
                                        
                 except:
                     print('Error when performing MBAR-GCMC analysis for '+compound)
+                    
+            ### Post-process values that can be derived
+            Z_MBAR = Psat_MBAR * Mw / rhov_MBAR / Rg / Tsat_MBAR / 1000.
+            
+            Vl_MBAR = Mw / rhol_MBAR / 1000. #[m3/mol]
+            Vv_MBAR = Mw / rhov_MBAR / 1000. #[m3/mol]
+            
+            PV_MBAR = Psat_MBAR * (Vv_MBAR - Vl_MBAR) / 1000. / 1000. #[kJ/mol]
+            
+            DeltaUv_MBAR = DeltaHv_MBAR - PV_MBAR #[kJ/mol]
 
-            if os.path.exists('H:/MBAR_GCMC/MBAR_values/'+compound+'.txt'):            
-
-                dev_rhol = (rhol_MBAR - rhol_Potoff)/rhol_Potoff * 100.
-                dev_rhov = (rhov_MBAR - rhov_Potoff)/rhov_Potoff * 100.
-                dev_Psat = (Psat_MBAR - Psat_Potoff)/Psat_Potoff * 100.
-                           
-                purhol_Potoff = urhol_Potoff / rhol_Potoff * 100.
-                purhov_Potoff = urhov_Potoff / rhov_Potoff * 100.
-                puPsat_Potoff = uPsat_Potoff / Psat_Potoff * 100.
+            if os.path.exists('H:/MBAR_GCMC/MBAR_values/'+compound+'.txt'):  
                 
                 Tr_Potoff = Tsat_Potoff/Tc_Potoff
-                           
-                axarr[0].errorbar(Tr_Potoff[np.abs(dev_rhol)<5],dev_rhol[np.abs(dev_rhol)<5],yerr=purhol_Potoff[np.abs(dev_rhol)<5],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
-                axarr[1].errorbar(Tr_Potoff[np.abs(dev_rhov)<10],dev_rhov[np.abs(dev_rhov)<10],yerr=purhov_Potoff[np.abs(dev_rhov)<10],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
-                axarr[2].errorbar(Tr_Potoff[np.abs(dev_Psat)<20],dev_Psat[np.abs(dev_Psat)<20],yerr=puPsat_Potoff[np.abs(dev_Psat)<20],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
+                
+                if scaled_dev:
+                    
+                    dev_rhol = (rhol_MBAR - rhol_Potoff)/urhol_Potoff
+                    dev_rhov = (rhov_MBAR - rhov_Potoff)/urhov_Potoff
+                    dev_Psat = (Psat_MBAR - Psat_Potoff)/uPsat_Potoff
+                    dev_DeltaHv = (DeltaHv_MBAR - DeltaHv_Potoff)/uDeltaHv_Potoff
+                    dev_Z = (Z_MBAR - Z_Potoff)/uZ_Potoff
+                    dev_DeltaUv = (DeltaUv_MBAR - DeltaUv_Potoff)/uDeltaUv_Potoff
+                    dev_PV = (PV_MBAR - PV_Potoff)/uPV_Potoff
+    
+                    axarr[0,0].errorbar(Tr_Potoff[np.abs(dev_rhol)<5],dev_rhol[np.abs(dev_rhol)<5],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
+                    axarr[0,1].errorbar(Tr_Potoff[np.abs(dev_rhov)<10],dev_rhov[np.abs(dev_rhov)<10],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
+                    axarr[1,0].errorbar(Tr_Potoff[np.abs(dev_Psat)<20],dev_Psat[np.abs(dev_Psat)<20],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
+                    axarr[1,1].errorbar(Tr_Potoff[np.abs(dev_DeltaHv)<20],dev_DeltaHv[np.abs(dev_DeltaHv)<20],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
+                    axarr[2,0].errorbar(Tr_Potoff[np.abs(dev_Z)<20],dev_Z[np.abs(dev_Z)<20],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
+                    axarr[2,1].errorbar(Tr_Potoff[np.abs(dev_PV)<20],dev_PV[np.abs(dev_PV)<20],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
+    #                axarr[1,1].errorbar(Tr_Potoff[np.abs(dev_DeltaUv)<20],dev_DeltaUv[np.abs(dev_DeltaUv)<20],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
 
-#                for iTr, Tr in enumerate(Tr_Potoff): 
-#                    
-#                    iBin = np.argmin(np.abs(Tr-Tr_bins))
-#                    
-#                    if dev_rhol[iTr] dev_rhol_bins[Tr_bins[iBin]].append(dev_rhol[iTr]):
+                else:
+
+                    dev_rhol = (rhol_MBAR - rhol_Potoff)/rhol_Potoff * 100.
+                    dev_rhov = (rhov_MBAR - rhov_Potoff)/rhov_Potoff * 100.
+                    dev_Psat = (Psat_MBAR - Psat_Potoff)/Psat_Potoff * 100.
+                    dev_DeltaHv = (DeltaHv_MBAR - DeltaHv_Potoff)/DeltaHv_Potoff * 100.
+                    dev_Z = (Z_MBAR - Z_Potoff)/Z_Potoff * 100.
+                    dev_DeltaUv = (DeltaUv_MBAR - DeltaUv_Potoff)/DeltaUv_Potoff * 100.
+                    dev_PV = (PV_MBAR - PV_Potoff)/PV_Potoff * 100.
+                               
+                    purhol_Potoff = urhol_Potoff / rhol_Potoff * 100.
+                    purhov_Potoff = urhov_Potoff / rhov_Potoff * 100.
+                    puPsat_Potoff = uPsat_Potoff / Psat_Potoff * 100.
+                    puDeltaHv_Potoff = uDeltaHv_Potoff / DeltaHv_Potoff * 100.
+                    puZ_Potoff = uZ_Potoff / Z_Potoff * 100.
+                    puDeltaUv_Potoff = uDeltaUv_Potoff / DeltaUv_Potoff * 100.
+                    puPV_Potoff = uPV_Potoff / PV_Potoff * 100.
+                    
+                    axarr[0,0].errorbar(Tr_Potoff[np.abs(dev_rhol)<5],dev_rhol[np.abs(dev_rhol)<5],yerr=purhol_Potoff[np.abs(dev_rhol)<5],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
+                    axarr[0,1].errorbar(Tr_Potoff[np.abs(dev_rhov)<10],dev_rhov[np.abs(dev_rhov)<10],yerr=purhov_Potoff[np.abs(dev_rhov)<10],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
+                    axarr[1,0].errorbar(Tr_Potoff[np.abs(dev_Psat)<20],dev_Psat[np.abs(dev_Psat)<20],yerr=puPsat_Potoff[np.abs(dev_Psat)<20],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
+                    axarr[1,1].errorbar(Tr_Potoff[np.abs(dev_DeltaHv)<20],dev_DeltaHv[np.abs(dev_DeltaHv)<20],yerr=puDeltaHv_Potoff[np.abs(dev_DeltaHv)<20],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
+                    axarr[2,0].errorbar(Tr_Potoff[np.abs(dev_Z)<20],dev_Z[np.abs(dev_Z)<20],yerr=puZ_Potoff[np.abs(dev_Z)<20],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
+                    axarr[2,1].errorbar(Tr_Potoff[np.abs(dev_PV)<20],dev_PV[np.abs(dev_PV)<20],yerr=puPV_Potoff[np.abs(dev_PV)<20],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
+    #                axarr[1,1].errorbar(Tr_Potoff[np.abs(dev_DeltaUv)<20],dev_DeltaUv[np.abs(dev_DeltaUv)<20],yerr=puDeltaUv_Potoff[np.abs(dev_DeltaUv)<20],fmt=color_list[icompound]+symbol_list[group]+line_list[icompound],mfc='None')
                         
-                for Tr, dev_rhol_i, dev_rhov_i, dev_Psat_i in zip(Tr_Potoff,dev_rhol,dev_rhov,dev_Psat): 
+                for Tr, dev_rhol_i, dev_rhov_i, dev_Psat_i, dev_DeltaHv_i, dev_Z_i, dev_PV_i, dev_DeltaUv_i in zip(Tr_Potoff,dev_rhol,dev_rhov,dev_Psat,dev_DeltaHv,dev_Z,dev_PV,dev_DeltaUv): 
                     
                     iBin = np.argmin(np.abs(Tr-Tr_bins))
                     
                     if np.abs(dev_rhol_i) < 5: dev_rhol_bins[Tr_bins[iBin]].append(dev_rhol_i)
                     if np.abs(dev_rhov_i) < 10: dev_rhov_bins[Tr_bins[iBin]].append(dev_rhov_i)
                     if np.abs(dev_Psat_i) < 20: dev_Psat_bins[Tr_bins[iBin]].append(dev_Psat_i)
+                    if np.abs(dev_DeltaHv_i) < 20: dev_DeltaHv_bins[Tr_bins[iBin]].append(dev_DeltaHv_i)
+                    if np.abs(dev_Z_i) < 20: dev_Z_bins[Tr_bins[iBin]].append(dev_Z_i)
+                    if np.abs(dev_PV_i) < 20: dev_PV_bins[Tr_bins[iBin]].append(dev_PV_i)
+                    if np.abs(dev_DeltaUv_i) < 20: dev_DeltaUv_bins[Tr_bins[iBin]].append(dev_DeltaUv_i)
                     
 #                    if Tr <= 0.675:
 #                        
@@ -170,78 +238,120 @@ for group in group_list:
                 
                 break
             
-prop_list = [r'$\rho_{\rm liq}^{\rm sat}$',r'$\rho_{\rm vap}^{\rm sat}$',r'$P_{\rm vap}^{\rm sat}$']
-ylim_low = [-1,-4.5,-10]
-ylim_high = [1,4.5,10]
+prop_list = [r'$\rho_{\rm liq}^{\rm sat}$',r'$\rho_{\rm vap}^{\rm sat}$',r'$P_{\rm vap}^{\rm sat}$',r'$\Delta H_{\rm v}$',r'$Z^{\rm sat}_{\rm vap}$',r'$P \Delta V$']  #r'$\Delta U_{\rm v}$'] #r'$P \Delta V$'] #r'$Z^{\rm sat}_{\rm vap}$']#r'$\Delta H_{\rm v}$']
+
+if scaled_dev:
+    ylim_low = [-6,-6,-6,-6,-6,-6]
+    ylim_high = [6,6,6,6,6,6]
+else:
+    ylim_low = [-1,-4.5,-10,-5,-5,-5]
+    ylim_high = [1,4.5,10,5,5,5]
         
 for iax, prop in enumerate(prop_list):
-    axarr[iax].set_xlabel(r'$T_{\rm r}$')
-#    axarr[iax].set_ylabel()
-    axarr[iax].set_title(r'X = '+prop)
-    axarr[iax].set_xlim([0.6,1.])
-    axarr[iax].set_xticks([0.65,0.75,0.85,0.95])
-    axarr[iax].set_ylim([ylim_low[iax],ylim_high[iax]])
+    axarr[axarr_dic[iax]].set_xlabel(r'$T_{\rm r}$')
     
-axarr[0].set_ylabel(r'$\frac{X_{\rm MBAR} - X_{\rm HR}}{X_{\rm HR}} \times 100 \%$')
+    if scaled_dev:
+        axarr[axarr_dic[iax]].set_ylabel(r'$\frac{X_{\rm MBAR} - X_{\rm HR}}{\delta X_{\rm HR}}$')  
+    else:
+        axarr[axarr_dic[iax]].set_ylabel(r'$\frac{X_{\rm MBAR} - X_{\rm HR}}{X_{\rm HR}} \times 100 \%$')
+    axarr[axarr_dic[iax]].set_title(r'$X = $'+prop)
+    axarr[axarr_dic[iax]].set_xlim([0.6,1.])
+    axarr[axarr_dic[iax]].set_xticks([0.65,0.75,0.85,0.95])
+    axarr[axarr_dic[iax]].set_ylim([ylim_low[iax],ylim_high[iax]])
+    
+#axarr[0,0].set_ylabel(r'$\frac{X_{\rm MBAR} - X_{\rm HR}}{X_{\rm HR}} \times 100 \%$')
+#axarr[1,1].set_xlabel(r'$T_{\rm r}$')
+#axarr[1,0].set_ylabel(r'$\frac{X_{\rm MBAR} - X_{\rm HR}}{X_{\rm HR}} \times 100 \%$')
+#axarr[1,0].set_xlabel(r'$T_{\rm r}$')
 
-plt.tight_layout(pad=0)
+plt.tight_layout(pad=0.5)
 
 fig.savefig('Comparison_MBAR_HR.pdf')
-        
-#        MBAR_GCMC_trial.eps_scan(Tsat_Potoff,rhol_Potoff,rhov_Potoff,rhol_Potoff,rhov_Potoff,1.0,1.0,1,compound,remove_low_high_Tsat=True)
 
-ylim_low = [-1.5,-6,-11]
-ylim_high = [1.5,6,11]
+if scaled_dev:
+    ylim_low = [-6,-6,-6,-6,-6,-6]
+    ylim_high = [6,6,6,6,6,6]
+else:        
+    ylim_low = [-1.5,-6,-11,-5,-5,-5]
+    ylim_high = [1.5,6,11,5,5,5]
 
-fig, axarr = plt.subplots(nrows=1,ncols=3,figsize=[18,6])
+fig, axarr = plt.subplots(nrows=3,ncols=2,figsize=[12,18])
 
 boxplot_rhol = []
 boxplot_rhov = []
 boxplot_Psat = []
+boxplot_DeltaHv = []
+boxplot_Z = []
+boxplot_PV = []
+boxplot_DeltaUv = []
 
 for Tr in Tr_bins:
     
     boxplot_rhol.append(dev_rhol_bins[Tr])
     boxplot_rhov.append(dev_rhov_bins[Tr])
     boxplot_Psat.append(dev_Psat_bins[Tr])
+    boxplot_DeltaHv.append(dev_DeltaHv_bins[Tr])
+    boxplot_Z.append(dev_Z_bins[Tr])
+    boxplot_PV.append(dev_PV_bins[Tr])
+    boxplot_DeltaUv.append(dev_DeltaUv_bins[Tr])
 
-axarr[0].boxplot(boxplot_rhol,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False)
-axarr[1].boxplot(boxplot_rhov,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False)
-axarr[2].boxplot(boxplot_Psat,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False)
-
-for iax, prop in enumerate(prop_list):
-    axarr[iax].set_xlabel(r'$T_{\rm r}$')
-#    axarr[iax].set_ylabel()
-    axarr[iax].set_title(r'X = '+prop)
-    axarr[iax].set_xlim([0.6,1.])
-    axarr[iax].set_xticks([0.65,0.75,0.85,0.95])
-    axarr[iax].set_ylim([ylim_low[iax],ylim_high[iax]])
-        
-axarr[0].set_ylabel(r'$\frac{X_{\rm MBAR} - X_{\rm HR}}{X_{\rm HR}} \times 100 \%$')
-
-plt.tight_layout(pad=0)
-
-fig.savefig('Comparison_MBAR_HR_boxplot.pdf')    
-
-ylim_low = [-0.8,-2.2,-7]
-ylim_high = [0.8,2.2,7]
-
-fig, axarr = plt.subplots(nrows=1,ncols=3,figsize=[18,6])
-
-axarr[0].boxplot(boxplot_rhol,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False,whis=[5,95],sym='')
-axarr[1].boxplot(boxplot_rhov,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False,whis=[5,95],sym='')
-axarr[2].boxplot(boxplot_Psat,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False,whis=[5,95],sym='')
+axarr[0,0].boxplot(boxplot_rhol,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False)
+axarr[0,1].boxplot(boxplot_rhov,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False)
+axarr[1,0].boxplot(boxplot_Psat,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False)
+axarr[1,1].boxplot(boxplot_DeltaHv,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False)
+axarr[2,0].boxplot(boxplot_Z,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False)
+axarr[2,1].boxplot(boxplot_PV,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False)
+#axarr[1,1].boxplot(boxplot_DeltaUv,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False)
 
 for iax, prop in enumerate(prop_list):
-    axarr[iax].set_xlabel(r'$T_{\rm r}$')
-#    axarr[iax].set_ylabel()
-    axarr[iax].set_title(r'X = '+prop)
-    axarr[iax].set_xlim([0.6,1.])
-    axarr[iax].set_xticks([0.65,0.75,0.85,0.95])
-    axarr[iax].set_ylim([ylim_low[iax],ylim_high[iax]])
+    axarr[axarr_dic[iax]].set_xlabel(r'$T_{\rm r}$')
+    
+    if scaled_dev:
+        axarr[axarr_dic[iax]].set_ylabel(r'$\frac{X_{\rm MBAR} - X_{\rm HR}}{\delta X_{\rm HR}}$')  
+    else:
+        axarr[axarr_dic[iax]].set_ylabel(r'$\frac{X_{\rm MBAR} - X_{\rm HR}}{X_{\rm HR}} \times 100 \%$')
+    axarr[axarr_dic[iax]].set_title(r'$X = $'+prop)
+    axarr[axarr_dic[iax]].set_xlim([0.6,1.])
+    axarr[axarr_dic[iax]].set_xticks([0.65,0.75,0.85,0.95])
+    axarr[axarr_dic[iax]].set_ylim([ylim_low[iax],ylim_high[iax]])
         
-axarr[0].set_ylabel(r'$\frac{X_{\rm MBAR} - X_{\rm HR}}{X_{\rm HR}} \times 100 \%$')
+#axarr[0].set_ylabel(r'$\frac{X_{\rm MBAR} - X_{\rm HR}}{X_{\rm HR}} \times 100 \%$')
 
-plt.tight_layout(pad=0)
+plt.tight_layout(pad=0.5)
+
+fig.savefig('Comparison_MBAR_HR_boxplot.pdf') 
+
+if scaled_dev: 
+    ylim_low = [-6,-6,-6,-6,-6,-6]
+    ylim_high = [6,6,6,6,6,6]
+else:
+    ylim_low = [-0.8,-2.2,-7,-5,-5,-5]
+    ylim_high = [0.8,2.2,7,5,5,5]
+
+fig, axarr = plt.subplots(nrows=3,ncols=2,figsize=[12,18])
+
+axarr[0,0].boxplot(boxplot_rhol,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False,whis=[5,95],sym='')
+axarr[0,1].boxplot(boxplot_rhov,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False,whis=[5,95],sym='')
+axarr[1,0].boxplot(boxplot_Psat,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False,whis=[5,95],sym='')
+axarr[1,1].boxplot(boxplot_DeltaHv,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False,whis=[5,95],sym='')
+axarr[2,0].boxplot(boxplot_Z,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False,whis=[5,95],sym='')
+axarr[2,1].boxplot(boxplot_PV,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False,whis=[5,95],sym='')
+#axarr[1,1].boxplot(boxplot_DeltaUv,positions=Tr_bins,widths=0.02,notch=True,manage_xticks=False,whis=[5,95],sym='')
+
+for iax, prop in enumerate(prop_list):
+    axarr[axarr_dic[iax]].set_xlabel(r'$T_{\rm r}$')
+    
+    if scaled_dev:
+        axarr[axarr_dic[iax]].set_ylabel(r'$\frac{X_{\rm MBAR} - X_{\rm HR}}{\delta X_{\rm HR}}$')  
+    else:
+        axarr[axarr_dic[iax]].set_ylabel(r'$\frac{X_{\rm MBAR} - X_{\rm HR}}{X_{\rm HR}} \times 100 \%$')
+    axarr[axarr_dic[iax]].set_title(r'$X = $'+prop)
+    axarr[axarr_dic[iax]].set_xlim([0.6,1.])
+    axarr[axarr_dic[iax]].set_xticks([0.65,0.75,0.85,0.95])
+    axarr[axarr_dic[iax]].set_ylim([ylim_low[iax],ylim_high[iax]])
+        
+#axarr[0].set_ylabel(r'$\frac{X_{\rm MBAR} - X_{\rm HR}}{X_{\rm HR}} \times 100 \%$')
+
+plt.tight_layout(pad=0.5)
 
 fig.savefig('Comparison_MBAR_HR_boxplot_CI.pdf')        
