@@ -27,26 +27,28 @@ referenceFF_directory_dic = {'Potoff_SL':'Optimized/','Potoff_gen':'Generalized/
 reprocess = True
 trim_data = False
 remove_low_high_Tsat = False
+bootstrap = False
+nBoots = 20
 
 referenceFF = 'Potoff_SL'
 
-if reprocess:
-    eps_opt = {}
-    Score_opt = {}
-    Score_Potoff = {}
-    eps_computed = {}
-    Score_computed = {}
+#if reprocess:
+#    eps_opt = {}
+#    Score_opt = {}
+#    Score_Potoff = {}
+#    eps_computed = {}
+#    Score_computed = {}
 
 for group in ['alkynes']: # group_list:
        
-    for compound in compound_list[group]:
+    for compound in ['1heptyne','1octyne','1nonyne']:# compound_list[group]:
         
         filepaths = []
         
         if group == 'alkynes':   ###Alkynes only have Potoff results     
-            root_path = 'H:/Mie-swf/histFiles/'+directory_dic[group]+compound
+            root_path = 'H:/GCMC_histFiles/'+directory_dic[group]+compound
         else: ### Branched alkanes have three different force field options
-            root_path = 'H:/Mie-swf/histFiles/'+directory_dic[group]+referenceFF_directory_dic[referenceFF]+compound        
+            root_path = 'H:/GCMC_histFiles/'+directory_dic[group]+referenceFF_directory_dic[referenceFF]+compound        
         
         for iT in np.arange(1,nhists_max+1):
                         
@@ -154,6 +156,47 @@ for group in ['alkynes']: # group_list:
             for scaling_factor, Score in zip(eps_computed[compound],Score_computed[compound]):
                 out_file.write(str(scaling_factor)+'\t'+str(Score)+'\n')
             out_file.close()  
+            
+        if bootstrap:
+            
+            print('Performing bootstrap analysis for '+compound)
+            
+            MBAR_GCMC_trial = MBAR_GCMC(root_path,filepaths,Mw,trim_data=trim_data,compare_literature=True)
+            MBAR_GCMC_trial.plot_histograms()
+            MBAR_GCMC_trial.plot_2dhistograms()
+            urholiq_ref, urhovap_ref, uPsat_ref, uDeltaHv_ref, Score_low95_ref, Score_high95_ref = MBAR_GCMC_trial.Score_uncertainty(Tsat_RP,rhol_RP,rhov_RP,Psat_RP,DeltaHv_RP,remove_low_high_Tsat=remove_low_high_Tsat,eps_scaled=1.,nBoots=nBoots)
+            ScoreBoots_ref = np.array(MBAR_GCMC_trial.Score_computed)
+
+            out_file =open('H:/MBAR_GCMC/Epsilon_scaling/'+referenceFF+'/'+compound+'_ScoreBoots_ref.txt','w')
+            out_file.write('Scoring_function'+'\n')
+            for Score in ScoreBoots_ref:
+                out_file.write(str(Score)+'\n')
+            out_file.close()
+            
+            out_file =open('H:/MBAR_GCMC/Epsilon_scaling/'+referenceFF+'/'+compound+'_uScore_ref.txt','w')
+            out_file.write('Score_low95'+'\t'+'Score_high95'+'\n')
+            out_file.write(str(Score_low95_ref)+'\t'+str(Score_high95_ref))
+            out_file.close()
+            
+            out_file =open('H:/MBAR_GCMC/MBAR_values/'+compound+'_uncertainties.txt','w')
+            out_file.write('T (K) urhol (kg/m3) urhov (kg/m3) uPsat (bar) uDeltaHv (kJ/mol)'+'\n')
+            for Tsat, urhol, urhov, uPsat, uDeltaHv in zip(Tsat_RP,urholiq_ref,urhovap_ref,uPsat_ref,uDeltaHv_ref):
+                out_file.write(str(Tsat)+'\t'+str(urhol)+'\t'+str(urhov)+'\t'+str(uPsat)+'\t'+str(uDeltaHv)+'\n')
+            out_file.close()  
+
+            urholiq_opt, urhovap_opt, uPsat_opt, uDeltaHv_opt, Score_low95_opt, Score_high95_opt = MBAR_GCMC_trial.Score_uncertainty(Tsat_RP,rhol_RP,rhov_RP,Psat_RP,DeltaHv_RP,remove_low_high_Tsat=remove_low_high_Tsat,eps_scaled=eps_opt[compound],nBoots=nBoots)
+            ScoreBoots_opt = np.array(MBAR_GCMC_trial.Score_computed)
+            
+            out_file =open('H:/MBAR_GCMC/Epsilon_scaling/'+referenceFF+'/'+compound+'_ScoreBoots_opt.txt','w')
+            out_file.write('Scoring_function'+'\n')
+            for Score in ScoreBoots_opt:
+                out_file.write(str(Score)+'\n')
+            out_file.close()
+            
+            out_file =open('H:/MBAR_GCMC/Epsilon_scaling/'+referenceFF+'/'+compound+'_uScore_opt.txt','w')
+            out_file.write('Score_low95'+'\t'+'Score_high95'+'\n')
+            out_file.write(str(Score_low95_opt)+'\t'+str(Score_high95_opt))
+            out_file.close()
                           
 ### Plot the results for different families and reference force fields:
     
@@ -180,7 +223,7 @@ for referenceFF_i in referenceFF_list:
         for compound in compound_list[group]:
             
             try:
-                
+#                print('Plot optimization for '+compound+' with '+referenceFF_i)
                 scaling_factor_optimization = np.loadtxt('H:/MBAR_GCMC/Epsilon_scaling/'+referenceFF_i+'/'+compound+'.txt',skiprows=1)
                 eps_computed_compound = scaling_factor_optimization[:,0]
                 Score_computed_compound = scaling_factor_optimization[:,1]
@@ -188,13 +231,41 @@ for referenceFF_i in referenceFF_list:
                 eps_opt_compound = eps_computed_compound[np.argmin(Score_computed_compound)]
                 Score_opt_compound = np.min(Score_computed_compound)
                 
-                axarr[axarr_dic[group][referenceFF_i]].plot(np.sort(eps_computed_compound),Score_computed_compound[np.argsort(eps_computed_compound)],color_list[counter]+symbol_list[counter]+line_list[counter],mfc='None')
+                Score_ref_compound = Score_computed_compound[eps_computed_compound==1.][0]
+                
+#                axarr[axarr_dic[group][referenceFF_i]].plot(np.sort(eps_computed_compound),Score_computed_compound[np.argsort(eps_computed_compound)],color_list[counter]+symbol_list[counter]+line_list[counter],mfc='None')
+                axarr[axarr_dic[group][referenceFF_i]].plot(np.sort(eps_computed_compound),Score_computed_compound[np.argsort(eps_computed_compound)],color_list[counter]+line_list[counter],mfc='None')
                 axarr[axarr_dic[group][referenceFF_i]].plot(eps_opt_compound,Score_opt_compound,color_list[counter]+'*',markersize=10)
+                
+                try:
+#                print('Plot uncertainties for '+compound+' with '+referenceFF_i)
+                    Score_95_ref = np.loadtxt('H:/MBAR_GCMC/Epsilon_scaling/'+referenceFF+'/'+compound+'_uScore_ref.txt',skiprows=1)
+                    Score_95_opt = np.loadtxt('H:/MBAR_GCMC/Epsilon_scaling/'+referenceFF+'/'+compound+'_uScore_opt.txt',skiprows=1)
+                             
+                    Score_low95_ref = Score_95_ref[0]
+                    Score_high95_ref = Score_95_ref[1]
+    
+                    Score_low95_opt = Score_95_opt[0]
+                    Score_high95_opt = Score_95_opt[1]
+                    
+                    uScore_low95_ref = Score_ref_compound - Score_low95_ref
+                    uScore_high95_ref = Score_high95_ref - Score_ref_compound
+    
+                    uScore_low95_opt = Score_opt_compound - Score_low95_opt
+                    uScore_high95_opt = Score_high95_opt - Score_opt_compound
+                    
+                    axarr[axarr_dic[group][referenceFF_i]].errorbar(1.,Score_ref_compound,yerr=[[uScore_low95_ref,],[uScore_high95_ref,]],fmt=color_list[counter]+symbol_list[counter],mfc='None')
+                    axarr[axarr_dic[group][referenceFF_i]].errorbar(eps_opt_compound,Score_opt_compound,yerr=[[uScore_low95_opt,],[uScore_high95_opt,]],fmt=color_list[counter]+'*',markersize=10)
+                
+                except:
+                    
+                    print('No uncertainty values for '+compound+' with '+referenceFF_i)
                 
             except:
                 
-                print('Optimization results not available for '+compound)
-                pass
+                print('Optimization results not available for '+compound+' with '+referenceFF_i)
+                            
+
             
             counter += 1
                
@@ -205,8 +276,8 @@ for iax in range(4): #, group in enumerate(group_list):
     axarr[axarr_dic[iax]].set_xlabel(xlabel_list[iax])
     axarr[axarr_dic[iax]].set_ylabel(r'Score')
     axarr[axarr_dic[iax]].set_title(title_list[iax])
-    axarr[axarr_dic[iax]].set_xlim([0.99,1.01])
-    axarr[axarr_dic[iax]].set_xticks([0.990,0.995,1.000,1.005,1.010])
+    axarr[axarr_dic[iax]].set_xlim([0.97,1.03])
+    axarr[axarr_dic[iax]].set_xticks([0.97,0.98,0.99,1.00,1.01,1.02,1.03])
 #    axarr[axarr_dic[iax]].set_ylim([ylim_low[iax],ylim_high[iax]])
     
 plt.tight_layout(pad=0.5)

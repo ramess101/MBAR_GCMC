@@ -56,7 +56,7 @@ for group in group_list:
         
             filepaths = []
             
-            root_path = 'H:/Mie-swf/histFiles/'+directory_dic[group]+compound
+            root_path = 'H:/GCMC_histFiles/'+directory_dic[group]+compound
             
             for iT in np.arange(1,nhists_max+1):
                             

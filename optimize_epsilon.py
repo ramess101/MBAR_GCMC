@@ -162,17 +162,20 @@ class MBAR_GCMC():
         '''
         Nmol_flat, U_flat, nSnapshots = self.Nmol_flat, self.U_flat, self.K_sim
         
+        Nmol_flat_stored = Nmol_flat.copy()
+        U_flat_stored = U_flat.copy()
+        
         irand = np.random.randint(0,len(Nmol_flat),len(Nmol_flat))
         
-        Nmol_flat = Nmol_flat[irand] #np.random.choice(np.arange(0,len(Nmol_flat)),size=len(Nmol_flat),replace=True)
-        U_flat = U_flat[irand]
+        Nmol_flat = Nmol_flat_stored[irand] #np.random.choice(np.arange(0,len(Nmol_flat)),size=len(Nmol_flat),replace=True)
+        U_flat = U_flat_stored[irand]
         
-        self.Nmol_flat, self.U_flat = Nmol_flat, U_flat
+        self.Nmol_flat, self.U_flat, self.Nmol_flat_stored, self.U_flat_stored = Nmol_flat, U_flat, Nmol_flat_stored, U_flat_stored
         
-    def VLE_uncertainty(self,Temp_VLE,eps_scaled=1.):
+    def VLE_uncertainty(self,Temp_VLE,eps_scaled=1.,nBoots=20):
         '''
+        Bootstrap the VLE uncertainties rather than using MBAR uncertainties
         '''
-        nBoots = 3
         
         rholiqBoots = np.zeros([len(Temp_VLE),nBoots])
         rhovapBoots = np.zeros([len(Temp_VLE),nBoots])
@@ -182,7 +185,6 @@ class MBAR_GCMC():
         for iBoot in range(nBoots):
             
             self.bootstrap_data()
-            self.min_max_sim_data()
             self.build_MBAR_sim()
             self.Ncut = self.solve_Ncut()
             self.solve_VLE(Temp_VLE,eps_scaled)
@@ -191,16 +193,80 @@ class MBAR_GCMC():
             rhovapBoots[:,iBoot] = self.rhovap
             PsatBoots[:,iBoot] = self.Psat
             DeltaHvBoots[:,iBoot] = self.DeltaHv
+                        
+        tstat = stats.t.interval(0.95,nBoots,loc=0,scale=1)[1]
                        
-        urholiq = 1.96 * np.std(rholiqBoots,axis=1)
-        urhovap = 1.96 * np.std(rhovapBoots,axis=1)
-        uPsat = 1.96 * np.std(PsatBoots,axis=1)
-        uDeltaHv = 1.96 * np.std(DeltaHvBoots,axis=1)
+        ### Should I use the standard error, i.e., divide by the square root of nBoots?
+        
+        urholiq = tstat * np.std(rholiqBoots,axis=1)
+        urhovap = tstat * np.std(rhovapBoots,axis=1)
+        uPsat = tstat * np.std(PsatBoots,axis=1)
+        uDeltaHv = tstat * np.std(DeltaHvBoots,axis=1)
         
         self.urholiq, self.urhovap, self.uPsat, self.uDeltaHv = urholiq, urhovap, uPsat, uDeltaHv
+        self.rholiqBoots, self.rhovapBoots, self.PsatBoots, self.DeltaHvBoots = rholiqBoots, rhovapBoots, PsatBoots, DeltaHvBoots
 
         return urholiq, urhovap, uPsat, uDeltaHv
     
+    def Score_uncertainty(self,Temp_VLE,rhol_RP,rhov_RP,Psat_RP,DeltaHv_RP,remove_low_high_Tsat=False,eps_scaled=1.,nBoots=20):
+        '''
+        Bootstrap the uncertainty in the scoring function
+        '''
+                
+        self.Temp_VLE, self.rhol_RP, self.rhov_RP, self.Psat_RP, self.DeltaHv_RP = Temp_VLE, rhol_RP, rhov_RP, Psat_RP, DeltaHv_RP
+        
+        if remove_low_high_Tsat:  #Remove the low T and high T ends for more stable results
+            self.Temp_VLE = self.Temp_VLE[2:-2]
+            self.rhol_RP = rhol_RP[2:-2]
+            self.rhov_RP = rhov_RP[2:-2]
+            self.Psat_RP = Psat_RP[2:-2]
+            self.DeltaHv_RP = DeltaHv_RP[2:-2]
+            
+        self.eps_computed = []
+        self.Score_computed = []
+        
+        rholiqBoots = np.zeros([len(Temp_VLE),nBoots])
+        rhovapBoots = np.zeros([len(Temp_VLE),nBoots])
+        PsatBoots = np.zeros([len(Temp_VLE),nBoots])
+        DeltaHvBoots = np.zeros([len(Temp_VLE),nBoots])
+        ScoreBoots = np.zeros(nBoots)
+        
+        self.Ncut_stored = self.Ncut
+        
+        for iBoot in range(nBoots):
+            
+            self.bootstrap_data()
+            self.build_MBAR_sim()
+#            self.Ncut = self.solve_Ncut()
+            self.Ncut = int(self.Ncut_stored*np.random.uniform(0.95,1.05))
+            print('Liquid and vapor phase is divided by Nmol = '+str(self.Ncut))
+            Score_iBoot = self.Scoring_function(eps_scaled)
+            print('Scoring function value for '+str(iBoot)+'th bootstrap = '+str(Score_iBoot))
+            
+            rholiqBoots[:,iBoot] = self.rholiq
+            rhovapBoots[:,iBoot] = self.rhovap
+            PsatBoots[:,iBoot] = self.Psat
+            DeltaHvBoots[:,iBoot] = self.DeltaHv
+            ScoreBoots[iBoot] = Score_iBoot                        
+                        
+        tstat = stats.t.interval(0.95,nBoots,loc=0,scale=1)[1]
+                       
+        ### Should I use the standard error, i.e., divide by the square root of nBoots?
+        
+        urholiq = tstat * np.std(rholiqBoots,axis=1)
+        urhovap = tstat * np.std(rhovapBoots,axis=1)
+        uPsat = tstat * np.std(PsatBoots,axis=1)
+        uDeltaHv = tstat * np.std(DeltaHvBoots,axis=1)
+        
+        ### The scoring function values are certainly not normal
+        i95 = int(0.025*nBoots)
+        Score_low95 = np.sort(ScoreBoots)[i95]
+        Score_high95 = np.sort(ScoreBoots)[-(i95+1)]
+        
+        self.urholiq, self.urhovap, self.uPsat, self.uDeltaHv, self.Score_low95, self.Score_high95 = urholiq, urhovap, uPsat, uDeltaHv, Score_low95, Score_high95
+        
+        return urholiq, urhovap, uPsat, uDeltaHv, Score_low95, Score_high95
+        
     def plot_histograms(self):
         '''
         Plots the histograms for the number of molecules
