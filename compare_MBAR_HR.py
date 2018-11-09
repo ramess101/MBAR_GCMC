@@ -20,7 +20,7 @@ icompound = 0
 
 reprocess = False
 trim_data = False
-scaled_dev = True
+scaled_dev = False
 
 Rg = 8.3144598e-5 #[bar m3 / mol / K]
 

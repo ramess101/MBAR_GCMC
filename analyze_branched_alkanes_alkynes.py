@@ -24,11 +24,11 @@ experimental_dic = {'C-CH-group':'','C-group':'REFPROP_values','CH-group':'REFPR
 
 referenceFF_directory_dic = {'Potoff_SL':'Optimized/','Potoff_gen':'Generalized/','TraPPE':'TraPPE/'}
 
-reprocess = True
+reprocess = False
 trim_data = False
 remove_low_high_Tsat = False
-bootstrap = False
-nBoots = 20
+bootstrap = True
+nBoots = 30
 
 referenceFF = 'Potoff_SL'
 
@@ -39,17 +39,18 @@ referenceFF = 'Potoff_SL'
 #    eps_computed = {}
 #    Score_computed = {}
 
-for group in ['alkynes']: # group_list:
+for group in ['C-group','CH-group']:
        
-    for compound in ['1heptyne','1octyne','1nonyne']:# compound_list[group]:
+    for compound in compound_list[group]:
         
         filepaths = []
         
         if group == 'alkynes':   ###Alkynes only have Potoff results     
             root_path = 'H:/GCMC_histFiles/'+directory_dic[group]+compound
         else: ### Branched alkanes have three different force field options
-            root_path = 'H:/GCMC_histFiles/'+directory_dic[group]+referenceFF_directory_dic[referenceFF]+compound        
-        
+#            root_path = 'H:/GCMC_histFiles/'+directory_dic[group]+referenceFF_directory_dic[referenceFF]+compound        
+            root_path = 'H:/GCMC_histFiles/branched-Alkanes/'+referenceFF_directory_dic[referenceFF]+group+'/'+compound        
+                                                           
         for iT in np.arange(1,nhists_max+1):
                         
             hist_name='/his'+str(iT)+'a.dat'
@@ -73,7 +74,7 @@ for group in ['alkynes']: # group_list:
         Psat_Potoff = VLE_Potoff[:,3] #[bar]
         DeltaHv_Potoff = VLE_Potoff[:,4] #[kJ/mol]
         
-        if compound in REFPROP_list or group == 'alkynes':
+        if False: #compound in REFPROP_list or group == 'alkynes':
             
             try:
             
@@ -115,6 +116,16 @@ for group in ['alkynes']: # group_list:
             Tsat_RP = []
             rhol_RP = []
             rhov_RP = []
+            Psat_RP = []
+            DeltaHv_RP = []
+            
+            VLE_Potoff = np.loadtxt('H:/MBAR_GCMC/Potoff_literature/'+compound+'_withuncertainties.txt',skiprows=1)
+                
+            Tsat_RP = VLE_Potoff[:,0] #[K]
+            rhol_RP = VLE_Potoff[:,1]*1000. #[kg/m3]
+            rhov_RP = VLE_Potoff[:,3]*1000. #[kg/m3]
+            Psat_RP = VLE_Potoff[:,5] #[bar]
+            DeltaHv_RP = VLE_Potoff[:,7] #[kJ/mol]
             
         if experimental_dic[group] == 'DIPPR_values':
             
@@ -162,8 +173,8 @@ for group in ['alkynes']: # group_list:
             print('Performing bootstrap analysis for '+compound)
             
             MBAR_GCMC_trial = MBAR_GCMC(root_path,filepaths,Mw,trim_data=trim_data,compare_literature=True)
-            MBAR_GCMC_trial.plot_histograms()
-            MBAR_GCMC_trial.plot_2dhistograms()
+#            MBAR_GCMC_trial.plot_histograms()
+#            MBAR_GCMC_trial.plot_2dhistograms()
             urholiq_ref, urhovap_ref, uPsat_ref, uDeltaHv_ref, Score_low95_ref, Score_high95_ref = MBAR_GCMC_trial.Score_uncertainty(Tsat_RP,rhol_RP,rhov_RP,Psat_RP,DeltaHv_RP,remove_low_high_Tsat=remove_low_high_Tsat,eps_scaled=1.,nBoots=nBoots)
             ScoreBoots_ref = np.array(MBAR_GCMC_trial.Score_computed)
 
@@ -184,19 +195,19 @@ for group in ['alkynes']: # group_list:
                 out_file.write(str(Tsat)+'\t'+str(urhol)+'\t'+str(urhov)+'\t'+str(uPsat)+'\t'+str(uDeltaHv)+'\n')
             out_file.close()  
 
-            urholiq_opt, urhovap_opt, uPsat_opt, uDeltaHv_opt, Score_low95_opt, Score_high95_opt = MBAR_GCMC_trial.Score_uncertainty(Tsat_RP,rhol_RP,rhov_RP,Psat_RP,DeltaHv_RP,remove_low_high_Tsat=remove_low_high_Tsat,eps_scaled=eps_opt[compound],nBoots=nBoots)
-            ScoreBoots_opt = np.array(MBAR_GCMC_trial.Score_computed)
-            
-            out_file =open('H:/MBAR_GCMC/Epsilon_scaling/'+referenceFF+'/'+compound+'_ScoreBoots_opt.txt','w')
-            out_file.write('Scoring_function'+'\n')
-            for Score in ScoreBoots_opt:
-                out_file.write(str(Score)+'\n')
-            out_file.close()
-            
-            out_file =open('H:/MBAR_GCMC/Epsilon_scaling/'+referenceFF+'/'+compound+'_uScore_opt.txt','w')
-            out_file.write('Score_low95'+'\t'+'Score_high95'+'\n')
-            out_file.write(str(Score_low95_opt)+'\t'+str(Score_high95_opt))
-            out_file.close()
+#            urholiq_opt, urhovap_opt, uPsat_opt, uDeltaHv_opt, Score_low95_opt, Score_high95_opt = MBAR_GCMC_trial.Score_uncertainty(Tsat_RP,rhol_RP,rhov_RP,Psat_RP,DeltaHv_RP,remove_low_high_Tsat=remove_low_high_Tsat,eps_scaled=eps_opt[compound],nBoots=nBoots)
+#            ScoreBoots_opt = np.array(MBAR_GCMC_trial.Score_computed)
+#            
+#            out_file =open('H:/MBAR_GCMC/Epsilon_scaling/'+referenceFF+'/'+compound+'_ScoreBoots_opt.txt','w')
+#            out_file.write('Scoring_function'+'\n')
+#            for Score in ScoreBoots_opt:
+#                out_file.write(str(Score)+'\n')
+#            out_file.close()
+#            
+#            out_file =open('H:/MBAR_GCMC/Epsilon_scaling/'+referenceFF+'/'+compound+'_uScore_opt.txt','w')
+#            out_file.write('Score_low95'+'\t'+'Score_high95'+'\n')
+#            out_file.write(str(Score_low95_opt)+'\t'+str(Score_high95_opt))
+#            out_file.close()
                           
 ### Plot the results for different families and reference force fields:
     
