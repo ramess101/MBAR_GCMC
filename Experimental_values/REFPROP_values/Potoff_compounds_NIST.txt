@@ -1,0 +1,34 @@
+Compounds which used NIST data:
+2-methylheptane
+3,3-dimethylpentane
+3,4-dimethylhexane
+2,3,4-trimethylpentane
+2,4-dimethylhexane
+2,2,3-trimethylbutane
+2-methylbutane REFPROP EXTRACTED
+3-methylpentane REFPROP
+2-methyl-3-ethylpentane
+3-methylhexane
+4-methylheptane
+2,2-dimethylbutane REFPROP
+3-ethylhexane
+2,3,3-trimethylpentane
+2,4-dimethylpentane
+2-methylpropane (isobutane) REFPROP EXTRACTED
+2,2-dimethylpentane
+2,3-dimethylpentane
+3-ethylpentane
+2,3-dimethylhexane
+3,3-dimethylhexane
+2-methylpentane REFPROP EXTRACTED
+2,2,3,3-tetramethylbutane
+3-methylheptane
+2-methylhexane
+3-methyl-3-ethylpentane
+2,5-dimethylhexane
+2,2,3-trimethylpentane
+2,2-dimethylhexane
+2,2,4-trimethylpentane REFPROP EXTRACTED
+2,2-dimethylpropane (neopentane) REFPROP EXTRACTED
+2,3-dimethylbutane REFPROP
+
