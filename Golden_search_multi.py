@@ -48,7 +48,7 @@ def GOLDEN(func,AX,BX,CX,TOL):
     
     return XMIN
 
-def GOLDEN_multi(func,guesses,lower_bounds,upper_bounds,TOL,maxit):
+def GOLDEN_multi(func,guesses,lower_bounds,upper_bounds,TOL,maxit,show_plot=False):
     '''
     Solves multiple functions that are contained within a single matrix
     Designed for implementation with n-dimensional MBAR
@@ -78,13 +78,15 @@ def GOLDEN_multi(func,guesses,lower_bounds,upper_bounds,TOL,maxit):
         recompute_A = False
         recompute_B = False
         initialized = False
+        attempts = 0
+        max_attempts = 5
         while not initialized:
 #            plt.plot(BX_all,FB_all,'k-')
 #            plt.plot(AX_all,FA_all,'b-')
 #            plt.plot(CX_all,FC_all,'r-')
 #            plt.show()
             for i, (ai,bi,ci,fa,fb,fc) in enumerate(zip(AX_all,BX_all,CX_all,FA_all,FB_all,FC_all)):
-                plt.plot([ai,bi,ci],[fa,fb,fc])
+                if show_plot: plt.plot([ai,bi,ci],[fa,fb,fc])
                 if fb > fa and fb < fc: #Guess is greater than lower bound but less than upper bound
                     AX_all[i] = ai - (bi - ai)
                     BX_all[i] = ai
@@ -101,10 +103,18 @@ def GOLDEN_multi(func,guesses,lower_bounds,upper_bounds,TOL,maxit):
                     FA_all[i] = fb
                     recompute_C = True
                     print('Guess is higher than upper bound')
-                elif fb > 0.999:
+                elif np.abs(fb - 1.) < 1e-5:
                     BX_all[i] = ai + (ci-ai)*np.random.random()
                     recompute_B = True
                     print('Guess is non-informative, equal to 1')
+                    attempts += 1
+                    if attempts > max_attempts: 
+                        print('Could not initialize system')
+                        if show_plot: plt.show()
+                        recompute_B = False
+                        recompute_A = False
+                        recompute_C = False
+#                        return BX_all
                 elif np.abs(fb - fa)/fa < 1e-3 and np.abs(fb - fc)/fc < 1e-3:
                     if np.random.rand() < 0.5:
                         BX_all[i] = (bi + ci)/2.
@@ -115,7 +125,7 @@ def GOLDEN_multi(func,guesses,lower_bounds,upper_bounds,TOL,maxit):
                 elif fb > fa and fb > fc: #Guess is greater than both the lower and upper bound
                     print('This function appears to be multimodal')
                     break
-            plt.show()
+            if show_plot: plt.show()
             if recompute_C:
                 FC_all = func(CX_all)
                 initialized=False
