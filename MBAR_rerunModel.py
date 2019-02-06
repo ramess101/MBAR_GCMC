@@ -176,7 +176,7 @@ class MBAR_GCMC():
         
         self.Nmol_flat, self.U_flat, self.Nmol_flat_stored, self.U_flat_stored = Nmol_flat, U_flat, Nmol_flat_stored, U_flat_stored
         
-    def VLE_uncertainty(self,Temp_VLE,eps_scaled=1.,nBoots=20):
+    def VLE_uncertainty(self,Temp_VLE,eps_scaled=0.,nBoots=20):
         '''
         Bootstrap the VLE uncertainties rather than using MBAR uncertainties
         '''
@@ -212,7 +212,7 @@ class MBAR_GCMC():
 
         return urholiq, urhovap, uPsat, uDeltaHv
     
-    def Score_uncertainty(self,Temp_VLE,rhol_RP,rhov_RP,Psat_RP,DeltaHv_RP,remove_low_high_Tsat=False,eps_scaled=1.,nBoots=20):
+    def Score_uncertainty(self,Temp_VLE,rhol_RP,rhov_RP,Psat_RP,DeltaHv_RP,remove_low_high_Tsat=False,eps_scaled=0.,nBoots=20):
         '''
         Bootstrap the uncertainty in the scoring function
         '''
@@ -489,7 +489,7 @@ class MBAR_GCMC():
         
         return mu_VLE_guess, mu_lower_bound, mu_upper_bound
         
-    def solve_VLE(self,Temp_VLE,eps_scaled=1.,show_plot=False):
+    def solve_VLE(self,Temp_VLE,eps_scaled=0.,show_plot=False):
         '''
         Determine optimal values of mu that result in equal pressures by 
         minimizing the square difference of the weights in the liquid and vapor
@@ -501,6 +501,7 @@ class MBAR_GCMC():
         
         self.build_MBAR_VLE_matrices()
         mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_guess_bounds()
+        
         sqdeltaW_scaled = lambda mu: self.sqdeltaW(mu,eps_scaled)
         
         ### Optimization of mu
@@ -509,7 +510,8 @@ class MBAR_GCMC():
 #        except:
 #            mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE,eps_scaled)
         mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE,eps_scaled) 
-        mu_opt = GOLDEN_multi(sqdeltaW_scaled,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.0001,maxit=30)
+        
+        mu_opt = GOLDEN_multi(sqdeltaW_scaled,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.000001,maxit=30)
 
         self.f_k_opt = self.f_k_guess.copy()
         self.mu_opt = mu_opt
@@ -518,6 +520,8 @@ class MBAR_GCMC():
         self.calc_Psat(eps_scaled)
         self.calc_Usat(eps_scaled)
         self.calc_DeltaHv(eps_scaled)
+        
+        self.computeNeff()
         
 #        self.print_VLE()
         
@@ -543,7 +547,29 @@ class MBAR_GCMC():
             print("Effective number of samples")
             print (self.mbar.computeEffectiveSampleNumber())
             print('\nWhich is approximately '+str(self.mbar.computeEffectiveSampleNumber()/self.sumN_k*100.)+'% of the total snapshots')
-     
+    
+    def computeNeff(self):
+        '''
+        Computes the vapor and liquid phase number of effective samples
+        '''
+        nTsim, Nmol_flat, Ncut, Temp_VLE, mbar = self.nTsim, self.Nmol_flat, self.Ncut, self.Temp_VLE, self.mbar
+        
+        Neffliq = np.zeros(len(Temp_VLE))
+        Neffvap = np.zeros(len(Temp_VLE))
+        
+        Neff = lambda Wn: (np.sum(Wn))**2./(np.sum(Wn**2.))
+        
+        for jT in range(len(Temp_VLE)):
+            
+            WnjT_liq = mbar.W_nk[:,nTsim+jT][Nmol_flat>Ncut]
+            WnjT_vap = mbar.W_nk[:,nTsim+jT][Nmol_flat<=Ncut]
+        
+            Neffliq[jT] = Neff(WnjT_liq)
+            Neffvap[jT] = Neff(WnjT_vap)
+        
+        self.Neffliq, self.Neffvap = Neffliq, Neffvap
+        return Neffliq, Neffvap
+        
     def sqdeltaW(self,mu_VLE,eps_scaled):
         '''
         Computes the square difference between the sum of the weights in the
@@ -554,13 +580,13 @@ class MBAR_GCMC():
         
         nTsim, Nmol_flat,Ncut, f_k_guess, Temp_VLE, u_kn_all, N_k_all = self.nTsim, self.Nmol_flat, self.Ncut,self.f_k_guess, self.Temp_VLE, self.u_kn_all, self.N_k_all
 
-        if eps_scaled == 1.:
+        if eps_scaled == 0.:
         
             U_flat = self.U_flat
             
         else:
             
-            U_flat = self.Urr_flat
+            U_flat = self.Urr_flat * eps_scaled
 
         for jT, (Temp, mu) in enumerate(zip(Temp_VLE, mu_VLE)):
             
@@ -630,22 +656,21 @@ class MBAR_GCMC():
         drhovap = rhovap * dNvap / Nvap
         
         self.rholiq, self.rhovap, self.Nliq, self.Nvap, self.drholiq, self.drhovap, self.dNliq, self.dNvap = rholiq, rhovap, Nliq, Nvap, drholiq, drhovap, dNliq, dNvap
-        assert 1==2
         
-    def calc_Usat(self,eps_scaled=1.):
+    def calc_Usat(self,eps_scaled=0.):
         '''
         Computes the saturated liquid and vapor internal energies
         '''
         
         Nmol_flat, Ncut, mbar, sumWliq, sumWvap, nTsim, Nliq, Nvap = self.Nmol_flat, self.Ncut, self.mbar, self.sumWliq, self.sumWvap, self.nTsim, self.Nliq, self.Nvap
         
-        if eps_scaled == 1.:
+        if eps_scaled == 0.:
         
             U_flat = self.U_flat
             
         else:
             
-            U_flat = self.Urr_flat
+            U_flat = self.Urr_flat * eps_scaled
         
         #Convert energy to per molecule basis
 #        Umol_flat = U_flat.copy()
@@ -741,13 +766,13 @@ class MBAR_GCMC():
         Temp_sim, u_kn_sim,f_k_sim,sumN_k = self.Temp_sim, self.u_kn_sim,self.f_k_sim,self.sumN_k
         nTsim, Nmol_flat,Ncut = self.nTsim, self.Nmol_flat, self.Ncut
 
-        if eps_scaled == 1.:
+        if eps_scaled == 0.:
         
             U_flat = self.U_flat
             
         else:
             
-            U_flat = self.Urr_flat
+            U_flat = self.Urr_flat * eps_scaled
         
         
         Temp_IG = np.min(Temp_sim[self.mu_sim == self.mu_sim.min()]) 
@@ -801,7 +826,7 @@ class MBAR_GCMC():
         
         self.abs_press_int, self.Temp_IG, self.f_k_IG, self.Nmol_IG = fit.intercept, Temp_IG, f_k_IG, Nmol_IG
         
-    def calc_Psat(self,eps_scaled=1.):
+    def calc_Psat(self,eps_scaled=0.):
         '''
         Computes the saturated vapor pressure
         '''
@@ -814,7 +839,7 @@ class MBAR_GCMC():
         Psat = kb * Temp_VLE * (f_k_opt[nTsim:]-np.log(2.) - abs_press_int) / Vbox / Ang3tom3 * Jm3tobar #-log(2) accounts for two phases
         self.Psat = Psat
         
-    def calc_DeltaHv(self,eps_scaled=1.):
+    def calc_DeltaHv(self,eps_scaled=0.):
         '''
         Fits Psat to line to compute deltaHvap
         '''
