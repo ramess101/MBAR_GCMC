@@ -29,9 +29,11 @@ compute_AD = lambda yhat,yset: np.mean((yhat - yset)/yset*100.)
 compute_APD = lambda yhat,ydata: np.abs((yhat - ydata)/ydata*100.)
 
 ### Branched alkanes
-#Score_w8 = np.array([0.6135,0.0123,0.2455,0.0245,0.0613,0.0061,0.0245,0.0123])
+Score_w8 = np.array([0.6135,0.0123,0.2455,0.0245,0.0613,0.0061,0.0245,0.0123])
+print('Using branched alkane scoring function')
 ### Alkynes
-Score_w8 = np.array([0.757,0.0,0.152,0.0,0.076,0.0,0.015,0.0])
+#Score_w8 = np.array([0.757,0.0,0.152,0.0,0.076,0.0,0.015,0.0])
+#print('Using alkyne scoring function')
 
 convert_AD2Score = lambda AD_rhol, AD_rhov, AD_Psat: Score_w8[0]*np.abs(AD_rhol) + Score_w8[1]*np.abs(AD_rhov) + Score_w8[2]*np.abs(AD_Psat)
 convert_MAPD2Score = lambda MAPD_rhol, MAPD_rhov, MAPD_Psat: Score_w8[0]*MAPD_rhol + Score_w8[1]*MAPD_rhov + Score_w8[2]*MAPD_Psat
@@ -505,7 +507,7 @@ class MBAR_GCMC():
 #        except:
 #            mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE,eps_scaled)
         mu_VLE_guess, mu_lower_bound, mu_upper_bound = self.mu_scan(Temp_VLE,eps_scaled) 
-        mu_opt = GOLDEN_multi(sqdeltaW_scaled,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.0001,maxit=30)
+        mu_opt = GOLDEN_multi(sqdeltaW_scaled,mu_VLE_guess,mu_lower_bound,mu_upper_bound,TOL=0.000001,maxit=30)
 
         self.f_k_opt = self.f_k_guess.copy()
         self.mu_opt = mu_opt
@@ -850,7 +852,46 @@ class MBAR_GCMC():
         
         return Score
     
-    def eps_scan(self,Temp_VLE,rhol_RP,rhov_RP,Psat_RP,rhol_Potoff,rhov_Potoff,Psat_Potoff,eps_low,eps_high,neps,compound,remove_low_high_Tsat=False):
+    def eps_scan(self,Temp_VLE,rhol_RP,rhov_RP,Psat_RP,DeltaHv_RP,eps_low,eps_high,neps,compound,remove_low_high_Tsat=False):
+        
+        self.Temp_VLE, self.rhol_RP, self.rhov_RP, self.Psat_RP, self.DeltaHv_RP = Temp_VLE, rhol_RP, rhov_RP, Psat_RP, DeltaHv_RP
+        
+        if remove_low_high_Tsat:  #Remove the low T and high T ends for more stable results
+            self.Temp_VLE = self.Temp_VLE[2:-2]
+            self.rhol_RP = rhol_RP[2:-2]
+            self.rhov_RP = rhov_RP[2:-2]
+            self.Psat_RP = Psat_RP[2:-2]
+            self.DeltaHv_RP = DeltaHv_RP[2:-2]
+        
+        eps_range = np.linspace(eps_low,eps_high,neps)
+        
+        self.eps_computed = []
+        self.Score_computed = []
+            
+        for ieps, eps_scaled in enumerate(eps_range):
+            
+            self.Scoring_function(eps_scaled)
+        
+        eps_computed = np.array(self.eps_computed)
+        Score_computed = np.array(self.Score_computed)
+        
+        eps_opt = eps_computed[np.argmin(Score_computed)]
+        Score_opt = np.min(Score_computed)
+        
+        plt.figure(figsize=(8,8))  
+        plt.plot(np.sort(eps_computed),Score_computed[np.argsort(eps_computed)],'ko-',mfc='None')
+#        plt.plot(eps_computed,Score_computed,'b--',mfc='None')
+        plt.plot(eps_opt,Score_opt,'r*',markersize=10,label='Optimal')
+        plt.xlabel(r'$\epsilon / \epsilon_{\rm Potoff}$')
+        plt.ylabel(r'Score')
+        plt.title(compound)        
+#        plt.legend()
+#        plt.savefig('figures/'+compound+'_Score_eps_scan.pdf')
+        plt.show()
+        
+        self.eps_opt, self.Score_opt = eps_opt, Score_opt
+    
+    def eps_scan_deprecated(self,Temp_VLE,rhol_RP,rhov_RP,Psat_RP,rhol_Potoff,rhov_Potoff,Psat_Potoff,eps_low,eps_high,neps,compound,remove_low_high_Tsat=False):
         
         self.Temp_VLE = Temp_VLE
         
