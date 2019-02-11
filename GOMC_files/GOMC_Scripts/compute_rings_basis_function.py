@@ -29,117 +29,143 @@ def convert_eps_sig_C6_Clam(eps_K,sig,lam,n=6.,print_Cit=True):
         
         return C6, Clam, Ncoef
 
+def compute_rings_basis_function(compound,model,NStates,NHists,NBasis):
+    '''
+    Converts histogram files into basis functions
+    Outputs to root_path/basisFunctions/
+    '''
 
-compound = 'CYC6'
-model = 'lam20_basis'
+    root_path = '/home/ram9/'+compound+'/GOMC/GCMC/'+model+'/'
 
-root_path = '/home/ram9/'+compound+'/GOMC/GCMC/'+model+'/'
+    ### Load in the epsilon, sigma, lambda values
 
-NStates = 7                                    
-NHists = 1250
-NBasis = 2
+    eps_sig_lam_basis = np.loadtxt(root_path+'eps_sig_lam_basis',skiprows=1)
 
-### Load in the epsilon, sigma, lambda values
+    assert len(eps_sig_lam_basis) == NBasis, "Number of basis functions is not equal to the dimensions of eps_sig_lam_basis file."
 
-eps_sig_lam_basis = np.loadtxt(root_path+'eps_sig_lam_basis',skiprows=1)
+    Cmatrix = np.zeros([NBasis,NBasis])
+    Ncoef_all = np.zeros(NBasis)
+    lam_all = np.zeros(NBasis)
 
-assert len(eps_sig_lam_basis) == NBasis, "Number of basis functions is not equal to the dimensions of eps_sig_lam_basis file."
+    for iBasis, eps_sig_lam_i in enumerate(eps_sig_lam_basis):
 
-Cmatrix = np.zeros([NBasis,NBasis])
-Ncoef_all = np.zeros(NBasis)
-lam_all = np.zeros(NBasis)
+        eps_i = eps_sig_lam_i[0]
+        sig_i = eps_sig_lam_i[1]
+        lam_i = eps_sig_lam_i[2]
 
-for iBasis, eps_sig_lam_i in enumerate(eps_sig_lam_basis):
+        C6_i, Clam_i, Ncoef_i = convert_eps_sig_C6_Clam(eps_i,sig_i,lam_i,print_Cit=False)
+        Cmatrix[iBasis,0] = C6_i
 
-    eps_i = eps_sig_lam_i[0]
-    sig_i = eps_sig_lam_i[1]
-    lam_i = eps_sig_lam_i[2]
+        if iBasis == 0:
 
-    C6_i, Clam_i, Ncoef_i = convert_eps_sig_C6_Clam(eps_i,sig_i,lam_i,print_Cit=False)
-    Cmatrix[iBasis,0] = C6_i
+            Cmatrix[iBasis,1] = Clam_i
 
-    if iBasis == 0:
+        else:
 
-        Cmatrix[iBasis,1] = Clam_i
+            Cmatrix[iBasis,iBasis] = Clam_i
 
-    else:
+        Ncoef_all[iBasis] = Ncoef_i
 
-        Cmatrix[iBasis,iBasis] = Clam_i
+        lam_all[iBasis] = lam_i
 
-    Ncoef_all[iBasis] = Ncoef_i
+    lam_all[0] = 6.
 
-    lam_all[iBasis] = lam_i
+    #print(Cmatrix)
+    #print(Ncoef_all)
 
-lam_all[0] = 6.
-
-#print(Cmatrix)
-#print(Ncoef_all)
-
-for iState in range(NStates):
+    for iState in range(NStates):
     
-    State_path = root_path+'State'+str(iState)+'/'
+        State_path = root_path+'State'+str(iState)+'/'
 
-    try:
+        try:
 
-        f = open(root_path+'basisFunctions/basis'+str(iState+1)+'.txt','w')
+            f = open(root_path+'basisFunctions/basis'+str(iState+1)+'.txt','w')
 
-    except:
+        except:
 
-        os.mkdir(root_path+'basisFunctions')
-        f = open(root_path+'basisFunctions/basis'+str(iState+1)+'.txt','w')
+            os.mkdir(root_path+'basisFunctions')
+            f = open(root_path+'basisFunctions/basis'+str(iState+1)+'.txt','w')
 
-    try:
+        try:
 
-        Hist_data = np.loadtxt(root_path+'/histfiles/his'+str(iState+1)+'a.dat',skiprows=1)
-        NSnapshots = len(Hist_data)
-        Hist_header = np.genfromtxt(root_path+'/histfiles/his'+str(iState+1)+'a.dat',skip_footer=NSnapshots)
+            Hist_data = np.loadtxt(root_path+'/histfiles/his'+str(iState+1)+'a.dat',skiprows=1)
+            NSnapshots = len(Hist_data)
+            Hist_header = np.genfromtxt(root_path+'/histfiles/his'+str(iState+1)+'a.dat',skip_footer=NSnapshots)
 
-        for header_i in Hist_header:
+            for header_i in Hist_header:
 
-            f.write(str(header_i)+'\t')
+                f.write(str(header_i)+'\t')
 
-        f.write('\n')
+            f.write('\n')
 
-    except:
+        except:
 
-        print('No file for State'+str(iState))
+            print('No file for State'+str(iState))
             
-    #for iHist in np.arange(1,NHists+1):
+        #for iHist in np.arange(1,NHists+1):
 
-     #   u_basis_all = np.zeros([NSnapshots,NBasis])
+         #   u_basis_all = np.zeros([NSnapshots,NBasis])
 
-    for ilam in lam_all:
+        for ilam in lam_all:
 
-        f.write('C'+str(int(ilam))+'\t')
+            f.write('C'+str(int(ilam))+'\t')
 
-    f.write('\n'+'Prexponent (Ncoef) not included'+'\n')
+        f.write('\n'+'Prexponent (Ncoef) not included'+'\n')
 
-    N_ref = Hist_data[:,0]
-    u_basis_all = Hist_data[:,1:]
+        N_ref = Hist_data[:,0]
+        u_basis_all = Hist_data[:,1:]
 
-    for iSnap in range(NSnapshots):
+        for iSnap in range(NSnapshots):
 
-       u_basis_i = u_basis_all[iSnap,:]
-       uNcoef_basis_i = u_basis_i / Ncoef_all
+           u_basis_i = u_basis_all[iSnap,:]
+           uNcoef_basis_i = u_basis_i / Ncoef_all
 
-       #print(u_basis_i)
-       #print(uNcoef_basis_i)
+           #print(u_basis_i)
+           #print(uNcoef_basis_i)
 
-       basisFunctions = np.linalg.solve(Cmatrix,uNcoef_basis_i)
-       #basisFunctions = np.linalg.lstsq(Cmatrix,uNcoef_basis_i).x
+           basisFunctions = np.linalg.solve(Cmatrix,uNcoef_basis_i)
+           #basisFunctions = np.linalg.lstsq(Cmatrix,uNcoef_basis_i).x
 
-       for basis_i in basisFunctions:
+           for basis_i in basisFunctions:
 
-           f.write(str(basis_i)+'\t')
+               f.write(str(basis_i)+'\t')
 
-       f.write('\n')
+           f.write('\n')
+
+        f.close()
+
+    f = open(root_path+'basisFunctions/Ncoef_basis.txt','w')
+
+    for Ncoef in Ncoef_all:
+
+        f.write(str(Ncoef)+'\t')
 
     f.close()
 
-f = open(root_path+'basisFunctions/Ncoef_basis.txt','w')
+def main():
+    '''
+    Reads in the argument values and calls compute_rings_basis_function
+    '''
 
-for Ncoef in Ncoef_all:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c","--compound",type=str,help="Please enter the name of the compound to analyze")
+    parser.add_argument("-ff","--forcefield",type=str,help="Please enter the name of the force field/model to analyze")
+    parser.add_argument("-NS","--NStates",type=int,help="Please enter the number of states (int), typical values are 7-10")
+    parser.add_argument("-NH","--NHists",type=int,help="Please enter the maximum number of histogram snapshots (int), typical values are 1250 or 2000")
+    parser.add_argument("-NB","--NBasis",type=int,help="Please enter the number of basis parameters rerun (int), typical values are 2-6")
+    args = parser.parse_args()
 
-    f.write(str(Ncoef)+'\t')
+    compound = args.compound
+    model = args.forcefield
+    NStates = args.NStates
+    NHists = args.NHists
+    NBasis = args.NBasis
 
-f.close()
+    compute_rings_basis_function(compound,model,NStates,NHists,NBasis)
+
+if __name__ == '__main__':
+    '''
+    Converts the histogram files into basis function files
+    '''
+   
+    main()
