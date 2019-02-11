@@ -20,6 +20,8 @@ NSTAGES="$2"
 NBASIS="$3"
 scripts_path="$4"
 model="$5"
+pinoffset="$6"
+nproc="$7"
 
 for nStage in $(seq 0 $NSTAGES)
 
@@ -28,19 +30,30 @@ do
 if [ "$nStage" -eq 0 ]
 then
 
-GOMC_CPU_GCMC +p"$nproc" in_start.conf > output.log
+GOMC_CPU_GCMC +p"$nproc" in_start.conf > output.log &
+
+pid=$!
+taskset -cp "$pinoffset"-"$((pinoffset+nproc-1))" $pid > /dev/null 2>&1
+wait $pid
 
 else
 
-GOMC_CPU_GCMC +p"$nproc" in_restart.conf > output.log
+GOMC_CPU_GCMC +p"$nproc" in_restart.conf > output.log &
 
+pid=$!
+taskset -cp "$pinoffset"-"$((pinoffset+nproc-1))" $pid > /dev/null 2>&1
+wait $pid
 
 for nRerun in $(seq 0 $NBASIS)
 do
 
 cp "$scripts_path"/Par_"$model"_rings_basis_function_"$nRerun".inp Par_Mie_Alkane_Exotic_basis_function.inp
 
-GOMC_CPU_GCMC +p"$nproc" in_rerun.conf > rerun.log
+GOMC_CPU_GCMC +p"$nproc" in_rerun.conf > rerun.log &
+
+pid=$!
+taskset -cp "$pinoffset"-"$((pinoffset+nproc-1))" $pid > /dev/null 2>&1
+wait $pid
 
 cp his?rr.dat his_rr"$nStage"_basis_function_"$nRerun"
 
