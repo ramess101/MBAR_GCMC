@@ -29,7 +29,7 @@ def convert_eps_sig_C6_Clam(eps_K,sig,lam,n=6.,print_Cit=True):
         
         return C6, Clam, Ncoef
 
-def compute_rings_basis_function(compound,model,NStates,NHists,NBasis):
+def compute_rings_basis_function(compound,model,NStates,NBasis):
     '''
     Converts histogram files into basis functions
     Outputs to root_path/basisFunctions/
@@ -102,10 +102,6 @@ def compute_rings_basis_function(compound,model,NStates,NHists,NBasis):
 
             print('No file for State'+str(iState))
             
-        #for iHist in np.arange(1,NHists+1):
-
-         #   u_basis_all = np.zeros([NSnapshots,NBasis])
-
         for ilam in lam_all:
 
             f.write('C'+str(int(ilam))+'\t')
@@ -151,17 +147,15 @@ def main():
     parser.add_argument("-c","--compound",type=str,help="Please enter the name of the compound to analyze")
     parser.add_argument("-ff","--forcefield",type=str,help="Please enter the name of the force field/model to analyze")
     parser.add_argument("-NS","--NStates",type=int,help="Please enter the number of states (int), typical values are 7-10")
-    parser.add_argument("-NH","--NHists",type=int,help="Please enter the maximum number of histogram snapshots (int), typical values are 1250 or 2000")
     parser.add_argument("-NB","--NBasis",type=int,help="Please enter the number of basis parameters rerun (int), typical values are 2-6")
     args = parser.parse_args()
 
     compound = args.compound
     model = args.forcefield
     NStates = args.NStates
-    NHists = args.NHists
     NBasis = args.NBasis
 
-    compute_rings_basis_function(compound,model,NStates,NHists,NBasis)
+    compute_rings_basis_function(compound,model,NStates,NBasis)
 
 if __name__ == '__main__':
     '''
