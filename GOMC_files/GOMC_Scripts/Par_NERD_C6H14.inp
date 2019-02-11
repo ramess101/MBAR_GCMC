@@ -1,0 +1,125 @@
+*
+* Parameter File for TraPPE (Martin and Siepmann) United Atom Force Field
+*
+* Parameters From:
+*
+* "Transferable potentials for phase equilibria. 1. United-atom description of n-alkanes." 
+* Martin, Marcus G., and J. Ilja Siepmann.
+* The Journal of Physical Chemistry B 102.14 (1998): 2569-2577.
+* DOI: 10.1021/jp972543+
+*
+*
+* "Novel configurational-bias Monte Carlo method for branched molecules.
+* Transferable potentials for phase equilibria. 2. United-atom description of branched alkanes."
+* Martin, Marcus G., and J. Ilja Siepmann. 
+* The Journal of Physical Chemistry B 103.21 (1999): 4508-4517.
+* DOI: 10.1021/jp984742e
+*
+*
+
+
+BONDS
+!
+!V(bond) = Kb(b - b0)**2
+!
+!Kb: kcal/mole/A**2
+!b0: A
+!
+! Kb (kcal/mol) = Kb (K) * Boltz. const.; (9999999999 if no stretching)
+!
+!atom type     Kb              b0        description
+CH3 CH3        9999999999      1.540   ! TraPPE I  (ethane)
+CH3 CH2        9999999999      1.540   ! TraPPE I  (ex. n-propane)
+CH2 CH2        9999999999      1.540   ! TraPPE I  (ex. n-butane)
+CH3 CH1        9999999999      1.540   ! TraPPE II (ex. 2-methylpropane) 
+CH3 CT         9999999999      1.540   ! TraPPE II (ex. 2,2-dimethylpropane)
+CH2 CH1        9999999999      1.540   ! TraPPE II (ex. 2-methylbutane)
+CH2 CT         9999999999      1.540   ! TraPPE II (ex. 2,2-dimethylbutane)
+CH1 CH1        9999999999      1.540   ! TraPPE II (ex. 2,3-dimethylbutane) 
+CT  CT         9999999999      1.540   ! (ex. 2,2,3,3-tetramethylbutane)
+
+
+ANGLES
+!
+!V(angle) = Ktheta(Theta - Theta0)**2
+!
+!Ktheta: kcal/mole/rad**2
+!Theta0: degrees
+!
+! Ktheta (kcal/mol) = Ktheta (K) * Boltz. const.
+!
+!atom types   Ktheta     Theta0 
+CH3 CH2 CH3    31250     114.00  ! TraPPE I  (propane only)
+CH3 CH2 CH2    31250     114.00  ! TraPPE I  (ex. n-butane)
+CH3 CH2 CH1    31250     114.00  ! TraPPE II (ex. 2-methylbutane)
+CH3 CH2 CT     31250     114.00  ! TraPPE II (ex. 2,2-dimethylbutane)
+CH2 CH2 CH2    31250     114.00  ! TraPPE I  (ex. n-pentane)
+CH2 CH2 CH1    31250     114.00  ! TraPPE II (ex. 2-methylpentane)
+CH2 CH2 CT     31250     114.00  ! TraPPE II (ex. 2,2-dimethylpentane)
+CH1 CH2 CH1    31250     114.00  ! TraPPE II (ex. 2,4-dimethylpentane)
+CH1 CH2 CT     31250     114.00  ! TraPPE II (ex. 2-methylpropane)
+CH3 CH1 CH3    31250     112.00  ! TraPPE II (ex. 2-methylpentane)
+CH3 CH1 CH2    31250     112.00  ! TraPPE II (ex. 2-methylbutane)
+CH3 CH1 CH1    31250     112.00  ! TraPPE II (ex. 2-methylbutane)
+CH3 CH1 CT     31250     112.00  ! TraPPE II (ex. 2-methylpentane)
+CH2 CH1 CH2    31250     112.00  ! TraPPE II (ex. 2,3-dimethylbutane)
+CH2 CH1 CH1    31250     112.00  ! TraPPE II (ex. 2,3-dimethylpentane)
+CH2 CH1 CT     31250     112.00  ! TraPPE II (ex. 2,2,3-trimethylbutane)
+CH1 CH1 CH1    31250     112.00  ! TraPPE II (ex. 2,3,4-trimethylpentane)
+CH3 CT  CH3    31250     109.47  ! TraPPE II (ex. 2,2-dimethylpropane)
+CH3 CT  CH2    31250     109.47  ! TraPPE II (ex. 2,2-dimethylbutane)
+CH3 CT  CH1    31250     109.47  ! TraPPE II (ex. 2,2,3-trimethylbutane)
+CH2 CT  CH2    31250     109.47  ! TraPPE II (ex. 3,3-dimethylpentane)
+CH3 CT  CT     31250     109.47  ! (ex. 2,2,3,3-tetramethylbutane)
+
+
+
+
+DIHEDRALS
+!
+!V(dihedral) = Kchi(1 + cos(n(chi) - delta))
+!
+!Kchi: kcal/mole
+!n: multiplicity
+!delta: degrees
+!
+! Kchi (kcal/mol) = Kchi (K) * Boltz. const.
+! Boltzmann = 0.0019872041 kcal / (mol * K)
+!
+! TraPPE Inherits most of its dihedrals from OPLS UA
+! X-CT-CH1-X fitted to QM data in this work
+!
+!atom types         Kchi          n    delta         description
+X   CH2 CH2 X         0.000000    0      0.0  ! TraPPE I  (ex. n-butane) 
+X   CH2 CH2 X       355.029964    1      0.0  ! ""
+X   CH2 CH2 X       -68.189775    2    180.0  ! ""
+X   CH2 CH2 X       791.317812    3      0.0  ! ""
+X   CH2 CH1 X      -251.059767    0      0.0  ! TraPPE II (ex. 2-MBut)
+X   CH2 CH1 X       428.729993    1      0.0  ! ""
+X   CH2 CH1 X      -111.850111    2    180.0  ! ""
+X   CH2 CH1 X       441.270224    3      0.0  ! ""
+X   CH1 CH1 X      -251.059767    0      0.0  ! TraPPE II (ex. 2,3-DMBut)
+X   CH1 CH1 X       428.729993    1      0.0  ! ""
+X   CH1 CH1 X      -111.850111    2    180.0  ! ""
+X   CH1 CH1 X       441.270224    3      0.0  ! ""
+X   CT  CH2 X       461.289809    3      0.0  ! TraPPE II (ex. 2,2-DMBut) 
+X   CT  CH1 X       1369.00000    3      0.0  ! this work (2,2,3-TriMBut)
+X   CT  CT  X      2950.910000    0      0.0  ! this work
+X   CT  CT  X     -2047.060000    3      0.0  ! (2,2,3,3-tetramethylbutane)
+X   CT  CT  X       529.250000    6    180.0  ! ""
+X   CT  CT  X       150.160000   12      0.0  ! ""
+
+
+
+NONBONDED_MIE
+!
+!V(mie) = 4*eps*((sig_ij/r_ij)^n-(sig_ij/r_ij)^6)
+!
+!atom   eps          sig_ij     n    description
+CH4     148.00       3.730      12   ! NERD I
+CH3     104.00       3.910      12   ! NERD I, general 
+!CH3      78.23       3.880      12   ! NERD I, isobutane
+!CH3     74.50       3.910      12   ! NERD I, neopentane
+CH2      45.80       3.930      12   ! NERD I 
+CH1      39.70       3.850      12   ! NERD II 
+CT       17.00       3.910      12   ! NERD II

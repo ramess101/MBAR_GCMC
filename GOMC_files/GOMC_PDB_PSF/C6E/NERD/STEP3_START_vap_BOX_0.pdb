@@ -1,0 +1,14 @@
+REMARK original generated coordinate pdb file
+ATOM      1  C1  C6E A   1       1.123  28.844  26.865  1.00  0.00      C6E  C
+ATOM      2  C2  C6E A   1       1.553  28.010  25.643  1.00  0.00      C6E  C
+ATOM      3  C3  C6E A   1       1.000  26.579  25.776  1.00  0.00      C6E  C
+ATOM      4  C4  C6E A   1       1.000  28.657  24.359  1.00  0.00      C6E  C
+ATOM      5  C5  C6E A   1       1.553  25.932  27.059  1.00  0.00      C6E  C
+ATOM      6  C6  C6E A   1       1.431  25.747  24.554  1.00  0.00      C6E  C
+ATOM      7  C1  C6E A   2       7.497  24.535  26.573  1.00  0.00      C6E  C
+ATOM      8  C2  C6E A   2       7.992  25.533  27.637  1.00  0.00      C6E  C
+ATOM      9  C3  C6E A   2       9.482  25.276  27.929  1.00  0.00      C6E  C
+ATOM     10  C4  C6E A   2       7.812  26.971  27.115  1.00  0.00      C6E  C
+ATOM     11  C5  C6E A   2       9.662  23.839  28.452  1.00  0.00      C6E  C
+ATOM     12  C6  C6E A   2       9.976  26.275  28.993  1.00  0.00      C6E  C
+END

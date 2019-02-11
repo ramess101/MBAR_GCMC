@@ -1,0 +1,201 @@
+#!/bin/bash
+####
+
+clean() {   # Make it so everything is killed on an interrupt
+local pids=$(jobs -pr)
+echo "On exit sending kill signal to: $pids"
+[ -n "$pids" ] && kill $pids
+exit 1
+}
+trap "clean" SIGINT SIGTERM EXIT SIGQUIT  # Call cleanup when asked to
+
+Compound=CYC6
+Compound_PDB=CYC6
+Model=MiPPE
+pin0=80
+
+iState_low=0
+iState_high=6
+
+### My files 'C6H14' had vapor at the end, while Mohammad's had vapor at the beginning
+if [ "$Compound" = 'C6H14' ]
+then
+
+nproc=(2 2 2 2 2 2 2 1 1)
+nproc_vap=1
+
+else
+
+#nproc=(1 1 2 2 2 2 2 2 2)
+nproc=(1 1 1 1 1 1 1 1 1)
+nproc_vap=1
+
+fi
+
+NSTAGES_liq=1250
+NSTAGES_vap=1250
+NBASIS=1
+
+#Specify the path location for files
+scripts_path=~/GOMC_Scripts
+conditions_path=~/GOMC_Conditions
+PDB_PSF_path=/home/ram9/GOMC_PDB_PSF/"$Compound_PDB"/"$Model"   
+input_path=~/"$Compound"/GOMC/GOMC_input
+output_path=~/"$Compound"/GOMC/GCMC/"$Model"_basis 
+
+job_date=$(date "+%Y_%m_%d_%H_%M_%S")
+
+jobfile="$output_path"/"$Compound"_job_"$job_date" 
+cp "$scripts_path"/run_all_GCMC_rings "$jobfile" #Keep track of what jobs have been submitted
+cat "$scripts_path"/genBasisFunctions.sh >> "$jobfile"  # Inellegant append
+#cat "$scripts_path"/run_single.sh >> "$jobfile"  # Another inellegant append
+#touch "$output_path"/warnings_job_"$job_date"
+
+### Read the temperature file into the array 'Temp'
+if [ -f "$conditions_path"/"$Compound"_Temp_"$Model" ]
+then
+
+while read line
+do
+Temp+=("$line")
+done < "$conditions_path"/"$Compound"_Temp_"$Model"
+
+else
+echo "$Compound"_Temp file does not exist
+exit 0
+
+fi
+
+### Read the box_length file into the array 'Lbox'
+if [ -f "$conditions_path"/"$Compound"_box_length ]
+then
+
+while read line
+do
+Lbox+=("$line")
+done < "$conditions_path"/"$Compound"_box_length
+
+else
+echo "$Compound"_box_length file does not exist
+exit 0
+
+fi
+
+### Read the ChemPot file into the array 'ChemPot'
+if [ -f "$conditions_path"/"$Compound"_ChemPot_"$Model" ]
+then
+
+while read line
+do
+ChemPot+=("$line")
+done < "$conditions_path"/"$Compound"_ChemPot_"$Model"
+
+else
+echo "$Compound"_ChemPot file does not exist
+exit 0
+
+fi
+
+cd "$output_path" || error_report "Error switching to $output_path" "0" "0" "preprocessing"
+pinoffset="$pin0"
+
+for iState in $(seq $iState_low $iState_high)
+
+do
+
+cd "$output_path" || exit 0
+
+mkdir State"$iState"
+cd State"$iState"
+
+### Old architecture was problematic when two states have same temperature
+#mkdir "${Temp[iState]}"
+#cd "${Temp[iState]}"
+
+cp "$scripts_path"/in_start_template_rings.conf in_start.conf
+cp "$scripts_path"/in_restart_template_rings.conf in_restart.conf
+cp "$scripts_path"/in_rerun_template_rings.conf in_rerun.conf
+
+sed -i -e s/some_Temp/"${Temp[iState]}"/ in_start.conf
+sed -i -e s/some_Lbox/"${Lbox[iState]}"/ in_start.conf
+sed -i -e s/some_ChemPot/"${ChemPot[iState]}"/ in_start.conf
+sed -i -e s/some_Compound/"$Compound_PDB"/ in_start.conf
+sed -i -e s/someGOMCinp/Par_"$Model"_rings/ in_start.conf
+sed -i -e s@some_PDB_PSF_path@"$PDB_PSF_path"@ in_start.conf
+
+sed -i -e s/some_Temp/"${Temp[iState]}"/ in_restart.conf
+sed -i -e s/some_Lbox/"${Lbox[iState]}"/ in_restart.conf
+sed -i -e s/some_ChemPot/"${ChemPot[iState]}"/ in_restart.conf
+sed -i -e s/some_Compound/"$Compound_PDB"/ in_restart.conf
+sed -i -e s/someGOMCinp/Par_"$Model"_rings/ in_restart.conf
+
+sed -i -e s/some_Temp/"${Temp[iState]}"/ in_rerun.conf
+sed -i -e s/some_Lbox/"${Lbox[iState]}"/ in_rerun.conf
+sed -i -e s/some_ChemPot/"${ChemPot[iState]}"/ in_rerun.conf
+sed -i -e s/some_Compound/"$Compound_PDB"/ in_rerun.conf
+
+cp "$scripts_path"/genBasisFunctions_rings.sh genBasisFunctions.sh
+chmod u+x genBasisFunctions.sh
+
+### Vapor phase runs just run on the same processor sequentially because they are at least twice as fast
+#if [ "${nproc[iState]}" -gt "$nproc_vap" ] 
+if [ "$iState" -gt 1 ]
+then
+
+echo "$iState" in background
+
+sed -i -e s/some_phase/liq/ in_start.conf
+
+./genBasisFunctions.sh "${nproc[iState]}" "$NSTAGES_liq" "$NBASIS" "$scripts_path" "$Model" &
+taskset -cp "$pinoffset"-"$((pinoffset+nproc[iState]-1))" $! > /dev/null 2>&1
+
+else
+
+echo "$iState" not in background
+
+sed -i -e s/some_phase/vap/ in_start.conf
+
+./genBasisFunctions.sh "${nproc[iState]}" "$NSTAGES_vap" "$NBASIS" "$scripts_path" "$Model" &
+taskset -cp "$pinoffset"-"$((pinoffset+nproc[iState]-1))" $! > /dev/null 2>&1
+
+fi
+
+pinoffset=$((pinoffset+nproc[iState]))
+
+done
+
+top
+
+
+#### Wait for all jobs to finish
+
+done=NO
+count=0
+
+while [ "$done" = "NO" ]
+do
+sleep 600s
+
+count=$((count + 1))
+
+if [ $count -gt 600 ]
+then
+echo "timed out"
+done=YES
+fi
+
+if pgrep -a "GOMC_CPU_GCMC"
+then
+echo "not done"
+else
+echo "done"
+done=YES
+fi
+
+done
+
+killall -w GOMC_CPU_GCMC # In case timed out, kill the jobs
+
+exit 0
+
+#######

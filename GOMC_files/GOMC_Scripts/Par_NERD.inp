@@ -1,0 +1,139 @@
+*
+* Parameter File for NERD (Nath, Escobedo, and Pablo) United Atom Force Field
+*
+* Parameters From:
+*
+* "On the simulation of vapor-liquid equilibria for alkanes"
+* Shyamal K. Nath, Fernando A. Escobedo and Juan J. de Pablo,
+* J. Chem. Phys., 1998, 108(23)(15 Jun), p9905-9911
+* DOI: 10.1063/1.476429
+*
+* "Simulation of vapour-liquid equilibria for branched alkanes"
+* Shyamal K. Nath and Juan J. Pablo, Mol. Phys., 2000, 98(4) p231-238
+* DOI: 10.1080/00268970009483286
+*
+* and
+*
+* "New forcefield parameters for branched hydrocarbons"
+* Shyamal K. Nath and Rajesh Khare, J. Chem. Phys., 2001, 115(23), p10837-10844
+* DOI: 10.1063/1.1418731
+
+BONDS
+!
+!V(bond) = Kb(b - b0)**2
+!
+!Kb: kcal/mole/A**2
+!b0: A
+!
+! Kb (kcal/mol) = Kb (K) * Boltz. const.; (9999999999 if no stretching)
+!
+!atom type     Kb              b0        description
+CA3 CH2        9999999999      1.540   ! (ex. n-butane)
+CB3 CB3        9999999999      1.540   ! (ethane only) 
+CC3 CH2        9999999999      1.540   ! (propane only)
+CD3 CH1        9999999999      1.540   ! (isobutane only)
+CE3 CH2        9999999999      1.540   ! (2-methylbutane only)
+CE3 CH1        9999999999      1.540   ! (2-methylbutane only)
+CG3 CT         9999999999      1.540   ! (2,2-dimethylpropane only)
+CJ3 CT         9999999999      1.540   ! (2,2-dimethylbutane only)
+CK3 CH1        9999999999      1.540   ! (ex. 2-methylpentane)
+CK3 CT         9999999999      1.540   ! (ex. 2,2-dimethylpentane)
+CM3 CH2        9999999999      1.540   ! (ex. 2,2-dimethylbutane)
+CH2 CH2        9999999999      1.540   ! (ex. n-butane) 
+CH2 CH1        9999999999      1.540   ! (ex. 2-methylbutane)
+CH2 CT         9999999999      1.540   ! (ex. 2,2-dimethylbutane)
+CH1 CH1        9999999999      1.540   ! (ex. 2,3-dimethylbutane)
+CH1 CT         9999999999      1.540   ! (ex. 2,2,3-trimethylbutane)
+CT  CT         9999999999      1.540   ! (ex. 2,2,3,3-tetramethylbutane)
+
+
+ANGLES
+!
+!V(angle) = Ktheta(Theta - Theta0)**2
+!
+!Ktheta: kcal/mole/rad**2
+!Theta0: degrees
+!
+! Ktheta (kcal/mol) = Ktheta (K) * Boltz. const.
+!
+!atom types         Ktheta       Theta0 
+CA3 CH2 CH2         31250        114.00 ! (ex. n-butane)
+CC3 CH2 CC3         31250        114.00 ! (propane only)
+CE3 CH2 CH1         31250        114.00 ! (2-methylbutane only)
+CH2 CH2 CH2         31250        114.00 ! (ex. n-pentane)
+CH2 CH2 CH1         31250        114.00 ! (ex. 2-methylpentane)
+CH2 CH2 CT          31250        114.00 ! (ex. 2,2-dimethylpentane)
+CH1 CH2 CH1         31250        114.00 ! (ex. 2,4-dimethylpentane)
+CH1 CH2 CT          31250        114.00 ! (ex. 2,2,4-trimethylpentane)
+CM3 CH2 CH1         31250        114.00 ! (ex. 3-methylpentane)
+CM3 CH2 CT          31250        114.00 ! (ex. 2,2-dimethylbutane)
+CD3 CH1 CD3         31250        109.47 ! (isobutane only)
+CE3 CH1 CE3         31250        109.47 ! (2-methylbutane only)
+CE3 CH1 CH2         31250        109.47 ! (2-methylbutane only)
+CH2 CH1 CH2         31250        109.47 ! (ex. 3-methylpentane)
+CH2 CH1 CH1         31250        109.47 ! (ex. 2,3-dimethylpentane)
+CH2 CH1 CT          31250        109.47 ! (ex. 2,2,3-trimethylpentane)
+CH1 CH1 CH1         31250        109.47 ! (ex. 2,3,4-trimethylpentane)
+CK3 CH1 CH2         31250        109.47 ! (ex. 2-methylpentane)
+CK3 CH1 CH1         31250        109.47 ! (ex. 2,3-dimethylbutane)
+CK3 CH1 CK3         31250        109.47 ! (ex. 2,3-dimethylbutane)
+CK3 CH1 CT          31250        109.47 ! (ex. 2,2,3-trimethylbutane)
+CG3 CT  CG3         31250        109.47 ! (2,2-dimethylpropane only)
+CJ3 CT  CJ3         31250        109.47 ! (2,2-dimethylbutane only)
+CJ3 CT  CH2         31250        109.47 ! (2,2-dimethylbutane only)
+CK3 CT  CK3         31250        109.47 ! (ex. 2,2-dimethylpentane)
+CK3 CT  CH2         31250        109.47 ! (ex. 2,2-dimethylpentane)
+CK3 CT  CH1         31250        109.47 ! (ex. 2,2,3-trimethylbutane)
+CH2 CT  CH2         31250        109.47 ! (ex. 3,3-dimethylpentane)
+CH2 CT  CH1         31250        109.47 ! (ex. 2,3,3-trimethylpentane)
+CH3 CT  CT          31250        109.47 ! (2,2,3,3-tetramethylbutane)
+
+DIHEDRALS
+!
+!V(dihedral) = Kchi(1 + cos(n(chi) - delta))
+!
+!Kchi: kcal/mole
+!n: multiplicity
+!delta: degrees
+!
+! Kchi (kcal/mol) = Kchi (K) * Boltz. const.
+! Boltzmann = 0.0019872041 kcal / (mol * K)
+!
+! NERD Inherits most of its dihedrals from OPLS UA
+!
+!atom types         Kchi          n    delta              description
+X   CH2 CH2 X         0.00        0      0.0              ! NERD/OPLS (ex. n-butane)
+X   CH2 CH2 X       355.04        1      0.0              ! ""
+X   CH2 CH2 X       -68.19        2    180.0              ! ""
+X   CH2 CH2 X       791.32        3      0.0              ! ""
+X   CH2 CH1 X      1416.3         0      0.0              ! NERD/OPLS (ex. 2-methylbutane)
+X   CH2 CH1 X       398.3         1      0.0              ! ""
+X   CH2 CH1 X       139.12        2    180.0              ! ""
+X   CH2 CH1 X      -901.2         3      0.0              ! ""
+X   CH1 CH1 X      1635.7         3      0.0              ! NERD/OPLS (ex. 2,3-DMBut)
+X   CT  CH2 X      1635.7         3      0.0              ! NERD/OPLS (ex. 2,2-DMBut)
+X   CT  CH1 X      1635.7         3      0.0              ! NERD/OPLS (ex. 2,2,3-TriMBut)
+X   CT  CT  X      2950.91        0      0.0              ! this work
+X   CT  CT  X     -2047.06        3      0.0              ! (2,2,3,3-tetramethylbutane)
+X   CT  CT  X       529.25        6    180.0              ! ""
+X   CT  CT  X       150.16       12      0.0              ! ""
+
+
+NONBONDED_MIE
+!
+!V(mie) = 4*eps*((sig_ij/r_ij)^n-(sig_ij/r_ij)^6)
+!
+!atom   eps          sig_ij     n    description
+CH4     148.00       3.730      12   ! NERD (note, same as TraPPE)
+CA3     104.00       3.910      12   ! (general case)
+CB3     100.60       3.825      12   ! (ethane)
+CC3     102.60       3.857      12   ! (propane)
+CD3      78.23       3.880      12   ! (isobutane)
+CE3      79.50       3.900      12   ! (2-methylbutane)
+CG3      74.50       3.910      12   ! (2,2-dimethylpropane)
+CJ3      74.50       3.870      12   ! (2,2-dimethylbutane)
+CK3      70.00       3.850      12   ! (methyl side chain)
+CM3      83.00       3.820      12   ! (ethyl side chain)
+CH2      45.80       3.930      12   ! 
+CH1      39.70       3.850      12   !
+CT       17.00       3.910      12   ! 

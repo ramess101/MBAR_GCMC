@@ -1,0 +1,65 @@
+PSF
+
+       3 !NTITLE
+ REMARKS original generated structure x-plor psf file
+ REMARKS topology ../model/Top_Branched_TraPPE.inp 
+ REMARKS segment C8O { first NONE; last NONE; auto angles dihedrals }
+
+      16 !NATOM
+       1 C8O  1    C8O  C1   CH3    0.000000       15.0350           0
+       2 C8O  1    C8O  C2   CT     0.000000       12.0110           0
+       3 C8O  1    C8O  C3   CH2    0.000000       14.0270           0
+       4 C8O  1    C8O  C4   CH1    0.000000       13.0190           0
+       5 C8O  1    C8O  C5   CH3    0.000000       15.0350           0
+       6 C8O  1    C8O  C6   CH3    0.000000       15.0350           0
+       7 C8O  1    C8O  C7   CH3    0.000000       15.0350           0
+       8 C8O  1    C8O  C8   CH3    0.000000       15.0350           0
+       9 C8O  2    C8O  C1   CH3    0.000000       15.0350           0
+      10 C8O  2    C8O  C2   CT     0.000000       12.0110           0
+      11 C8O  2    C8O  C3   CH2    0.000000       14.0270           0
+      12 C8O  2    C8O  C4   CH1    0.000000       13.0190           0
+      13 C8O  2    C8O  C5   CH3    0.000000       15.0350           0
+      14 C8O  2    C8O  C6   CH3    0.000000       15.0350           0
+      15 C8O  2    C8O  C7   CH3    0.000000       15.0350           0
+      16 C8O  2    C8O  C8   CH3    0.000000       15.0350           0
+
+      14 !NBOND: bonds
+       1       2       2       3       2       6       2       7
+       3       4       4       5       4       8       9      10
+      10      11      10      14      10      15      11      12
+      12      13      12      16
+
+      20 !NTHETA: angles
+       1       2       7       1       2       6       1       2       3
+       2       3       4       3       4       8       3       4       5
+       3       2       7       3       2       6       5       4       8
+       6       2       7       9      10      15       9      10      14
+       9      10      11      10      11      12      11      12      16
+      11      12      13      11      10      15      11      10      14
+      13      12      16      14      10      15
+
+      10 !NPHI: dihedrals
+       1       2       3       4       2       3       4       5
+       2       3       4       8       4       3       2       6
+       4       3       2       7       9      10      11      12
+      10      11      12      13      10      11      12      16
+      12      11      10      14      12      11      10      15
+
+       0 !NIMPHI: impropers
+
+
+       0 !NDON: donors
+
+
+       0 !NACC: acceptors
+
+
+       0 !NNB
+
+       0       0       0       0       0       0       0       0
+       0       0       0       0       0       0       0       0
+
+
+       1       0 !NGRP
+       0       0       0
+

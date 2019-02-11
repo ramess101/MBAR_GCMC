@@ -1,0 +1,21 @@
+#!/bin/bash
+####
+
+pinoffset=0
+nproc=2
+
+for isig in $(seq 1 1)
+do
+
+echo "$isig" > isig_low
+
+python cyclohexane_VLE_from_basis_functions.py &
+taskset -cp "$pinoffset"-"$((pinoffset+nproc-1))" $! > /dev/null 2>&1
+
+echo pinoffset = "$pinoffset"
+
+pinoffset=$((pinoffset+nproc))
+
+sleep 2s #Make sure it has loaded isig before proceeding
+
+done

@@ -1,0 +1,55 @@
+PSF
+
+       3 !NTITLE
+ REMARKS original generated structure x-plor psf file
+ REMARKS topology ../model/Top_Branched_Mie.inp 
+ REMARKS segment C6E { first NONE; last NONE; auto angles dihedrals }
+
+      12 !NATOM
+       1 C6E  1    C6E  C1   CH1    0.000000       13.0190           0
+       2 C6E  1    C6E  C2   CH3    0.000000       15.0350           0
+       3 C6E  1    C6E  C3   CH3    0.000000       15.0350           0
+       4 C6E  1    C6E  C4   CH1    0.000000       13.0190           0
+       5 C6E  1    C6E  C5   CH3    0.000000       15.0350           0
+       6 C6E  1    C6E  C6   CH3    0.000000       15.0350           0
+       7 C6E  2    C6E  C1   CH1    0.000000       13.0190           0
+       8 C6E  2    C6E  C2   CH3    0.000000       15.0350           0
+       9 C6E  2    C6E  C3   CH3    0.000000       15.0350           0
+      10 C6E  2    C6E  C4   CH1    0.000000       13.0190           0
+      11 C6E  2    C6E  C5   CH3    0.000000       15.0350           0
+      12 C6E  2    C6E  C6   CH3    0.000000       15.0350           0
+
+      10 !NBOND: bonds
+       1       2       1       3       1       4       4       5
+       4       6       7       8       7       9       7      10
+      10      11      10      12
+
+      12 !NTHETA: angles
+       1       4       6       1       4       5       2       1       4
+       2       1       3       3       1       4       5       4       6
+       7      10      12       7      10      11       8       7      10
+       8       7       9       9       7      10      11      10      12
+
+       8 !NPHI: dihedrals
+       2       1       4       5       2       1       4       6
+       3       1       4       5       3       1       4       6
+       8       7      10      11       8       7      10      12
+       9       7      10      11       9       7      10      12
+
+       0 !NIMPHI: impropers
+
+
+       0 !NDON: donors
+
+
+       0 !NACC: acceptors
+
+
+       0 !NNB
+
+       0       0       0       0       0       0       0       0
+       0       0       0       0
+
+       1       0 !NGRP
+       0       0       0
+
